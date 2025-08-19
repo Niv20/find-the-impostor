@@ -47,6 +47,10 @@ function generateGameCode() {
   return code;
 }
 
+function getAvatarByFile(fileName) {
+  return AVATARS_CONFIG.find(a => a.file === fileName) || AVATARS_CONFIG[0];
+}
+
 // Gets a random available avatar for a game
 function getAvailableAvatar(game) {
   const usedAvatars = game.players.map((p) => p.avatar.file);
@@ -54,7 +58,7 @@ function getAvailableAvatar(game) {
     (a) => !usedAvatars.includes(a.file)
   );
   if (availableAvatars.length === 0) {
-    // If all avatars are used, just pick a random one
+    // If all avatars are used, just pick a random one from the full list
     return AVATARS_CONFIG[Math.floor(Math.random() * AVATARS_CONFIG.length)];
   }
   return availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
@@ -69,11 +73,11 @@ io.on("connection", (socket) => {
   );
 
   // --- Game Creation and Joining ---
-  socket.on("createGame", ({ name }) => {
+  socket.on("createGame", ({ name, requestedAvatarFile }) => {
     const gameCode = generateGameCode();
     socket.join(gameCode);
 
-    const adminAvatar = getAvailableAvatar({ players: [] });
+    const adminAvatar = getAvatarByFile(requestedAvatarFile);
 
     games[gameCode] = {
       adminId: socket.id,
@@ -105,9 +109,8 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("joinGame", ({ gameCode, name }) => {
+  socket.on("joinGame", ({ gameCode, name, requestedAvatarFile }) => {
     const game = games[gameCode];
-    // Basic validation, though checkGameCode should prevent most of these.
     if (!game) {
       return socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
     }
@@ -119,9 +122,12 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "השם שבחרת כבר תפוס בחדר זה.");
     }
 
-    const playerAvatar = getAvailableAvatar(game);
-    if (!playerAvatar) {
-      return socket.emit("errorMsg", "שגיאה במציאת אווטאר פנוי.");
+    let playerAvatar;
+    const usedAvatarFiles = game.players.map(p => p.avatar.file);
+    if (requestedAvatarFile && !usedAvatarFiles.includes(requestedAvatarFile)) {
+        playerAvatar = getAvatarByFile(requestedAvatarFile);
+    } else {
+        playerAvatar = getAvailableAvatar(game);
     }
 
     socket.join(gameCode);
