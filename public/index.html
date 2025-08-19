@@ -12,21 +12,22 @@
   </head>
   <body>
     <header id="app-header">
-      <button id="header-back-btn" class="header-btn hidden">
-        <span class="material-icons">arrow_forward_ios</span>
-      </button>
       <span id="header-title">מי המתחזה? 🤔</span>
       <div id="header-actions">
-        <button id="header-create-btn" class="header-link-btn">צור משחק חדש</button>
-        <button id="header-settings-btn" class="header-btn hidden">
-          <span class="material-icons">settings</span>
-        </button>
+          <button id="header-create-btn" class="header-link-btn">צור משחק חדש</button>
+          <button id="header-back-btn" class="header-btn hidden">
+              <span class="material-icons">arrow_forward_ios</span>
+              <span>חזור</span>
+          </button>
+          <button id="header-settings-btn" class="header-btn hidden">
+              <span class="material-icons">settings</span>
+          </button>
       </div>
     </header>
 
     <div class="container">
       <!-- Ekrani fillestar -->
-      <div id="home-screen">
+      <div id="home-screen" class="screen-container">
         <div class="join-game">
           <p>הזן את קוד המשחק בן 4 הספרות:</p>
           <div id="code-inputs" dir="ltr">
@@ -40,27 +41,32 @@
       </div>
 
       <!-- Ekrani i hyrjes së emrit -->
-      <div id="name-entry-screen" class="hidden">
-        <h2 id="name-entry-title">הכנס את שמך</h2>
-        <div id="avatar-preview-container"></div>
-        <div class="name-input-container">
-          <input
-            type="text"
-            id="name-input"
-            class="name-input"
-            placeholder="השם שלך"
-            maxlength="10"
-          />
-          <span id="char-counter">0/10</span>
+      <div id="name-entry-screen" class="hidden screen-container">
+        <div class="name-entry-content">
+            <h2 id="name-entry-title">הכנס את שמך</h2>
+            <div id="avatar-preview-container"></div>
+            <div class="name-input-container">
+              <input
+                type="text"
+                id="name-input"
+                class="name-input"
+                placeholder="השם שלך"
+                maxlength="10"
+              />
+              <span id="char-counter">0/10</span>
+            </div>
         </div>
-        <button id="submit-name-btn" class="button-bottom">המשך</button>
+        <button id="submit-name-btn">המשך</button>
       </div>
 
       <!-- Ekrani i lobit -->
-      <div id="lobby-screen" class="hidden">
-        <div id="game-code-display" class="game-code hidden">----</div>
-        <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
-        <ul id="player-list"></ul>
+      <div id="lobby-screen" class="hidden screen-container">
+        <div class="lobby-content">
+            <p class="share-code-text">שתף עם חברים את הקוד:</p>
+            <div id="game-code-display" class="game-code hidden">----</div>
+            <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
+            <ul id="player-list"></ul>
+        </div>
         <div id="admin-controls">
           <p id="start-game-hint" class="hidden">
             צריך לפחות 3 שחקנים בשביל להתחיל

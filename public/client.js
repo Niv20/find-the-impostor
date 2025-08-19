@@ -316,12 +316,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       item.appendChild(checkbox);
       item.appendChild(label);
-      
-      item.addEventListener('click', (e) => {
-          if(e.target !== checkbox) {
-              checkbox.click();
-          }
-      });
 
       categoryListDiv.appendChild(item);
     });
