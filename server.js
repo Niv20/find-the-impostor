@@ -92,8 +92,22 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("checkGameCode", (gameCode) => {
+    const game = games[gameCode];
+    if (game) {
+      if (game.players.length < 6) {
+        socket.emit("gameCodeValid");
+      } else {
+        socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
+      }
+    } else {
+      socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
+    }
+  });
+
   socket.on("joinGame", ({ gameCode, name }) => {
     const game = games[gameCode];
+    // Basic validation, though checkGameCode should prevent most of these.
     if (!game) {
       return socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
     }

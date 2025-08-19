@@ -73,14 +73,13 @@ button {
   border: none;
   padding: 12px 25px;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.1rem; /* Slightly larger font */
   cursor: pointer;
   font-family: "Assistant", sans-serif;
   transition: background-color 0.3s, transform 0.2s;
   font-weight: 600;
   margin-top: 10px;
-  width: 80%;
-  max-width: 300px;
+  width: 100%; /* Adjusted width */
 }
 button:hover {
   background-color: #5a52e0;
@@ -123,7 +122,7 @@ button:disabled {
 /* Home Screen */
 .join-game {
   background-color: var(--card-color);
-  padding: 20px;
+  padding: 25px;
   border-radius: 12px;
   margin-bottom: 20px;
 }
@@ -142,18 +141,36 @@ button:disabled {
   margin: 20px 0;
 }
 .code-input {
-  width: 50px;
-  height: 60px;
-  font-size: 2rem;
+  width: 55px; /* Adjusted size */
+  height: 70px; /* Adjusted size */
+  font-size: 2.8rem; /* Adjusted font size */
+  line-height: 70px; /* Vertically center text */
   text-align: center;
   border-radius: 8px;
   padding: 0;
   border: 2px solid #444;
   background-color: #1a1a1d;
   color: var(--text-color);
+  font-weight: 700;
 }
 .code-input:focus {
   border-color: var(--primary-color);
+}
+
+/* Create Game Button Style */
+#go-to-create-btn {
+  background-color: transparent;
+  border: none;
+  color: var(--primary-color);
+  text-decoration: underline;
+  font-weight: 600;
+  padding: 5px;
+  margin-top: 15px;
+}
+#go-to-create-btn:hover {
+  background-color: transparent;
+  transform: none;
+  color: #8c84ff; /* Lighter purple on hover */
 }
 
 /* Name Entry Screen */

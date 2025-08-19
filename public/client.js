@@ -90,11 +90,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Home Screen Logic
   codeInputs.forEach((input, index) => {
-    input.addEventListener("input", () => {
-      if (input.value.length === 1 && index < codeInputs.length - 1) {
+    input.addEventListener("input", (e) => {
+      // Allow only numbers
+      e.target.value = e.target.value.replace(/[^0-9]/g, "");
+      if (e.target.value && index < codeInputs.length - 1) {
         codeInputs[index + 1].focus();
       }
       validateCodeInputs();
+    });
+
+    input.addEventListener("focus", (e) => {
+      e.target.select();
     });
 
     input.addEventListener("keydown", (e) => {
@@ -115,9 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
     if (code.length === 4) {
       gameCode = code;
-      isCreatingGame = false;
-      showNameEntryScreen();
-    } 
+      socket.emit("checkGameCode", gameCode);
+    }
   });
 
   // Name Entry Screen Logic
@@ -203,7 +208,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("errorMsg", (message) => {
     alert(message);
+    // Optionally reset UI, e.g., clear code inputs
+    codeInputs.forEach(input => input.value = '');
+    joinGameBtn.disabled = true;
     showScreen("home"); // Go back to home on error
+  });
+
+  socket.on("gameCodeValid", () => {
+    isCreatingGame = false;
+    showNameEntryScreen();
   });
 
   socket.on("gameCreated", (data) => {
