@@ -110,6 +110,11 @@ document.addEventListener("DOMContentLoaded", () => {
   nameInput.addEventListener("input", () => {
     const len = nameInput.value.length;
     charCounter.textContent = `${len}/10`;
+    // Hebrew name validation
+    const hebrewRegex = /^[א-ת\s]*$/;
+    if (!hebrewRegex.test(nameInput.value)) {
+      nameInput.value = nameInput.value.replace(/[^א-ת\s]/g, "");
+    }
   });
   nameInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") submitNameBtn.click();
