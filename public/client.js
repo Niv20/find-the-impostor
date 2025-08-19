@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     playerCountSpan.textContent = players.length;
     if (isAdmin) {
-      startGameBtn.disabled = players.length < 2;
+      startGameBtn.disabled = players.length < 3;
     }
   }
 
