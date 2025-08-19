@@ -36,6 +36,11 @@ fs.readdirSync(dataPath).forEach((file) => {
     wordCategories[categoryKey] = categoryData;
   }
 });
+const allCategoriesForClient = Object.entries(wordCategories).map(([id, data]) => ({
+    id,
+    name: data.categoryName
+}));
+
 console.log(`✅ Loaded ${Object.keys(wordCategories).length} word categories.`);
 
 // --- Helper Functions ---
@@ -75,7 +80,6 @@ io.on("connection", (socket) => {
     socket.join(gameCode);
 
     const adminAvatar = getAvatarByFile(requestedAvatarFile);
-    const allCategoryKeys = Object.keys(wordCategories);
 
     games[gameCode] = {
       adminId: socket.id,
@@ -85,7 +89,7 @@ io.on("connection", (socket) => {
       settings: {
         timer: 60,
         showCategory: true,
-        enabledCategories: allCategoryKeys, // Default to all categories
+        enabledCategories: Object.keys(wordCategories), // Default to all category IDs
       },
       gameState: "lobby",
       currentRound: null,
@@ -95,7 +99,7 @@ io.on("connection", (socket) => {
       gameCode,
       players: games[gameCode].players,
       settings: games[gameCode].settings,
-      allCategories: allCategoryKeys, // Send all category keys to admin
+      allCategories: allCategoriesForClient, // Send all category objects to admin
     });
   });
 

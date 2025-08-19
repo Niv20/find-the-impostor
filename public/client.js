@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let chosenAvatarFile = null;
   let allCategories = [];
   let enabledCategories = [];
+  let currentScreen = 'home';
 
   // --- Screen Elements ---
   const screens = {
@@ -26,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- UI Elements ---
   const codeInputs = document.querySelectorAll(".code-input");
   const joinGameBtn = document.getElementById("join-game-btn");
-  const goToCreateBtn = document.getElementById("go-to-create-btn");
   const nameInput = document.getElementById("name-input");
   const charCounter = document.getElementById("char-counter");
   const submitNameBtn = document.getElementById("submit-name-btn");
@@ -35,6 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const nameEntryTitle = document.getElementById("name-entry-title");
 
+  // Header
+  const header = document.getElementById('app-header');
+  const headerBackBtn = document.getElementById('header-back-btn');
+  const headerCreateBtn = document.getElementById('header-create-btn');
+  const headerSettingsBtn = document.getElementById('header-settings-btn');
+
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
   const playerCountSpan = document.getElementById("player-count");
@@ -42,21 +48,46 @@ document.addEventListener("DOMContentLoaded", () => {
   const adminControls = document.getElementById("admin-controls");
   const startGameBtn = document.getElementById("start-game-btn");
   const startGameHint = document.getElementById("start-game-hint");
-  const backToHomeBtn = document.getElementById("back-to-home-btn");
 
   // Settings
-  const settingsBtn = document.getElementById("settings-btn");
+  const settingsBtn = document.getElementById("header-settings-btn"); // Corrected
   const settingsModal = document.getElementById("settings-modal");
   const closeSettingsBtn = document.getElementById("close-settings-btn");
   const categoryListDiv = document.getElementById("category-list");
   const showCategoryToggle = document.getElementById("show-category-toggle");
 
   // --- Screen Management ---
+  function updateHeader(screenName) {
+    headerBackBtn.classList.add('hidden');
+    headerCreateBtn.classList.add('hidden');
+    headerSettingsBtn.classList.add('hidden');
+
+    switch (screenName) {
+      case 'home':
+        headerCreateBtn.classList.remove('hidden');
+        break;
+      case 'nameEntry':
+      case 'lobby':
+        headerBackBtn.classList.remove('hidden');
+        if (isAdmin && screenName === 'lobby') {
+            headerSettingsBtn.classList.remove('hidden');
+        }
+        break;
+      case 'game':
+      case 'voting':
+      case 'result':
+        // No buttons shown during the game flow
+        break;
+    }
+  }
+
   function showScreen(screenName) {
+    currentScreen = screenName;
     Object.values(screens).forEach((screen) => screen.classList.add("hidden"));
     if (screens[screenName]) {
       screens[screenName].classList.remove("hidden");
     }
+    updateHeader(screenName);
   }
 
   function showNameEntryScreen() {
@@ -71,6 +102,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Event Listeners ---
+
+  // Header
+  headerCreateBtn.addEventListener("click", () => {
+    isCreatingGame = true;
+    showNameEntryScreen();
+  });
+
+  headerBackBtn.addEventListener('click', () => {
+      switch(currentScreen) {
+          case 'nameEntry':
+              showScreen('home');
+              break;
+          case 'lobby':
+              if (isAdmin) {
+                if (confirm("אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?")) {
+                    socket.emit("endGame", gameCode);
+                }
+              } else {
+                  window.location.reload(); // Player leaves
+              }
+              break;
+      }
+  });
 
   // Home Screen
   codeInputs.forEach((input, index) => {
@@ -89,11 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
         joinGameBtn.click();
       }
     });
-  });
-
-  goToCreateBtn.addEventListener("click", () => {
-    isCreatingGame = true;
-    showNameEntryScreen();
   });
 
   joinGameBtn.addEventListener("click", () => {
@@ -137,18 +186,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Lobby & Settings
-  backToHomeBtn.addEventListener("click", () => {
-    if (isAdmin) {
-      if (
-        confirm("אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?")
-      ) {
-        socket.emit("endGame", gameCode);
-      }
-    } else {
-      window.location.reload();
-    }
-  });
-
   settingsBtn.addEventListener("click", () =>
     settingsModal.classList.remove("hidden")
   );
@@ -186,7 +223,6 @@ document.addEventListener("DOMContentLoaded", () => {
     gameCodeDisplay.textContent = gameCode;
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
-    settingsBtn.classList.remove("hidden");
 
     populateCategorySettings();
     updatePlayerList(data.players);
@@ -255,17 +291,18 @@ document.addEventListener("DOMContentLoaded", () => {
     allCategories.forEach((cat) => {
       const item = document.createElement("div");
       item.className = "category-item";
+      
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
-      checkbox.id = `cat-${cat}`;
-      checkbox.value = cat;
-      checkbox.checked = enabledCategories.includes(cat);
+      checkbox.id = `cat-${cat.id}`;
+      checkbox.value = cat.id;
+      checkbox.checked = enabledCategories.includes(cat.id);
 
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
-          enabledCategories.push(cat);
+          enabledCategories.push(cat.id);
         } else {
-          enabledCategories = enabledCategories.filter((c) => c !== cat);
+          enabledCategories = enabledCategories.filter((c) => c !== cat.id);
         }
         socket.emit("changeSettings", {
           gameCode,
@@ -274,11 +311,18 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const label = document.createElement("label");
-      label.htmlFor = `cat-${cat}`;
-      label.textContent = cat;
+      label.htmlFor = `cat-${cat.id}`;
+      label.textContent = cat.name;
 
       item.appendChild(checkbox);
       item.appendChild(label);
+      
+      item.addEventListener('click', (e) => {
+          if(e.target !== checkbox) {
+              checkbox.click();
+          }
+      });
+
       categoryListDiv.appendChild(item);
     });
   }
@@ -305,4 +349,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function startTimer(duration) { /* Full implementation exists */ }
   function showVotingScreen() { /* Full implementation exists */ }
   function updateScoreList(players) { /* Full implementation exists */ }
+
+  showScreen('home'); // Initial screen
 });

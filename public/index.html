@@ -11,10 +11,22 @@
     />
   </head>
   <body>
+    <header id="app-header">
+      <button id="header-back-btn" class="header-btn hidden">
+        <span class="material-icons">arrow_forward_ios</span>
+      </button>
+      <span id="header-title">מי המתחזה? 🤔</span>
+      <div id="header-actions">
+        <button id="header-create-btn" class="header-link-btn">צור משחק חדש</button>
+        <button id="header-settings-btn" class="header-btn hidden">
+          <span class="material-icons">settings</span>
+        </button>
+      </div>
+    </header>
+
     <div class="container">
       <!-- Ekrani fillestar -->
       <div id="home-screen">
-        <h1>מי המתחזה? 🤔</h1>
         <div class="join-game">
           <p>הזן את קוד המשחק בן 4 הספרות:</p>
           <div id="code-inputs" dir="ltr">
@@ -25,8 +37,6 @@
           </div>
           <button id="join-game-btn" disabled>הצטרף למשחק</button>
         </div>
-        <p class="or-divider">או</p>
-        <button id="go-to-create-btn">צור משחק חדש</button>
       </div>
 
       <!-- Ekrani i hyrjes së emrit -->
@@ -43,21 +53,11 @@
           />
           <span id="char-counter">0/10</span>
         </div>
-        <button id="submit-name-btn">המשך</button>
+        <button id="submit-name-btn" class="button-bottom">המשך</button>
       </div>
 
       <!-- Ekrani i lobit -->
       <div id="lobby-screen" class="hidden">
-        <div class="lobby-header">
-          <button id="back-to-home-btn">
-            <span class="material-icons">arrow_back_ios</span>
-            חזור למסך הראשי
-          </button>
-          <button id="settings-btn" class="hidden">
-            <span class="material-icons">settings</span>
-          </button>
-        </div>
-
         <div id="game-code-display" class="game-code hidden">----</div>
         <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
         <ul id="player-list"></ul>
@@ -104,26 +104,28 @@
     <div id="settings-modal" class="hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>הגדרות משחק</h2>
           <button id="close-settings-btn">
             <span class="material-icons">close</span>
           </button>
         </div>
         <div class="settings-grid">
-          <label>זמן לדיון:</label>
+          <label>זמן לדיון (בשניות):</label>
           <div>
-            <button class="timer-btn" data-time="30">30 שנ'</button>
-            <button class="timer-btn active" data-time="60">60 שנ'</button>
-            <button class="timer-btn" data-time="90">90 שנ'</button>
+            <button class="timer-btn" data-time="30">30</button>
+            <button class="timer-btn active" data-time="60">60</button>
+            <button class="timer-btn" data-time="90">90</button>
           </div>
-          <label>הצג קטגוריה למתחזה:</label>
-          <label class="switch">
-            <input type="checkbox" id="show-category-toggle" checked />
-            <span class="slider round"></span>
-          </label>
+        </div>
+        <hr class="settings-divider" />
+        <div class="settings-grid">
+            <label>הצג קטגוריה למתחזה:</label>
+            <label class="switch">
+                <input type="checkbox" id="show-category-toggle" checked />
+                <span class="slider round"></span>
+            </label>
         </div>
         <div id="category-settings">
-          <h3>קטגוריות מילים</h3>
+          <label class="settings-label">קטגוריות שמהן יילקחו מילים:</label>
           <div id="category-list"></div>
         </div>
       </div>

@@ -8,23 +8,71 @@
   --text-muted: #a0a0a0;
   --success-color: #4caf50;
   --error-color: #f44336;
+  --header-height: 60px;
 }
 
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: "Assistant", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
   margin: 0;
+  padding-top: var(--header-height);
   text-align: center;
   direction: rtl;
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE 10+ */
   user-select: none; /* Standard syntax */
+}
+
+#app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background-color: var(--card-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px;
+  border-bottom: 1px solid #444;
+  z-index: 10;
+}
+
+#header-title {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.header-btn, .header-link-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 5px;
+    margin: 0;
+    width: auto;
+    display: flex;
+    align-items: center;
+}
+.header-btn:hover, .header-link-btn:hover {
+    color: white;
+    background: transparent;
+    transform: none;
+}
+.header-link-btn {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+.header-link-btn:hover {
+    color: #8c84ff;
+}
+
+#header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .container {
@@ -43,6 +91,7 @@ h4 {
 }
 h1 {
   font-size: 2.5rem;
+  margin-bottom: 20px;
 }
 h2 {
   font-size: 2rem;
@@ -124,17 +173,12 @@ button:disabled {
 }
 
 /* Home Screen */
+#home-screen h1 { display: none; } /* Hide since it's in the header now */
 .join-game {
   background-color: var(--card-color);
   padding: 25px;
   border-radius: 12px;
   margin-bottom: 20px;
-}
-.or-divider {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin: 20px 0;
 }
 
 /* New Code Inputs */
@@ -161,23 +205,6 @@ button:disabled {
   border-color: var(--primary-color);
 }
 
-/* Create Game Button Style */
-#go-to-create-btn {
-  background-color: transparent;
-  border: none;
-  color: var(--primary-color);
-  text-decoration: underline;
-  font-weight: 600;
-  padding: 5px;
-  margin-top: 15px;
-  width: auto;
-}
-#go-to-create-btn:hover {
-  background-color: transparent;
-  transform: none;
-  color: #8c84ff; /* Lighter purple on hover */
-}
-
 /* Name Entry Screen */
 .name-input-container {
   position: relative;
@@ -197,34 +224,23 @@ button:disabled {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+#submit-name-btn {
+    width: 80%;
+    max-width: 300px;
+    margin: 20px auto;
+    display: block;
+}
+
+.button-bottom {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 300px;
+}
 
 /* Lobby Screen */
-.lobby-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-#back-to-home-btn,
-#settings-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 5px;
-  margin: 0;
-  width: auto;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-#back-to-home-btn:hover,
-#settings-btn:hover {
-  background: transparent;
-  color: white;
-  transform: none;
-}
-
 #game-code-display {
   background-color: #111;
   color: var(--primary-color);
@@ -303,11 +319,10 @@ button:disabled {
 }
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* Changed */
   align-items: center;
-  border-bottom: 1px solid #444;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
+  padding-bottom: 10px; /* Reduced padding */
+  margin-bottom: 10px; /* Reduced margin */
 }
 #close-settings-btn {
   background: transparent;
@@ -324,12 +339,26 @@ button:disabled {
   transform: none;
 }
 
-#category-settings h3 {
-  margin-top: 25px;
-  margin-bottom: 10px;
-  border-top: 1px solid #444;
-  padding-top: 20px;
+.settings-divider {
+    border: none;
+    border-top: 1px solid #444;
+    margin: 20px 0;
 }
+
+#category-settings {
+    border-top: 1px solid #444;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.settings-label {
+    display: block;
+    text-align: right;
+    color: var(--text-color);
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
 #category-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -343,10 +372,52 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer; /* Make item look clickable */
+  transition: background-color 0.2s;
 }
-.category-item input {
-  width: 18px;
-  height: 18px;
+.category-item:hover {
+    background-color: #333;
+}
+
+.category-item label {
+    cursor: pointer; /* Ensure label is also clickable */
+}
+
+.category-item input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #333;
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  width: 1.15em;
+  height: 1.15em;
+  border: 0.15em solid #555;
+  border-radius: 0.15em;
+  transform: translateY(-0.075em);
+  display: grid;
+  place-content: center;
+}
+
+.category-item input[type="checkbox"]::before {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em var(--primary-color);
+  background-color: CanvasText;
+  transform-origin: bottom left;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+.category-item input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+.category-item input[type="checkbox"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 /* Admin Controls */
