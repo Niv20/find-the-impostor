@@ -48,7 +48,8 @@ h2 {
   font-size: 2rem;
 }
 
-input[type="text"] {
+input[type="text"],
+input[type="tel"] {
   width: 80%;
   padding: 12px;
   margin: 8px 0;
@@ -60,7 +61,8 @@ input[type="text"] {
   text-align: center;
   transition: border-color 0.3s;
 }
-input[type="text"]:focus {
+input[type="text"]:focus,
+input[type="tel"]:focus {
   outline: none;
   border-color: var(--primary-color);
 }
@@ -77,6 +79,8 @@ button {
   transition: background-color 0.3s, transform 0.2s;
   font-weight: 600;
   margin-top: 10px;
+  width: 80%;
+  max-width: 300px;
 }
 button:hover {
   background-color: #5a52e0;
@@ -94,8 +98,11 @@ button:disabled {
 
 /* --- Avatar Styles --- */
 #avatar-preview-container {
-  margin-bottom: 20px;
+  margin: 20px 0;
   height: 100px; /* Reserve space for avatar */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .avatar-circle-preview {
   width: 100px;
@@ -114,8 +121,7 @@ button:disabled {
 }
 
 /* Home Screen */
-.join-game,
-.create-game {
+.join-game {
   background-color: var(--card-color);
   padding: 20px;
   border-radius: 12px;
@@ -125,6 +131,49 @@ button:disabled {
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--text-muted);
+  margin: 20px 0;
+}
+
+/* New Code Inputs */
+#code-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+.code-input {
+  width: 50px;
+  height: 60px;
+  font-size: 2rem;
+  text-align: center;
+  border-radius: 8px;
+  padding: 0;
+  border: 2px solid #444;
+  background-color: #1a1a1d;
+  color: var(--text-color);
+}
+.code-input:focus {
+  border-color: var(--primary-color);
+}
+
+/* Name Entry Screen */
+.name-input-container {
+  position: relative;
+  width: 80%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+#name-input {
+  width: 100%;
+  box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+#char-counter {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* Lobby & Score Lists */
@@ -163,6 +212,9 @@ button:disabled {
 }
 
 /* Lobby Screen Specific */
+#lobby-header {
+  margin-bottom: 20px;
+}
 #game-code-display {
   background-color: #111;
   color: var(--primary-color);
@@ -192,6 +244,7 @@ button:disabled {
   padding: 8px 12px;
   margin: 0 4px;
   background-color: #444;
+  width: auto;
 }
 .timer-btn.active {
   background-color: var(--primary-color);

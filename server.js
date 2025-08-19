@@ -53,14 +53,16 @@ function getAvailableAvatar(game) {
   const availableAvatars = AVATARS_CONFIG.filter(
     (a) => !usedAvatars.includes(a.file)
   );
-  if (availableAvatars.length === 0) return null; // Should not happen with player limit
+  if (availableAvatars.length === 0) {
+    // If all avatars are used, just pick a random one
+    return AVATARS_CONFIG[Math.floor(Math.random() * AVATARS_CONFIG.length)];
+  }
   return availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
 }
 
 io.on("connection", (socket) => {
   console.log(`🔌 New user connected: ${socket.id}`);
 
-  // Provide the list of avatars to the client on connection
   socket.emit(
     "avatarList",
     AVATARS_CONFIG.map((a) => a.file)
@@ -71,8 +73,7 @@ io.on("connection", (socket) => {
     const gameCode = generateGameCode();
     socket.join(gameCode);
 
-    const adminAvatar =
-      AVATARS_CONFIG[Math.floor(Math.random() * AVATARS_CONFIG.length)];
+    const adminAvatar = getAvailableAvatar({ players: [] });
 
     games[gameCode] = {
       adminId: socket.id,
@@ -96,9 +97,12 @@ io.on("connection", (socket) => {
     if (!game) {
       return socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
     }
-    // Enforce 6-player limit
     if (game.players.length >= 6) {
       return socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
+    }
+    const isNameTaken = game.players.some((p) => p.name === name);
+    if (isNameTaken) {
+      return socket.emit("errorMsg", "השם שבחרת כבר תפוס בחדר זה.");
     }
 
     const playerAvatar = getAvailableAvatar(game);
@@ -122,7 +126,6 @@ io.on("connection", (socket) => {
     io.to(gameCode).emit("updatePlayerList", game.players);
   });
 
-  // ... (שאר הקוד של השרת נשאר זהה לקודם)
   // --- Admin Controls ---
   socket.on("changeSettings", ({ gameCode, settings }) => {
     const game = games[gameCode];
@@ -134,8 +137,10 @@ io.on("connection", (socket) => {
 
   socket.on("startGame", (gameCode) => {
     const game = games[gameCode];
-    if (!game || game.adminId !== socket.id || game.players.length < 3) return;
-
+    if (!game || game.adminId !== socket.id) return;
+    if (game.players.length < 3) {
+      return socket.emit("errorMsg", "צריך לפחות 3 שחקנים כדי להתחיל.");
+    }
     startNewRound(gameCode);
   });
 
@@ -210,7 +215,7 @@ io.on("connection", (socket) => {
     });
 
     let mostVotedId = null;
-    let maxVotes = -1; // Start at -1 to handle single player case
+    let maxVotes = -1;
     for (const playerId in voteCounts) {
       if (voteCounts[playerId] > maxVotes) {
         maxVotes = voteCounts[playerId];
@@ -275,14 +280,23 @@ io.on("connection", (socket) => {
     game.players.splice(playerIndex, 1);
     sock.leave(gameCode);
 
-    if (leavingPlayer.isAdmin && game.players.length > 0) {
-      // Admin left, end game
-      io.to(gameCode).emit("gameEnded", "המנהל עזב, המשחק הסתיים.");
+    if (game.players.length === 0) {
+      console.log(`[Game ${gameCode}] Game empty, deleting.`);
       delete games[gameCode];
-    } else if (game.players.length === 0) {
-      delete games[gameCode]; // Delete empty game
+    } else if (leavingPlayer.isAdmin) {
+      io.to(gameCode).emit("gameEnded", "המנהל עזב, המשחק הסתיים.");
+      console.log(`[Game ${gameCode}] Admin left, ending game.`);
+      delete games[gameCode];
     } else {
       if (
+        game.gameState === "in-game" &&
+        game.currentRound &&
+        !game.currentRound.revealed &&
+        game.players.length < 2
+      ) {
+        io.to(gameCode).emit("gameEnded", "אין מספיק שחקנים כדי להמשיך.");
+        delete games[gameCode];
+      } else if (
         game.gameState === "in-game" &&
         game.currentRound &&
         game.currentRound.impostorId === sock.id

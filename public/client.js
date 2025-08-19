@@ -6,13 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let myName = "";
   let gameCode = "";
   let isAdmin = false;
+  let isCreatingGame = false;
   let roundTimerInterval;
   let availableAvatars = [];
-  let previewAvatarElement; // To store the preview avatar element
 
   // --- Screen Elements ---
   const screens = {
     home: document.getElementById("home-screen"),
+    nameEntry: document.getElementById("name-entry-screen"),
     lobby: document.getElementById("lobby-screen"),
     game: document.getElementById("game-screen"),
     voting: document.getElementById("voting-screen"),
@@ -20,22 +21,33 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // --- UI Elements ---
-  const nameInputs = document.querySelectorAll(".name-input");
+  // Home
+  const codeInputs = document.querySelectorAll(".code-input");
   const joinGameBtn = document.getElementById("join-game-btn");
-  const createGameBtn = document.getElementById("create-game-btn");
-  const exitBtn = document.getElementById("exit-btn");
+  const goToCreateBtn = document.getElementById("go-to-create-btn");
+
+  // Name Entry
+  const nameEntryTitle = document.getElementById("name-entry-title");
   const avatarPreviewContainer = document.getElementById(
     "avatar-preview-container"
   );
+  const nameInput = document.getElementById("name-input");
+  const charCounter = document.getElementById("char-counter");
+  const submitNameBtn = document.getElementById("submit-name-btn");
 
   // Lobby
+  const lobbyTitle = document.getElementById("lobby-title");
+  const lobbySubtitle = document.getElementById("lobby-subtitle");
   const gameCodeDisplay = document.getElementById("game-code-display");
   const playerCountSpan = document.getElementById("player-count");
   const playerListUl = document.getElementById("player-list");
   const adminControls = document.getElementById("admin-controls");
   const startGameBtn = document.getElementById("start-game-btn");
 
-  // ... (שאר הגדרות האלמנטים נשארות זהות)
+  // General
+  const exitBtn = document.getElementById("exit-btn");
+
+  // Game
   const timerDisplay = document.getElementById("timer-display");
   const wordDisplayContainer = document.getElementById(
     "word-display-container"
@@ -47,9 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "impostor-category-info"
   );
   const toggleWordBtn = document.getElementById("toggle-word-btn");
-
   const voteOptionsDiv = document.getElementById("vote-options");
-
   const resultScreen = document.getElementById("result-screen");
   const resultTitle = document.getElementById("result-title");
   const resultInfo = document.getElementById("result-info");
@@ -64,39 +74,78 @@ document.addEventListener("DOMContentLoaded", () => {
     exitBtn.classList.toggle("hidden", screenName === "home");
   }
 
+  function showNameEntryScreen() {
+    showRandomAvatarPreview();
+    nameInput.value = "";
+    charCounter.textContent = "0/10";
+    if (isCreatingGame) {
+      nameEntryTitle.textContent = "צור משחק חדש";
+    } else {
+      nameEntryTitle.textContent = "הצטרף למשחק";
+    }
+    showScreen("nameEntry");
+  }
+
   // --- Event Listeners ---
-  createGameBtn.addEventListener("click", () => {
-    const name = document.getElementById("name-input-create").value.trim();
+
+  // Home Screen Logic
+  codeInputs.forEach((input, index) => {
+    input.addEventListener("input", () => {
+      if (input.value.length === 1 && index < codeInputs.length - 1) {
+        codeInputs[index + 1].focus();
+      }
+      validateCodeInputs();
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !input.value && index > 0) {
+        codeInputs[index - 1].focus();
+      }
+    });
+  });
+
+  goToCreateBtn.addEventListener("click", () => {
+    isCreatingGame = true;
+    showNameEntryScreen();
+  });
+
+  joinGameBtn.addEventListener("click", () => {
+    const code = Array.from(codeInputs)
+      .map((input) => input.value)
+      .join("");
+    if (code.length === 4) {
+      gameCode = code;
+      isCreatingGame = false;
+      showNameEntryScreen();
+    } 
+  });
+
+  // Name Entry Screen Logic
+  nameInput.addEventListener("input", () => {
+    const len = nameInput.value.length;
+    charCounter.textContent = `${len}/10`;
+    // Hebrew name validation
+    const hebrewRegex = /^[א-ת\s]*$/;
+    if (!hebrewRegex.test(nameInput.value)) {
+      nameInput.value = nameInput.value.replace(/[^א-ת\s]/g, "");
+    }
+  });
+
+  submitNameBtn.addEventListener("click", () => {
+    const name = nameInput.value.trim();
     if (name) {
       myName = name;
-      socket.emit("createGame", { name });
+      if (isCreatingGame) {
+        socket.emit("createGame", { name });
+      } else {
+        socket.emit("joinGame", { gameCode, name });
+      }
     } else {
       alert("אנא הזן את שמך.");
     }
   });
 
-  joinGameBtn.addEventListener("click", () => {
-    const code = document.getElementById("game-code-input").value.trim();
-    const name = document.getElementById("name-input-join").value.trim();
-    if (code && name) {
-      gameCode = code;
-      myName = name;
-      socket.emit("joinGame", { gameCode: code, name });
-    } else {
-      alert("אנא הזן קוד משחק ושם.");
-    }
-  });
-
-  // Hebrew name validation
-  nameInputs.forEach((input) => {
-    input.addEventListener("input", () => {
-      const hebrewRegex = /^[א-ת\s]*$/;
-      if (!hebrewRegex.test(input.value)) {
-        input.value = input.value.replace(/[^א-ת\s]/g, "");
-      }
-    });
-  });
-
+  // General
   exitBtn.addEventListener("click", () => {
     if (isAdmin) {
       if (
@@ -110,15 +159,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Lobby Controls
   startGameBtn.addEventListener("click", () => {
     socket.emit("startGame", gameCode);
-  });
-
-  toggleWordBtn.addEventListener("click", () => {
-    const isHidden = wordDisplay.style.visibility === "hidden";
-    wordDisplay.style.visibility = isHidden ? "visible" : "hidden";
-    categoryDisplay.style.visibility = isHidden ? "visible" : "hidden";
-    toggleWordBtn.textContent = isHidden ? "הסתר מילה" : "הצג מילה";
   });
 
   document.querySelectorAll(".timer-btn").forEach((btn) => {
@@ -131,6 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
+
   document
     .getElementById("show-category-toggle")
     .addEventListener("change", (e) => {
@@ -140,6 +184,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+  // Game Screen
+  toggleWordBtn.addEventListener("click", () => {
+    const isHidden = wordDisplay.style.visibility === "hidden";
+    wordDisplay.style.visibility = isHidden ? "visible" : "hidden";
+    categoryDisplay.style.visibility = isHidden ? "visible" : "hidden";
+    toggleWordBtn.textContent = isHidden ? "הסתר מילה" : "הצג מילה";
+  });
+
   // --- Socket Listeners ---
   socket.on("connect", () => {
     myId = socket.id;
@@ -147,24 +199,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("avatarList", (avatars) => {
     availableAvatars = avatars;
-    showRandomAvatarPreview();
   });
 
   socket.on("errorMsg", (message) => {
     alert(message);
+    showScreen("home"); // Go back to home on error
   });
 
   socket.on("gameCreated", (data) => {
     gameCode = data.gameCode;
     isAdmin = true;
     gameCodeDisplay.textContent = gameCode;
+    gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
+    lobbyTitle.textContent = "המשחק נוצר!";
+    lobbySubtitle.textContent = "שתף את הקוד עם חברים כדי שיוכלו להצטרף.";
     updatePlayerList(data.players);
     showScreen("lobby");
   });
 
   socket.on("joinedSuccess", (data) => {
-    gameCodeDisplay.textContent = gameCode;
+    isAdmin = false;
+    gameCodeDisplay.classList.add("hidden");
+    adminControls.classList.add("hidden");
+    lobbyTitle.textContent = "הצטרפת למשחק!";
+    lobbySubtitle.textContent = "אנא המתן למנהל שיתחיל את המשחק...";
     updatePlayerList(data.players);
     showScreen("lobby");
   });
@@ -220,11 +279,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- Helper Functions ---
+  function validateCodeInputs() {
+    const code = Array.from(codeInputs)
+      .map((input) => input.value)
+      .join("");
+    joinGameBtn.disabled = code.length !== 4;
+  }
+
   function showRandomAvatarPreview() {
     if (availableAvatars.length > 0) {
       const randomAvatarFile =
         availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
       avatarPreviewContainer.innerHTML = `<img src="/avatars/${randomAvatarFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
+    } else {
+      avatarPreviewContainer.innerHTML = ""; // Clear if no avatars
     }
   }
 

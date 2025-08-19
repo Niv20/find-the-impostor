@@ -10,44 +10,48 @@
     <div class="container">
       <button id="exit-btn" class="exit-btn hidden">&times;</button>
 
+      <!-- Ekrani fillestar -->
       <div id="home-screen">
         <h1>מי המתחזה? 🤔</h1>
-
-        <div id="avatar-preview-container"></div>
-
         <div class="join-game">
-          <input
-            type="text"
-            id="game-code-input"
-            placeholder="הכנס קוד משחק"
-            maxlength="4"
-          />
-          <input
-            type="text"
-            id="name-input-join"
-            class="name-input"
-            placeholder="השם שלך"
-            maxlength="10"
-          />
-          <button id="join-game-btn">הצטרף למשחק</button>
+          <h2>הצטרף למשחק</h2>
+          <p>הזן את קוד המשחק בן 4 הספרות:</p>
+          <div id="code-inputs" dir="ltr">
+            <input type="tel" class="code-input" maxlength="1" />
+            <input type="tel" class="code-input" maxlength="1" />
+            <input type="tel" class="code-input" maxlength="1" />
+            <input type="tel" class="code-input" maxlength="1" />
+          </div>
+          <button id="join-game-btn" disabled>הצטרף</button>
         </div>
         <p class="or-divider">או</p>
-        <div class="create-game">
+        <button id="go-to-create-btn">צור משחק חדש</button>
+      </div>
+
+      <!-- Ekrani i hyrjes së emrit -->
+      <div id="name-entry-screen" class="hidden">
+        <h2 id="name-entry-title">הכנס את שמך</h2>
+        <div id="avatar-preview-container"></div>
+        <div class="name-input-container">
           <input
             type="text"
-            id="name-input-create"
+            id="name-input"
             class="name-input"
             placeholder="השם שלך"
             maxlength="10"
           />
-          <button id="create-game-btn">צור משחק חדש</button>
+          <span id="char-counter">0/10</span>
         </div>
+        <button id="submit-name-btn">המשך</button>
       </div>
 
+      <!-- Ekrani i lobit -->
       <div id="lobby-screen" class="hidden">
-        <h2>ברוכים הבאים!</h2>
-        <p>שתף את הקוד עם חברים:</p>
-        <div id="game-code-display" class="game-code">----</div>
+        <div id="lobby-header">
+          <h2 id="lobby-title">ברוכים הבאים!</h2>
+          <p id="lobby-subtitle">ממתין למנהל שיתחיל את המשחק...</p>
+        </div>
+        <div id="game-code-display" class="game-code hidden">----</div>
         <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
         <ul id="player-list"></ul>
         <div id="admin-controls" class="hidden">
@@ -69,6 +73,7 @@
         </div>
       </div>
 
+      <!-- Ekrani i lojës -->
       <div id="game-screen" class="hidden">
         <div id="timer-display">--:--</div>
         <div id="word-display-container">
@@ -82,12 +87,14 @@
         </div>
       </div>
 
+      <!-- Ekrani i votimit -->
       <div id="voting-screen" class="hidden">
         <h2>הצבעה!</h2>
         <p>מי לדעתך המתחזה?</p>
         <div id="vote-options"></div>
       </div>
 
+      <!-- Ekrani i rezultatit -->
       <div id="result-screen" class="hidden">
         <h2 id="result-title">המתחזה נחשף!</h2>
         <p id="result-info"></p>
