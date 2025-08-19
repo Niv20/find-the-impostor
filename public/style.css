@@ -430,9 +430,6 @@ button:disabled {
   cursor: pointer; /* Make item look clickable */
   transition: background-color 0.2s;
 }
-.category-item:hover {
-    background-color: #333;
-}
 
 .category-item label {
     cursor: pointer; /* Ensure label is also clickable */
@@ -496,15 +493,8 @@ button:disabled {
   width: auto;
   transition: background-color 0.3s, transform 0.2s; /* Add transition */
 }
-.timer-btn:hover {
-  background-color: #555;
-  transform: translateY(-2px);
-}
 .timer-btn.active {
   background-color: var(--primary-color);
-}
-.timer-btn.active:hover {
-  background-color: #5a52e0;
 }
 
 /* Toggle Switch */
