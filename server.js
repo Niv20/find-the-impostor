@@ -134,7 +134,7 @@ io.on("connection", (socket) => {
 
   socket.on("startGame", (gameCode) => {
     const game = games[gameCode];
-    if (!game || game.adminId !== socket.id || game.players.length < 2) return;
+    if (!game || game.adminId !== socket.id || game.players.length < 3) return;
 
     startNewRound(gameCode);
   });
