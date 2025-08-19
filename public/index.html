@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>מי המתחזה?</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <button id="exit-btn" class="exit-btn hidden">&times;</button>
+
+      <div id="home-screen">
+        <h1>מי המתחזה? 🤔</h1>
+
+        <div id="avatar-preview-container"></div>
+
+        <div class="join-game">
+          <input
+            type="text"
+            id="game-code-input"
+            placeholder="הכנס קוד משחק"
+            maxlength="4"
+          />
+          <input
+            type="text"
+            id="name-input-join"
+            class="name-input"
+            placeholder="השם שלך"
+            maxlength="10"
+          />
+          <button id="join-game-btn">הצטרף למשחק</button>
+        </div>
+        <p class="or-divider">או</p>
+        <div class="create-game">
+          <input
+            type="text"
+            id="name-input-create"
+            class="name-input"
+            placeholder="השם שלך"
+            maxlength="10"
+          />
+          <button id="create-game-btn">צור משחק חדש</button>
+        </div>
+      </div>
+
+      <div id="lobby-screen" class="hidden">
+        <h2>ברוכים הבאים!</h2>
+        <p>שתף את הקוד עם חברים:</p>
+        <div id="game-code-display" class="game-code">----</div>
+        <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
+        <ul id="player-list"></ul>
+        <div id="admin-controls" class="hidden">
+          <h4>הגדרות משחק</h4>
+          <div class="settings-grid">
+            <label>זמן לדיון:</label>
+            <div>
+              <button class="timer-btn" data-time="30">30 שנ'</button>
+              <button class="timer-btn active" data-time="60">60 שנ'</button>
+              <button class="timer-btn" data-time="90">90 שנ'</button>
+            </div>
+            <label>הצג קטגוריה למתחזה:</label>
+            <label class="switch">
+              <input type="checkbox" id="show-category-toggle" checked />
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <button id="start-game-btn" disabled>התחל משחק</button>
+        </div>
+      </div>
+
+      <div id="game-screen" class="hidden">
+        <div id="timer-display">--:--</div>
+        <div id="word-display-container">
+          <h1 id="word-display">המילה שלך היא...</h1>
+          <p id="category-display"></p>
+          <button id="toggle-word-btn">הסתר מילה</button>
+        </div>
+        <div id="impostor-display" class="hidden">
+          <h1>אתה המתחזה!</h1>
+          <p id="impostor-category-info"></p>
+        </div>
+      </div>
+
+      <div id="voting-screen" class="hidden">
+        <h2>הצבעה!</h2>
+        <p>מי לדעתך המתחזה?</p>
+        <div id="vote-options"></div>
+      </div>
+
+      <div id="result-screen" class="hidden">
+        <h2 id="result-title">המתחזה נחשף!</h2>
+        <p id="result-info"></p>
+        <h3>טבלת ניקוד</h3>
+        <ul id="score-list"></ul>
+        <p class="next-round-msg">הסיבוב הבא יתחיל בעוד מספר שניות...</p>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+  </body>
+</html>
