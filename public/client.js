@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let isCreatingGame = false;
   let roundTimerInterval;
   let availableAvatars = [];
+  let chosenAvatarFile = null;
 
   // --- Screen Elements ---
   const screens = {
@@ -75,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showNameEntryScreen() {
-    showRandomAvatarPreview();
+    chosenAvatarFile = showRandomAvatarPreview();
     nameInput.value = "";
     charCounter.textContent = "0/10";
     if (isCreatingGame) {
@@ -141,9 +142,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (name) {
       myName = name;
       if (isCreatingGame) {
-        socket.emit("createGame", { name });
+        socket.emit("createGame", { name, requestedAvatarFile: chosenAvatarFile });
       } else {
-        socket.emit("joinGame", { gameCode, name });
+        socket.emit("joinGame", { gameCode, name, requestedAvatarFile: chosenAvatarFile });
       }
     } else {
       alert("אנא הזן את שמך.");
@@ -304,8 +305,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const randomAvatarFile =
         availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
       avatarPreviewContainer.innerHTML = `<img src="/avatars/${randomAvatarFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
+      return randomAvatarFile;
     } else {
       avatarPreviewContainer.innerHTML = ""; // Clear if no avatars
+      return null;
     }
   }
 
