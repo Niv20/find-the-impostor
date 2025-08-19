@@ -33,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const avatarPreviewContainer = document.getElementById(
     "avatar-preview-container"
   );
-  const nameEntryTitle = document.getElementById("name-entry-title");
 
   // Header
   const header = document.getElementById('app-header');
@@ -94,9 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
     chosenAvatarFile = showRandomAvatarPreview();
     nameInput.value = "";
     charCounter.textContent = "0/10";
-    nameEntryTitle.textContent = isCreatingGame
-      ? "צור משחק חדש"
-      : "הצטרף למשחק";
     showScreen("nameEntry");
     nameInput.focus();
   }

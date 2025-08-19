@@ -241,9 +241,6 @@ button:disabled {
 }
 
 /* Name Entry Screen */
-#name-entry-screen {
-    justify-content: space-between; /* Push content up, button down */
-}
 .name-entry-content {
     width: 100%;
 }
