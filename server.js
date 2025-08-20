@@ -347,3 +347,35 @@ io.on("connection", (socket) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server is live and running on port ${PORT}`);
 });
+
+// הצגת כותרת הצבעה
+const votingScreen = document.getElementById('voting-screen');
+const mainTitle = votingScreen.querySelector('h2');
+if (mainTitle) mainTitle.classList.remove('hidden');
+
+// יצירת overlay להמתנה (אם לא קיים)
+let waitingOverlay = document.getElementById('waiting-vote-overlay');
+if (!waitingOverlay) {
+    waitingOverlay = document.createElement('div');
+    waitingOverlay.id = 'waiting-vote-overlay';
+    waitingOverlay.className = 'hidden';
+    waitingOverlay.style.position = 'fixed';
+    waitingOverlay.style.top = '0';
+    waitingOverlay.style.left = '0';
+    waitingOverlay.style.width = '100vw';
+    waitingOverlay.style.height = '100vh';
+    waitingOverlay.style.background = 'rgba(0,0,0,0.85)';
+    waitingOverlay.style.zIndex = '999';
+    waitingOverlay.style.display = 'flex';
+    waitingOverlay.style.flexDirection = 'column';
+    waitingOverlay.style.justifyContent = 'center';
+    waitingOverlay.style.alignItems = 'center';
+    waitingOverlay.innerHTML = '<h2 style=\"color:white;\">הצבעתך התקבלה</h2><p style=\"color:#eee;font-size:1.2rem;\">אנא המתן לשאר המשתתפים...</p>';
+    votingScreen.appendChild(waitingOverlay);
+}
+waitingOverlay.classList.add('hidden');
+
+voteOptionsDiv.classList.add('voting-done');
+document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
+waitingOverlay.classList.remove('hidden');
+socket.emit("playerVote", { gameCode, votedForId: player.id });
