@@ -209,7 +209,10 @@ document.addEventListener("DOMContentLoaded", () => {
   settingsModal.addEventListener("click", (e) => {
     if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
-  startGameBtn.addEventListener("click", () => socket.emit("startGame", gameCode));
+  startGameBtn.addEventListener("click", () => {
+    console.log('Start game button clicked, emitting startGame with code:', gameCode);
+    socket.emit("startGame", gameCode)
+  });
   nextRoundBtn.addEventListener("click", () => socket.emit("startGame", gameCode));
   endGameBtnFromResult.addEventListener("click", () => {
       if (confirm("האם אתה בטוח שברצונך לסיים את המשחק עבור כולם?")) {
@@ -362,10 +365,27 @@ document.addEventListener("DOMContentLoaded", () => {
     players.forEach((player) => {
       const li = document.createElement("li");
       li.dataset.id = player.id;
-      const avatarImg = `<img src="/avatars/${player.avatar.file}" class="avatar-circle-small">`;
-      const nameSpan = `<span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>`;
-      li.innerHTML = `${avatarImg}${nameSpan}`;
-      if (player.isAdmin) li.classList.add("admin");
+
+      const playerInfoDiv = document.createElement('div');
+      playerInfoDiv.innerHTML = `<img src="/avatars/${player.avatar.file}" class="avatar-circle-small">`;
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'player-name';
+      nameSpan.style.color = player.avatar.color;
+      nameSpan.textContent = player.name;
+      playerInfoDiv.appendChild(nameSpan);
+
+      li.appendChild(playerInfoDiv);
+
+      if (player.isAdmin) {
+        const adminSpan = document.createElement('span');
+        adminSpan.className = 'admin-tag';
+        adminSpan.textContent = ' (מנהל)';
+        adminSpan.style.color = player.avatar.color;
+        adminSpan.style.opacity = '0.8';
+        li.appendChild(adminSpan);
+      }
+
       playerListUl.appendChild(li);
     });
     playerCountSpan.textContent = players.length;
@@ -461,7 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const li = document.createElement("li");
         li.dataset.id = player.id;
 
-        if (maxScore > 0 && player.score === maxScore) {
+        if (withAnimation && maxScore > 0 && player.score === maxScore) {
             li.classList.add("top-player");
             li.style.setProperty('--player-highlight-color', hexToRgba(player.avatar.color, 0.3));
         }

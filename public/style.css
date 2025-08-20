@@ -63,7 +63,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    order: 2; /* Logo container on the right for RTL */
+    order: 1; /* Logo container on the left for RTL */
 }
 
 #header-logo {
@@ -79,7 +79,7 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
-    order: 1; /* Actions on the left for RTL */
+    order: 2; /* Actions on the right for RTL */
 }
 
 .header-btn, .header-link-btn {
@@ -336,6 +336,10 @@ button:disabled {
   align-items: center;
 }
 
+#player-list li {
+    justify-content: space-between;
+}
+
 #score-list li {
     transition: transform 0.6s ease-in-out, background-color 0.6s ease-in-out;
 }
@@ -384,12 +388,6 @@ button:disabled {
 .player-name {
   font-weight: 600;
 }
-#player-list li.admin::after {
-  content: " (מנהל)";
-  color: var(--primary-color);
-  font-weight: 600;
-  margin-right: auto;
-}
 
 /* Settings Modal */
 #settings-modal {
@@ -419,20 +417,6 @@ button:disabled {
   align-items: center;
   padding-bottom: 10px; /* Reduced padding */
   margin-bottom: 10px; /* Reduced margin */
-}
-#close-settings-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-  width: auto;
-}
-#close-settings-btn:hover {
-  color: white;
-  background: transparent;
-  transform: none;
 }
 
 .settings-divider {
@@ -694,7 +678,7 @@ input:checked + .slider:before {
     height: 60px;
     font-size: 2.2rem;
   }
-  #header-title {
+  #header-title-text {
       font-size: 1rem;
   }
   .header-btn span:not(.material-icons) {
