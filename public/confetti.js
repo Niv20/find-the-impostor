@@ -1,6 +1,8 @@
 async function createConfetti() {
-  // Load the tsParticles library
-  await loadTsParticles();
+  if (typeof tsParticles === "undefined") {
+    console.error("tsParticles library not loaded");
+    return;
+  }
 
   // Create container
   const container = document.createElement("div");
@@ -124,17 +126,4 @@ async function createConfetti() {
     tsParticles.destroy();
     container.remove();
   }, 5000);
-}
-
-// פונקציה לטעינת הספרייה
-async function loadTsParticles() {
-  if (typeof tsParticles === "undefined") {
-    const script = document.createElement("script");
-    script.src =
-      "https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js";
-    document.head.appendChild(script);
-
-    // המתנה לטעינת הספרייה
-    await new Promise((resolve) => (script.onload = resolve));
-  }
 }

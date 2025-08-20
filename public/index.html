@@ -73,7 +73,12 @@
       <div id="lobby-screen" class="hidden screen-container">
         <div class="lobby-content">
           <p class="share-code-text">שתף עם חברים את הקוד:</p>
-          <div id="game-code-display" class="game-code hidden">----</div>
+          <div id="game-code-display" class="game-code hidden" dir="ltr">
+            <div class="code-digit"></div>
+            <div class="code-digit"></div>
+            <div class="code-digit"></div>
+            <div class="code-digit"></div>
+          </div>
           <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
           <ul id="player-list"></ul>
         </div>
@@ -175,6 +180,7 @@
         </div>
       </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
     <script src="/confetti.js"></script>

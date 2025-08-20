@@ -384,7 +384,12 @@ document.addEventListener("DOMContentLoaded", () => {
     isAdmin = true;
     allCategories = data.allCategories;
     enabledCategories = data.settings.enabledCategories;
-    gameCodeDisplay.textContent = gameCode;
+
+    // עדכון הצגת הקוד בריבועים
+    const codeDigits = gameCodeDisplay.querySelectorAll(".code-digit");
+    for (let i = 0; i < gameCode.length; i++) {
+      codeDigits[i].textContent = gameCode[i];
+    }
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
     if (shareCodeText) {
