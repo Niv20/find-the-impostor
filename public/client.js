@@ -143,13 +143,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const message = isAdmin
       ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
       : "האם אתה בטוח שברצונך לצאת מהמשחק?";
-    if (confirm(message)) {
-      if (isAdmin) {
-        socket.emit("endGame", gameCode);
-      } else {
-        window.location.reload();
-      }
-    }
+    showModalMessage(message, {
+      okText: isAdmin ? "סיים משחק" : "צא",
+      cancelText: "ביטול",
+      onOk: () => {
+        if (isAdmin) {
+          socket.emit("endGame", gameCode);
+        } else {
+          window.location.reload();
+        }
+      },
+      onCancel: () => {},
+    });
   });
 
   // Home Screen
@@ -206,7 +211,10 @@ document.addEventListener("DOMContentLoaded", () => {
         socket.emit("joinGame", payload);
       }
     } else {
-      alert("אנא הזן את שמך.");
+      showModalMessage("אנא הזן את שמך.", {
+        okText: "אישור",
+        onOk: () => nameInput.focus(),
+      });
     }
   });
 
@@ -228,9 +236,12 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.emit("startGame", gameCode)
   );
   endGameBtnFromResult.addEventListener("click", () => {
-    if (confirm("האם אתה בטוח שברצונך לסיים את המשחק עבור כולם?")) {
-      socket.emit("endGame", gameCode);
-    }
+    showModalMessage("האם אתה בטוח שברצונך לסיים את המשחק עבור כולם?", {
+      okText: "סיים משחק",
+      cancelText: "ביטול",
+      onOk: () => socket.emit("endGame", gameCode),
+      onCancel: () => {},
+    });
   });
   playAgainBtn.addEventListener("click", () => window.location.reload());
   toggleWordBtn.addEventListener("click", () => {
@@ -244,19 +255,26 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("avatarList", (avatars) => (availableAvatars = avatars));
 
   socket.on("errorMsg", (message) => {
-    alert(message);
-    codeInputs.forEach((input) => (input.value = ""));
-    joinGameBtn.disabled = true;
-    showScreen("home");
+    showModalMessage(message, {
+      okText: "אישור",
+      onOk: () => {
+        codeInputs.forEach((input) => (input.value = ""));
+        joinGameBtn.disabled = true;
+        showScreen("home");
+      },
+    });
   });
 
   // טיפול בשגיאת שם כפול - השארת המשתמש במסך הזנת השם
   socket.on("nameTakenError", (message) => {
-    alert(message);
-    nameInput.value = "";
-    nameInput.focus();
-    // השאר במסך הזנת השם
-    showScreen("nameEntry");
+    showModalMessage(message, {
+      okText: "אישור",
+      onOk: () => {
+        nameInput.value = "";
+        nameInput.focus();
+        showScreen("nameEntry");
+      },
+    });
   });
 
   socket.on("gameCodeValid", () => {
@@ -652,4 +670,32 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   showScreen("home"); // Initial screen
+
+  // --- Modal Message ---
+  function showModalMessage(message, options = {}) {
+    // options: { okText, cancelText, onOk, onCancel }
+    const overlay = document.getElementById("modal-overlay");
+    const box = document.getElementById("modal-message-box");
+    const textDiv = document.getElementById("modal-message-text");
+    const okBtn = document.getElementById("modal-ok-btn");
+    const cancelBtn = document.getElementById("modal-cancel-btn");
+    textDiv.textContent = message;
+    okBtn.textContent = options.okText || "אישור";
+    cancelBtn.textContent = options.cancelText || "ביטול";
+    cancelBtn.classList.toggle("hidden", !options.onCancel);
+    overlay.classList.remove("hidden");
+    function closeModal() {
+      overlay.classList.add("hidden");
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+    }
+    okBtn.onclick = () => {
+      closeModal();
+      if (options.onOk) options.onOk();
+    };
+    cancelBtn.onclick = () => {
+      closeModal();
+      if (options.onCancel) options.onCancel();
+    };
+  }
 });

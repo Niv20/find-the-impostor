@@ -1,3 +1,63 @@
+/* --- Modal Message Styles --- */
+#modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#modal-message-box {
+  background: var(--card-color);
+  border-radius: 18px;
+  box-shadow: 0 4px 32px 0 rgba(94, 129, 172, 0.22);
+  padding: 32px 24px 24px 24px;
+  min-width: 260px;
+  max-width: 90vw;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+#modal-message-text {
+  color: var(--text-color);
+  font-size: 1.18rem;
+  margin-bottom: 10px;
+  word-break: break-word;
+}
+#modal-message-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+#modal-ok-btn,
+#modal-cancel-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 10px;
+  font-size: 1.08rem;
+  font-family: "Assistant", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px 0 rgba(94, 129, 172, 0.1);
+  transition: background 0.2s;
+}
+#modal-ok-btn:hover,
+#modal-cancel-btn:hover {
+  background-color: #8fbcff;
+}
+#modal-cancel-btn {
+  background-color: #555;
+}
+#modal-cancel-btn:hover {
+  background-color: #888;
+}
 @import url("https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap");
 
 :root {

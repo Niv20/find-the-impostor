@@ -12,20 +12,22 @@
   </head>
   <body>
     <header id="app-header">
-        <div id="header-logo-container">
-            <img src="/logo.png" alt="Logo" id="header-logo" />
-            <span id="header-title-text">המתחזה</span>
-        </div>
-        <div id="header-actions">
-            <button id="exit-game-btn" class="header-btn hidden">
-                <span class="material-icons">logout</span>
-                <span>צא מהמשחק</span>
-            </button>
-            <button id="header-create-btn" class="header-link-btn">צור משחק חדש</button>
-            <button id="header-settings-btn" class="header-btn hidden">
-                <span class="material-icons">settings</span>
-            </button>
-        </div>
+      <div id="header-logo-container">
+        <img src="/logo.png" alt="Logo" id="header-logo" />
+        <span id="header-title-text">המתחזה</span>
+      </div>
+      <div id="header-actions">
+        <button id="exit-game-btn" class="header-btn hidden">
+          <span class="material-icons">logout</span>
+          <span>צא מהמשחק</span>
+        </button>
+        <button id="header-create-btn" class="header-link-btn">
+          צור משחק חדש
+        </button>
+        <button id="header-settings-btn" class="header-btn hidden">
+          <span class="material-icons">settings</span>
+        </button>
+      </div>
     </header>
 
     <div class="container">
@@ -46,17 +48,17 @@
       <!-- Name Entry Screen -->
       <div id="name-entry-screen" class="hidden screen-container">
         <div class="name-entry-content">
-            <div id="avatar-preview-container"></div>
-            <div class="name-input-container">
-              <input
-                type="text"
-                id="name-input"
-                class="name-input"
-                placeholder="השם שלך"
-                maxlength="10"
-              />
-              <span id="char-counter">0/10</span>
-            </div>
+          <div id="avatar-preview-container"></div>
+          <div class="name-input-container">
+            <input
+              type="text"
+              id="name-input"
+              class="name-input"
+              placeholder="השם שלך"
+              maxlength="10"
+            />
+            <span id="char-counter">0/10</span>
+          </div>
         </div>
         <button id="submit-name-btn">המשך</button>
       </div>
@@ -64,10 +66,10 @@
       <!-- Lobby Screen -->
       <div id="lobby-screen" class="hidden screen-container">
         <div class="lobby-content">
-            <p class="share-code-text">שתף עם חברים את הקוד:</p>
-            <div id="game-code-display" class="game-code hidden">----</div>
-            <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
-            <ul id="player-list"></ul>
+          <p class="share-code-text">שתף עם חברים את הקוד:</p>
+          <div id="game-code-display" class="game-code hidden">----</div>
+          <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
+          <ul id="player-list"></ul>
         </div>
         <div id="admin-controls">
           <p id="start-game-hint" class="hidden">
@@ -105,11 +107,13 @@
         <h3>טבלת ניקוד</h3>
         <ul id="score-list"></ul>
         <div id="result-controls">
-            <div id="admin-result-controls" class="hidden">
-                <button id="next-round-btn">הסיבוב הבא</button>
-                <button id="end-game-btn-from-result" class="link-style-btn">סיים משחק</button>
-            </div>
-            <p id="waiting-for-admin-msg" class="hidden">ממתין למנהל...</p>
+          <div id="admin-result-controls" class="hidden">
+            <button id="next-round-btn">הסיבוב הבא</button>
+            <button id="end-game-btn-from-result" class="link-style-btn">
+              סיים משחק
+            </button>
+          </div>
+          <p id="waiting-for-admin-msg" class="hidden">ממתין למנהל...</p>
         </div>
       </div>
 
@@ -142,11 +146,11 @@
         </div>
         <hr class="settings-divider" />
         <div class="settings-grid">
-            <label>הצג קטגוריה למתחזה:</label>
-            <label class="switch">
-                <input type="checkbox" id="show-category-toggle" checked />
-                <span class="slider round"></span>
-            </label>
+          <label>הצג קטגוריה למתחזה:</label>
+          <label class="switch">
+            <input type="checkbox" id="show-category-toggle" checked />
+            <span class="slider round"></span>
+          </label>
         </div>
         <div id="category-settings">
           <label class="settings-label">קטגוריות שמהן יילקחו מילים:</label>
@@ -155,6 +159,16 @@
       </div>
     </div>
 
+    <!-- מודאל הודעות -->
+    <div id="modal-overlay" class="hidden">
+      <div id="modal-message-box">
+        <div id="modal-message-text"></div>
+        <div id="modal-message-actions">
+          <button id="modal-ok-btn">אישור</button>
+          <button id="modal-cancel-btn" class="hidden">ביטול</button>
+        </div>
+      </div>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
   </body>
