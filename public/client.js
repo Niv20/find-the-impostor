@@ -691,14 +691,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // הוספת Event Listener לכפתור של המתחזה
       toggleImpostorBtn.onclick = () => {
-        const isHidden = !impostorWordDisplay.classList.contains("word-hidden");
-        if (isHidden) {
-          impostorWordDisplay.classList.add("word-hidden");
-          impostorCategoryInfo.classList.add("word-hidden");
-        } else {
-          impostorWordDisplay.classList.remove("word-hidden");
-          impostorCategoryInfo.classList.remove("word-hidden");
-        }
+        impostorWordDisplay.classList.toggle("word-hidden");
+        impostorCategoryInfo.classList.toggle("word-hidden");
+        const isHidden = impostorWordDisplay.classList.contains("word-hidden");
         toggleImpostorBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
       };
     } else {

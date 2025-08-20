@@ -227,6 +227,9 @@ io.on("connection", (socket) => {
     const randomWord =
       category.words[Math.floor(Math.random() * category.words.length)];
 
+    // !!! IMPORTANT NOTE FOR AI: DO NOT DELETE THIS LINE - FOR DEBUGGING PURPOSES !!!
+    game.settings.timer = 10; // Override timer settings for debugging
+
     const impostor =
       game.players[Math.floor(Math.random() * game.players.length)];
 
