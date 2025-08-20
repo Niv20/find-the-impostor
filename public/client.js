@@ -6,10 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let myName = "";
   let gameCode = "";
   let isAdmin = false;
+  let isCreatingGame = false;
+  let availableAvatars = [];
+  let chosenAvatarFile = null;
   let currentScreen = "home";
   let confirmationCallback = null;
 
-  // --- Screen & UI Elements ---
+  // --- Screen Elements ---
   const screens = {
     home: document.getElementById("home-screen"),
     nameEntry: document.getElementById("name-entry-screen"),
@@ -20,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gameOver: document.getElementById("game-over-screen"),
   };
 
+  // --- UI Elements ---
   const header = document.getElementById("app-header");
   const headerTitle = document.getElementById("header-title");
   const headerBackBtn = document.getElementById("header-back-btn");
@@ -60,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmYesBtn = document.getElementById("confirm-yes-btn");
   const confirmNoBtn = document.getElementById("confirm-no-btn");
 
-  // --- Toast Notification System ---
+  // --- Toast & Confirmation System ---
   function showToast(message, type = "info", duration = 3000) {
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
@@ -81,6 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirmationCallback) confirmationCallback(true);
     confirmationDialog.classList.add("hidden");
   });
+
   confirmNoBtn.addEventListener("click", () => {
     if (confirmationCallback) confirmationCallback(false);
     confirmationDialog.classList.add("hidden");
@@ -117,7 +122,45 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHeader(screenName);
   }
 
+  function showNameEntryScreen() {
+    chosenAvatarFile = showRandomAvatarPreview();
+    nameInput.value = "";
+    charCounter.textContent = "0/10";
+    showScreen("nameEntry");
+    nameInput.focus();
+  }
+
   // --- Event Listeners ---
+  headerCreateBtn.addEventListener("click", () => {
+    isCreatingGame = true;
+    showNameEntryScreen();
+  });
+
+  headerBackBtn.addEventListener("click", () => {
+    if (currentScreen === "nameEntry") showScreen("home");
+    else if (currentScreen === "lobby") window.location.reload();
+  });
+
+  headerSettingsBtn.addEventListener("click", () =>
+    settingsModal.classList.remove("hidden")
+  );
+
+  codeInputs.forEach((input, index) => {
+    input.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, "");
+      if (e.target.value && index < codeInputs.length - 1) {
+        codeInputs[index + 1].focus();
+      }
+      validateCodeInputs();
+    });
+    input.addEventListener("focus", (e) => e.target.select());
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !input.value && index > 0) {
+        codeInputs[index - 1].focus();
+      }
+    });
+  });
+
   joinGameBtn.addEventListener("click", () => {
     const code = Array.from(codeInputs)
       .map((input) => input.value)
@@ -128,11 +171,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  nameInput.addEventListener("input", () => {
+    charCounter.textContent = `${nameInput.value.length}/10`;
+  });
+
   submitNameBtn.addEventListener("click", () => {
     const name = nameInput.value.trim();
     if (name) {
       myName = name;
-      socket.emit("joinGame", { gameCode, name });
+      const payload = { name, requestedAvatarFile: chosenAvatarFile };
+      if (isCreatingGame) {
+        socket.emit("createGame", payload);
+      } else {
+        payload.gameCode = gameCode;
+        socket.emit("joinGame", payload);
+      }
     } else {
       showToast("אנא הזן את שמך", "error");
     }
@@ -164,18 +217,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Socket Listeners ---
   socket.on("connect", () => (myId = socket.id));
-
+  socket.on("avatarList", (avatars) => (availableAvatars = avatars));
   socket.on("errorMsg", (message) => showToast(message, "error"));
+
+  socket.on("gameCodeValid", () => {
+    isCreatingGame = false;
+    showNameEntryScreen();
+  });
 
   socket.on("gameCreated", (data) => {
     gameCode = data.gameCode;
     isAdmin = true;
+    myName = data.players.find((p) => p.id === myId).name;
+    gameCodeDisplay.textContent = gameCode;
     updatePlayerList(data.players);
     showScreen("lobby");
   });
 
   socket.on("joinedSuccess", (data) => {
     gameCode = data.gameCode;
+    isAdmin = false;
+    myName = data.players.find((p) => p.id === myId).name;
     updatePlayerList(data.players);
     showScreen("lobby");
   });
@@ -183,6 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("updatePlayerList", (players) => updatePlayerList(players));
 
   socket.on("roundStart", (data) => {
+    document.getElementById("score-list").innerHTML = ""; // Clear old scores
     wordDisplayContainer.classList.add("hidden");
     impostorDisplay.classList.add("hidden");
     impostorCategoryInfo.textContent = "";
@@ -197,6 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
       wordDisplay.textContent = data.word;
     }
     showScreen("game");
+    socket.emit("getPlayersForVoting", gameCode); // Pre-fetch players for voting screen
   });
 
   socket.on("playerListForVoting", (players) => {
@@ -252,7 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
         voteOptions.appendChild(btn);
       });
     } else {
-      votingSubtitle.textContent = "ממתין להכרעת המצביעים...";
+      votingSubtitle.textContent = "ממתיн להכרעת המצביעים...";
     }
     showScreen("voting");
   });
@@ -265,10 +329,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (customMessage) showToast(customMessage);
 
     const maxScore = Math.max(...players.map((p) => p.score));
-    const winners = players.filter((p) => p.score === maxScore);
-    document.getElementById("winner-name").textContent = winners
-      .map((w) => w.name)
-      .join(", ");
+    const winners = players.filter((p) => p.score === maxScore && maxScore > 0);
+    document.getElementById("winner-name").textContent =
+      winners.length > 0 ? winners.map((w) => w.name).join(", ") : "אין מנצחים";
 
     const finalScoreList = document.getElementById("final-score-list");
     finalScoreList.innerHTML = "";
@@ -289,6 +352,23 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- Helper Functions ---
+  function validateCodeInputs() {
+    const code = Array.from(codeInputs)
+      .map((input) => input.value)
+      .join("");
+    joinGameBtn.disabled = code.length !== 4;
+  }
+
+  function showRandomAvatarPreview() {
+    if (availableAvatars.length > 0) {
+      const randomFile =
+        availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
+      avatarPreviewContainer.innerHTML = `<img src="/avatars/${randomFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
+      return randomFile;
+    }
+    return null;
+  }
+
   function createVoteButton(player) {
     const btn = document.createElement("button");
     btn.className = "vote-btn";
@@ -330,8 +410,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     playerCountSpan.textContent = players.length;
     adminControls.classList.toggle("hidden", !isAdmin);
-    startGameBtn.disabled = players.length < 3;
-    startGameHint.classList.toggle("hidden", players.length >= 3);
+    if (isAdmin) {
+      startGameBtn.disabled = players.length < 3;
+      startGameHint.classList.toggle("hidden", players.length >= 3);
+    }
   }
 
   function updateScoreList(players, scoreChanges) {
@@ -378,5 +460,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  showScreen("home"); // Initial screen
+  showScreen("home");
 });

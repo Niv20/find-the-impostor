@@ -64,6 +64,11 @@ function startNewRound(gameCode) {
   if (!game) return;
 
   const { enabledCategories } = game.settings;
+  if (enabledCategories.length === 0) {
+    // This case should be handled on client, but as a fallback:
+    io.to(game.adminId).emit("errorMsg", "יש לבחור לפחות קטגוריה אחת בהגדרות.");
+    return;
+  }
   const randomCategoryKey =
     enabledCategories[Math.floor(Math.random() * enabledCategories.length)];
   const category = wordCategories[randomCategoryKey];
@@ -121,14 +126,13 @@ function revealResults(gameCode, isTieBreak = false) {
   }
 
   const mostVotedIds = Object.keys(voteCounts).filter(
-    (id) => voteCounts[id] === maxVotes
+    (id) => voteCounts[id] === maxVotes && maxVotes > 0
   );
 
   if (mostVotedIds.length > 1 && !isTieBreak) {
     const impostorIsSuspect = mostVotedIds.includes(impostorId);
 
     if (impostorIsSuspect && mostVotedIds.length === 2) {
-      // Handle tie-break for impostor vs one other
       game.gameState = "tie-break";
       game.currentRound.tieCandidates = mostVotedIds;
 
@@ -136,7 +140,6 @@ function revealResults(gameCode, isTieBreak = false) {
       let finalVoters = [...voters];
 
       if (voters.length % 2 === 0 && voters.length > 0) {
-        // If even number of voters, exclude one
         const excludedVoter = voters[Math.floor(Math.random() * voters.length)];
         finalVoters = voters.filter((p) => p.id !== excludedVoter.id);
         io.to(excludedVoter.id).emit("excludedFromTieVote");
@@ -149,7 +152,7 @@ function revealResults(gameCode, isTieBreak = false) {
         candidates: candidateData,
         voterIds: finalVoters.map((p) => p.id),
       });
-      return; // Stop here and wait for tie-break votes
+      return;
     }
   }
 
@@ -173,7 +176,7 @@ function revealResults(gameCode, isTieBreak = false) {
 
   const scoreChanges = game.players.map((p) => {
     const oldPlayer = oldScores.find((op) => op.id === p.id);
-    return { id: p.id, change: p.score - oldPlayer.score };
+    return { id: p.id, change: p.score - (oldPlayer ? oldPlayer.score : 0) };
   });
 
   io.to(gameCode).emit("roundResult", {
@@ -184,11 +187,14 @@ function revealResults(gameCode, isTieBreak = false) {
     message,
     scoreChanges,
   });
-  // Automatic next round is removed. Waiting for admin.
 }
 
 io.on("connection", (socket) => {
-  // ... (createGame, joinGame, etc. remain the same)
+  socket.emit(
+    "avatarList",
+    AVATARS_CONFIG.map((a) => a.file)
+  );
+
   socket.on("createGame", ({ name, requestedAvatarFile }) => {
     const gameCode = generateGameCode();
     socket.join(gameCode);
@@ -213,6 +219,7 @@ io.on("connection", (socket) => {
       allCategories: allCategoriesForClient,
     });
   });
+
   socket.on("checkGameCode", (gameCode) => {
     const game = games[gameCode];
     if (game) {
@@ -220,6 +227,7 @@ io.on("connection", (socket) => {
       else socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
     } else socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
   });
+
   socket.on("joinGame", ({ gameCode, name, requestedAvatarFile }) => {
     const game = games[gameCode];
     if (!game) return socket.emit("errorMsg", "המשחק לא נמצא.");
@@ -244,11 +252,13 @@ io.on("connection", (socket) => {
       avatar: playerAvatar,
     });
     socket.emit("joinedSuccess", {
+      gameCode,
       players: game.players,
       settings: game.settings,
     });
     io.to(gameCode).emit("updatePlayerList", game.players);
   });
+
   socket.on("changeSettings", ({ gameCode, settings }) => {
     const game = games[gameCode];
     if (game && game.adminId === socket.id) {
@@ -272,6 +282,13 @@ io.on("connection", (socket) => {
     const game = games[gameCode];
     if (game && game.adminId === socket.id) {
       startNewRound(gameCode);
+    }
+  });
+
+  socket.on("getPlayersForVoting", (gameCode) => {
+    const game = games[gameCode];
+    if (game) {
+      socket.emit("playerListForVoting", game.players);
     }
   });
 
@@ -301,7 +318,7 @@ io.on("connection", (socket) => {
     if (voters.length % 2 === 0 && voters.length > 0) expectedVotes--;
 
     if (Object.keys(game.currentRound.tieBreakVotes).length === expectedVotes) {
-      revealResults(gameCode, true); // Process as a tie-break result
+      revealResults(gameCode, true);
     }
   });
 
@@ -313,7 +330,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ... (disconnect logic remains similar)
   socket.on("disconnect", () => {
     for (const gameCode in games) {
       const game = games[gameCode];
