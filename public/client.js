@@ -320,7 +320,15 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
             socket.emit("startGame", gameCode);
         }, 5000); // 5 second delay before starting next round
+    } else {
+      // הצגת כפתור למנהל בלבד, לשאר הודעת המתנה
+      adminResultControls.classList.remove("hidden");
+      waitingForAdminMsg.classList.add("hidden");
     }
+
+    // הסתרת overlay הצבעה אם קיים
+    const waitingOverlay = document.getElementById('waiting-vote-overlay');
+    if (waitingOverlay) waitingOverlay.classList.add('hidden');
     showScreen("result");
   });
 
@@ -457,20 +465,41 @@ document.addEventListener("DOMContentLoaded", () => {
     voteOptionsDiv.innerHTML = "";
     voteOptionsDiv.classList.remove('voting-done'); // Reset class for new round
 
-    // Hide the generic "Voting" title if it exists
+    // הצגת כותרת הצבעה
     const votingScreen = document.getElementById('voting-screen');
     const mainTitle = votingScreen.querySelector('h2');
-    if (mainTitle) mainTitle.classList.add('hidden');
+    if (mainTitle) mainTitle.classList.remove('hidden');
+
+    // יצירת overlay להמתנה (אם לא קיים)
+    let waitingOverlay = document.getElementById('waiting-vote-overlay');
+    if (!waitingOverlay) {
+        waitingOverlay = document.createElement('div');
+        waitingOverlay.id = 'waiting-vote-overlay';
+        waitingOverlay.className = 'hidden';
+        waitingOverlay.style.position = 'fixed';
+        waitingOverlay.style.top = '0';
+        waitingOverlay.style.left = '0';
+        waitingOverlay.style.width = '100vw';
+        waitingOverlay.style.height = '100vh';
+        waitingOverlay.style.background = 'rgba(0,0,0,0.85)';
+        waitingOverlay.style.zIndex = '999';
+        waitingOverlay.style.display = 'flex';
+        waitingOverlay.style.flexDirection = 'column';
+        waitingOverlay.style.justifyContent = 'center';
+        waitingOverlay.style.alignItems = 'center';
+        waitingOverlay.innerHTML = '<h2 style=\"color:white;\">הצבעתך התקבלה</h2><p style=\"color:#eee;font-size:1.2rem;\">אנא המתן לשאר המשתתפים...</p>';
+        votingScreen.appendChild(waitingOverlay);
+    }
+    waitingOverlay.classList.add('hidden');
 
     const playersToVoteFor = players.filter(p => p.id !== myId);
     playersToVoteFor.forEach((player) => {
         const btn = document.createElement("button");
         btn.className = "vote-btn";
         btn.addEventListener("click", () => {
-            // Add a class to the container to disable hover via CSS
             voteOptionsDiv.classList.add('voting-done');
-            // Also disable buttons immediately for better feedback
             document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
+            waitingOverlay.classList.remove('hidden');
             socket.emit("playerVote", { gameCode, votedForId: player.id });
         });
         const avatarImg = document.createElement("img");
@@ -478,7 +507,6 @@ document.addEventListener("DOMContentLoaded", () => {
         avatarImg.className = "avatar-circle-small";
         const nameSpan = document.createElement("span");
         nameSpan.textContent = player.name;
-        // D1: Apply the player's specific color to their name
         nameSpan.style.color = player.avatar.color;
         btn.appendChild(avatarImg);
         btn.appendChild(nameSpan);
