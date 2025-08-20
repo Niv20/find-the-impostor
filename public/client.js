@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const headerBackBtn = document.getElementById('header-back-btn');
   const headerCreateBtn = document.getElementById('header-create-btn');
   const headerSettingsBtn = document.getElementById('header-settings-btn');
+  const headerTitle = document.getElementById('header-title');
 
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
@@ -47,6 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const adminControls = document.getElementById("admin-controls");
   const startGameBtn = document.getElementById("start-game-btn");
   const startGameHint = document.getElementById("start-game-hint");
+  const shareCodeText = document.querySelector(".share-code-text");
+
+  // Game Screen
+  const wordDisplayContainer = document.getElementById('word-display-container');
+  const wordDisplay = document.getElementById('word-display');
+  const categoryDisplay = document.getElementById('category-display');
+  const impostorDisplay = document.getElementById('impostor-display');
+  const impostorCategoryInfo = document.getElementById('impostor-category-info');
 
   // Settings
   const settingsBtn = document.getElementById("header-settings-btn"); // Corrected
@@ -60,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
     headerBackBtn.classList.add('hidden');
     headerCreateBtn.classList.add('hidden');
     headerSettingsBtn.classList.add('hidden');
+    headerTitle.classList.remove('hidden'); // Show title by default
 
     switch (screenName) {
       case 'home':
@@ -70,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headerBackBtn.classList.remove('hidden');
         if (isAdmin && screenName === 'lobby') {
             headerSettingsBtn.classList.remove('hidden');
+            headerTitle.classList.add('hidden'); // Hide title for admin in lobby
         }
         break;
       case 'game':
@@ -219,6 +230,9 @@ document.addEventListener("DOMContentLoaded", () => {
     gameCodeDisplay.textContent = gameCode;
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
+    if(shareCodeText) {
+        shareCodeText.textContent = "שתף עם חברים את הקוד:";
+    }
 
     populateCategorySettings();
     updatePlayerList(data.players);
@@ -228,16 +242,40 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("joinedSuccess", (data) => {
     adminControls.classList.add("hidden");
     settingsBtn.classList.add("hidden");
+    if(shareCodeText) {
+        shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
+    }
     updatePlayerList(data.players);
     showScreen("lobby");
   });
 
   socket.on("updatePlayerList", (players) => updatePlayerList(players));
 
-  // ... (rest of the socket listeners for game flow remain the same)
   socket.on("roundStart", (data) => {
-    // ... same as before
+    // Reset displays
+    wordDisplayContainer.classList.add('hidden');
+    impostorDisplay.classList.add('hidden');
+    categoryDisplay.textContent = '';
+    impostorCategoryInfo.textContent = '';
+
+    if (data.isImpostor) {
+        impostorDisplay.classList.remove('hidden');
+        // Show category as hint only if enabled in settings
+        if (data.showCategory) {
+            impostorCategoryInfo.textContent = data.category;
+        }
+    } else {
+        wordDisplayContainer.classList.remove('hidden');
+        wordDisplay.textContent = data.word;
+        // Per request, category is no longer shown to non-impostors
+    }
+
+    // Assuming a timer function exists and is handled elsewhere or should be called here
+    // startTimer(data.timer);
+
+    showScreen('game');
   });
+
   socket.on("roundResult", (data) => {
     // ... same as before
   });
@@ -312,6 +350,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       item.appendChild(checkbox);
       item.appendChild(label);
+
+      item.addEventListener('click', (e) => {
+        // Trigger click on checkbox only if the click is on the parent div 
+        // and not on the checkbox or the label which already triggers the checkbox.
+        if (e.target === item) {
+            checkbox.click();
+        }
+      });
 
       categoryListDiv.appendChild(item);
     });
