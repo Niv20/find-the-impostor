@@ -642,7 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
     roundTimerInterval = setInterval(update, 1000);
   }
 
-  function showVotingScreen(players, tieBreakData = null) {
+  function showVotingScreen(players) {
     // Clear previous voting state if exists
     const existingOverlay = document.getElementById("waiting-vote-overlay");
     if (existingOverlay) {
@@ -656,34 +656,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // הצגת כותרת הצבעה
     const votingScreen = document.getElementById("voting-screen");
     const mainTitle = votingScreen.querySelector("h2");
-    
-    if (tieBreakData) {
-      // מקרה של שובר שוויון
-      if (tieBreakData.canVote) {
-        mainTitle.textContent = "הצבעה מכרעת!";
-        const subtitle = document.createElement("p");
-        subtitle.className = "voting-subtitle";
-        subtitle.textContent = "התקבל תיקו! הצביעו שוב בין שני השחקנים הבאים:";
-        mainTitle.after(subtitle);
-      } else if (tieBreakData.isPartOfTie) {
-        mainTitle.textContent = "ממתין לתוצאות...";
-        const subtitle = document.createElement("p");
-        subtitle.className = "voting-subtitle";
-        subtitle.textContent = "חושדים בך! שאר השחקנים מצביעים כעת מי מביניכם הוא המתחזה.";
-        mainTitle.after(subtitle);
-        return; // אין צורך להציג אפשרויות הצבעה
-      } else if (tieBreakData.excludedFromVoting) {
-        mainTitle.textContent = "ממתין לתוצאות...";
-        const subtitle = document.createElement("p");
-        subtitle.className = "voting-subtitle";
-        subtitle.textContent = "נבחרת באופן אקראי לא להשתתף בהצבעה המכרעת כדי להבטיח תוצאה חד משמעית.";
-        mainTitle.after(subtitle);
-        return; // אין צורך להציג אפשרויות הצבעה
-      }
-    } else {
-      mainTitle.textContent = "מי המתחזה?";
-      if (mainTitle) mainTitle.classList.remove("hidden");
-    }
+    mainTitle.textContent = "מי המתחזה?";
+    if (mainTitle) mainTitle.classList.remove("hidden");
 
     // יצירת overlay חדש להמתנה
     const waitingOverlay = document.createElement("div");
@@ -708,15 +682,8 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     votingScreen.appendChild(waitingOverlay);
 
-    let playersToVoteFor;
-    if (tieBreakData && tieBreakData.canVote) {
-      // במקרה של שובר שוויון, מציגים רק את שני השחקנים בתיקו
-      playersToVoteFor = players.filter(p => 
-        tieBreakData.tiePlayers.includes(p.id));
-    } else {
-      // הצבעה רגילה - כל השחקנים חוץ מהמצביע עצמו
-      playersToVoteFor = players.filter((p) => p.id !== myId);
-    }
+    // הצבעה רגילה - כל השחקנים חוץ מהמצביע עצמו
+    const playersToVoteFor = players.filter((p) => p.id !== myId);
 
     playersToVoteFor.forEach((player) => {
       const btn = document.createElement("button");
@@ -734,8 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Send vote to server
         socket.emit("playerVote", { 
           gameCode, 
-          votedForId: player.id,
-          isTieBreaker: !!tieBreakData
+          votedForId: player.id
         });
       });
       const avatarImg = document.createElement("img");
