@@ -1,10 +1,4 @@
-const express = require(      // --- Game State Management ---
-const games = {};
-
-// טיימר עבור כל משחק
-const gameTimers = {};
-
-// --- Word Loading ---ress");
+const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const fs = require("fs");
@@ -170,10 +164,13 @@ io.on("connection", (socket) => {
     });
 
     // בדיקה אם המשחק כבר בעיצומו
-    if (game.gameState === "in-game" || (game.currentRound && !game.currentRound.revealed)) {
+    if (
+      game.gameState === "in-game" ||
+      (game.currentRound && !game.currentRound.revealed)
+    ) {
       socket.emit("joinedMidGame", {
         message: "תכף נצרף אותך למשחק! אנא המתן לסיום הסבב.",
-        players: game.players
+        players: game.players,
       });
     } else {
       socket.emit("joinedSuccess", {
@@ -181,7 +178,7 @@ io.on("connection", (socket) => {
         settings: game.settings,
       });
     }
-    
+
     io.to(gameCode).emit("updatePlayerList", game.players);
   });
 
@@ -245,7 +242,7 @@ io.on("connection", (socket) => {
       votes: {},
       revealed: false,
       startTime: Date.now(),
-      timerDuration: game.settings.timer
+      timerDuration: game.settings.timer,
     };
 
     game.gameState = "in-game";
@@ -255,15 +252,15 @@ io.on("connection", (socket) => {
     gameTimers[gameCode] = {
       interval: setInterval(() => {
         timeLeft--;
-        io.to(gameCode).emit('timerUpdate', timeLeft);
-        
+        io.to(gameCode).emit("timerUpdate", timeLeft);
+
         if (timeLeft <= 0) {
           clearInterval(gameTimers[gameCode].interval);
           delete gameTimers[gameCode];
           io.to(gameCode).emit("startVoting", game.players);
         }
       }, 1000),
-      timeLeft: timeLeft
+      timeLeft: timeLeft,
     };
 
     game.players.forEach((player) => {
@@ -391,7 +388,7 @@ io.on("connection", (socket) => {
     // שליחת הודעה על התנתקות השחקן לכל השחקנים
     io.to(gameCode).emit("playerDisconnected", {
       player: leavingPlayer,
-      remainingPlayers: game.players.length
+      remainingPlayers: game.players.length,
     });
 
     if (game.players.length === 0) {
@@ -445,7 +442,7 @@ io.on("connection", (socket) => {
             word: game.currentRound.word,
             players: game.players,
             customMessage: `${leavingPlayer.name} (המתחזה) התנתק מהמשחק!`,
-            showAdminControls: true // מציג את כפתורי ההמשך למנהל
+            showAdminControls: true, // מציג את כפתורי ההמשך למנהל
           });
           game.gameState = "lobby";
         } else {
