@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     game: document.getElementById("game-screen"),
     voting: document.getElementById("voting-screen"),
     result: document.getElementById("result-screen"),
+    endGame: document.getElementById("end-game-screen"),
   };
 
   // --- UI Elements ---
@@ -36,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Header
   const header = document.getElementById('app-header');
-  const headerBackBtn = document.getElementById('header-back-btn');
   const headerCreateBtn = document.getElementById('header-create-btn');
   const headerSettingsBtn = document.getElementById('header-settings-btn');
   const headerTitle = document.getElementById('header-title');
@@ -57,36 +57,48 @@ document.addEventListener("DOMContentLoaded", () => {
   const impostorDisplay = document.getElementById('impostor-display');
   const impostorCategoryInfo = document.getElementById('impostor-category-info');
 
+  // Result Screen
+  const resultTitle = document.getElementById("result-title");
+  const resultInfo = document.getElementById("result-info");
+  const scoreListUl = document.getElementById("score-list");
+  const adminResultControls = document.getElementById("admin-result-controls");
+  const nextRoundBtn = document.getElementById("next-round-btn");
+  const endGameBtnFromResult = document.getElementById("end-game-btn-from-result");
+  const waitingForAdminMsg = document.getElementById("waiting-for-admin-msg");
+
+  // End Game Screen
+  const winnerListDiv = document.getElementById("winner-list");
+  const finalScoreListUl = document.getElementById("final-score-list");
+  const playAgainBtn = document.getElementById("play-again-btn");
+
   // Settings
-  const settingsBtn = document.getElementById("header-settings-btn"); // Corrected
+  const settingsBtn = document.getElementById("header-settings-btn");
   const settingsModal = document.getElementById("settings-modal");
-  const closeSettingsBtn = document.getElementById("close-settings-btn");
   const categoryListDiv = document.getElementById("category-list");
   const showCategoryToggle = document.getElementById("show-category-toggle");
 
   // --- Screen Management ---
   function updateHeader(screenName) {
-    headerBackBtn.classList.add('hidden');
     headerCreateBtn.classList.add('hidden');
     headerSettingsBtn.classList.add('hidden');
-    headerTitle.classList.remove('hidden'); // Show title by default
+    headerTitle.classList.remove('hidden');
 
     switch (screenName) {
       case 'home':
         headerCreateBtn.classList.remove('hidden');
         break;
-      case 'nameEntry':
       case 'lobby':
-        headerBackBtn.classList.remove('hidden');
-        if (isAdmin && screenName === 'lobby') {
+        if (isAdmin) {
             headerSettingsBtn.classList.remove('hidden');
-            headerTitle.classList.add('hidden'); // Hide title for admin in lobby
+            headerTitle.classList.add('hidden');
         }
         break;
+      case 'nameEntry':
       case 'game':
       case 'voting':
       case 'result':
-        // No buttons shown during the game flow
+      case 'endGame':
+        // No buttons shown
         break;
     }
   }
@@ -109,28 +121,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Event Listeners ---
-
-  // Header
   headerCreateBtn.addEventListener("click", () => {
     isCreatingGame = true;
     showNameEntryScreen();
-  });
-
-  headerBackBtn.addEventListener('click', () => {
-      switch(currentScreen) {
-          case 'nameEntry':
-              showScreen('home');
-              break;
-          case 'lobby':
-              if (isAdmin) {
-                if (confirm("אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?")) {
-                    socket.emit("endGame", gameCode);
-                }
-              } else {
-                  window.location.reload(); // Player leaves
-              }
-              break;
-      }
   });
 
   // Home Screen
@@ -166,7 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
   nameInput.addEventListener("input", () => {
     const len = nameInput.value.length;
     charCounter.textContent = `${len}/10`;
-    // Hebrew name validation
     const hebrewRegex = /^[א-ת\s]*$/;
     if (!hebrewRegex.test(nameInput.value)) {
       nameInput.value = nameInput.value.replace(/[^א-ת\s]/g, "");
@@ -192,18 +184,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Lobby & Settings
-  settingsBtn.addEventListener("click", () =>
-    settingsModal.classList.remove("hidden")
-  );
-  closeSettingsBtn.addEventListener("click", () =>
-    settingsModal.classList.add("hidden")
-  );
+  // In-Game Buttons
+  settingsBtn.addEventListener("click", () => settingsModal.classList.remove("hidden"));
   settingsModal.addEventListener("click", (e) => {
     if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
-
   startGameBtn.addEventListener("click", () => socket.emit("startGame", gameCode));
+  nextRoundBtn.addEventListener("click", () => socket.emit("startGame", gameCode));
+  endGameBtnFromResult.addEventListener("click", () => {
+      if (confirm("האם אתה בטוח שברצונך לסיים את המשחק עבור כולם?")) {
+          socket.emit("endGame", gameCode);
+      }
+  });
+  playAgainBtn.addEventListener("click", () => window.location.reload());
 
   // --- Socket Listeners ---
   socket.on("connect", () => (myId = socket.id));
@@ -226,14 +219,10 @@ document.addEventListener("DOMContentLoaded", () => {
     isAdmin = true;
     allCategories = data.allCategories;
     enabledCategories = data.settings.enabledCategories;
-
     gameCodeDisplay.textContent = gameCode;
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
-    if(shareCodeText) {
-        shareCodeText.textContent = "שתף עם חברים את הקוד:";
-    }
-
+    if(shareCodeText) shareCodeText.textContent = "שתף עם חברים את הקוד:";
     populateCategorySettings();
     updatePlayerList(data.players);
     showScreen("lobby");
@@ -242,9 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("joinedSuccess", (data) => {
     adminControls.classList.add("hidden");
     settingsBtn.classList.add("hidden");
-    if(shareCodeText) {
-        shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
-    }
+    if(shareCodeText) shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
     updatePlayerList(data.players);
     showScreen("lobby");
   });
@@ -252,27 +239,19 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("updatePlayerList", (players) => updatePlayerList(players));
 
   socket.on("roundStart", (data) => {
-    // Reset displays
     wordDisplayContainer.classList.add('hidden');
     impostorDisplay.classList.add('hidden');
     categoryDisplay.textContent = '';
     impostorCategoryInfo.textContent = '';
-
     if (data.isImpostor) {
         impostorDisplay.classList.remove('hidden');
-        // Show category as hint only if enabled in settings
         if (data.showCategory) {
             impostorCategoryInfo.textContent = data.category;
         }
     } else {
         wordDisplayContainer.classList.remove('hidden');
         wordDisplay.textContent = data.word;
-        // Per request, category is no longer shown to non-impostors
     }
-
-    // Assuming a timer function exists and is handled elsewhere or should be called here
-    // startTimer(data.timer);
-
     showScreen('game');
   });
 
@@ -281,18 +260,48 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("roundResult", (data) => {
-    // ... same as before
-  });;
-  socket.on("gameEnded", (message = "המשחק הסתיים.") => {
-    alert(message);
-    window.location.reload();
+    const { impostor, word, correctlyGuessed, players } = data;
+    resultTitle.textContent = correctlyGuessed ? "המתחזה נתפס!" : "המתחזה ניצח!";
+    resultScreen.dataset.impostorFound = correctlyGuessed;
+    resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
+    updateScoreList(players, scoreListUl);
+    if (isAdmin) {
+        adminResultControls.classList.remove("hidden");
+        waitingForAdminMsg.classList.add("hidden");
+    } else {
+        adminResultControls.classList.add("hidden");
+        waitingForAdminMsg.classList.remove("hidden");
+    }
+    showScreen("result");
+  });
+
+  socket.on("gameEnded", (players) => {
+    let maxScore = -1;
+    players.forEach(p => { if (p.score > maxScore) maxScore = p.score; });
+    const winners = players.filter(p => p.score === maxScore && maxScore > 0);
+
+    winnerListDiv.innerHTML = "";
+    if (winners.length > 0) {
+        winners.forEach(winner => {
+            const winnerCard = document.createElement('div');
+            winnerCard.className = 'winner-card';
+            winnerCard.innerHTML = `
+                <img src="/avatars/${winner.avatar.file}" class="avatar-circle-small">
+                <span class="player-name">${winner.name}</span>
+            `;
+            winnerListDiv.appendChild(winnerCard);
+        });
+    } else {
+        winnerListDiv.textContent = "אין מנצחים בסבב זה.";
+    }
+
+    updateScoreList(players, finalScoreListUl);
+    showScreen("endGame");
   });
 
   // --- Helper Functions ---
   function validateCodeInputs() {
-    const code = Array.from(codeInputs)
-      .map((input) => input.value)
-      .join("");
+    const code = Array.from(codeInputs).map((input) => input.value).join("");
     joinGameBtn.disabled = code.length !== 4;
   }
 
@@ -316,7 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
       playerListUl.appendChild(li);
     });
     playerCountSpan.textContent = players.length;
-
     if (isAdmin) {
       const canStart = players.length >= 3;
       startGameBtn.disabled = !canStart;
@@ -329,71 +337,35 @@ document.addEventListener("DOMContentLoaded", () => {
     allCategories.forEach((cat) => {
       const item = document.createElement("div");
       item.className = "category-item";
-      
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.id = `cat-${cat.id}`;
       checkbox.value = cat.id;
       checkbox.checked = enabledCategories.includes(cat.id);
-
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
           enabledCategories.push(cat.id);
         } else {
           enabledCategories = enabledCategories.filter((c) => c !== cat.id);
         }
-        socket.emit("changeSettings", {
-          gameCode,
-          settings: { enabledCategories },
-        });
+        socket.emit("changeSettings", { gameCode, settings: { enabledCategories } });
       });
-
       const label = document.createElement("label");
       label.htmlFor = `cat-${cat.id}`;
       label.textContent = cat.name;
-
       item.appendChild(checkbox);
       item.appendChild(label);
-
       item.addEventListener('click', (e) => {
-        // Trigger click on checkbox only if the click is on the parent div 
-        // and not on the checkbox or the label which already triggers the checkbox.
-        if (e.target === item) {
-            checkbox.click();
-        }
+        if (e.target === item) checkbox.click();
       });
-
       categoryListDiv.appendChild(item);
     });
   }
 
-  document.querySelectorAll(".timer-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelector(".timer-btn.active").classList.remove("active");
-      btn.classList.add("active");
-      socket.emit("changeSettings", {
-        gameCode,
-        settings: { timer: parseInt(btn.dataset.time) },
-      });
-    });
-  });
-
-  showCategoryToggle.addEventListener("change", (e) => {
-    socket.emit("changeSettings", {
-      gameCode,
-      settings: { showCategory: e.target.checked },
-    });
-  });
-
-  // Dummy implementations for functions that were collapsed for brevity
-  function startTimer(duration) { /* Full implementation exists */ }
-  
   function showVotingScreen(players) {
     const voteOptionsDiv = document.getElementById("vote-options");
-    voteOptionsDiv.innerHTML = ""; // Clear previous options
-
+    voteOptionsDiv.innerHTML = "";
     const playersToVoteFor = players.filter(p => p.id !== myId);
-
     playersToVoteFor.forEach((player) => {
         const btn = document.createElement("button");
         btn.className = "vote-btn";
@@ -401,23 +373,45 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
             socket.emit("playerVote", { gameCode, votedForId: player.id });
         });
-
         const avatarImg = document.createElement("img");
         avatarImg.src = `/avatars/${player.avatar.file}`;
         avatarImg.className = "avatar-circle-small";
-
         const nameSpan = document.createElement("span");
         nameSpan.textContent = player.name;
-        
         btn.appendChild(avatarImg);
         btn.appendChild(nameSpan);
         voteOptionsDiv.appendChild(btn);
     });
-
     showScreen("voting");
   }
 
-  function updateScoreList(players) { /* Full implementation exists */ }
+  function updateScoreList(players, listElement) {
+    listElement.innerHTML = "";
+    players.sort((a, b) => b.score - a.score);
+    players.forEach(player => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <div>
+                <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
+                <span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>
+            </div>
+            <span class="player-score">${player.score} נק'</span>
+        `;
+        listElement.appendChild(li);
+    });
+  }
+
+  document.querySelectorAll(".timer-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelector(".timer-btn.active").classList.remove("active");
+      btn.classList.add("active");
+      socket.emit("changeSettings", { gameCode, settings: { timer: parseInt(btn.dataset.time) } });
+    });
+  });
+
+  showCategoryToggle.addEventListener("change", (e) => {
+    socket.emit("changeSettings", { gameCode, settings: { showCategory: e.target.checked } });
+  });
 
   showScreen('home'); // Initial screen
 });

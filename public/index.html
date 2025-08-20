@@ -26,7 +26,7 @@
     </header>
 
     <div class="container">
-      <!-- Ekrani fillestar -->
+      <!-- Home Screen -->
       <div id="home-screen" class="screen-container">
         <div class="join-game">
           <p>הזן את קוד המשחק בן 4 הספרות:</p>
@@ -40,7 +40,7 @@
         </div>
       </div>
 
-      <!-- Ekrani i hyrjes së emrit -->
+      <!-- Name Entry Screen -->
       <div id="name-entry-screen" class="hidden screen-container">
         <div class="name-entry-content">
             <div id="avatar-preview-container"></div>
@@ -58,7 +58,7 @@
         <button id="submit-name-btn">המשך</button>
       </div>
 
-      <!-- Ekrani i lobit -->
+      <!-- Lobby Screen -->
       <div id="lobby-screen" class="hidden screen-container">
         <div class="lobby-content">
             <p class="share-code-text">שתף עם חברים את הקוד:</p>
@@ -74,7 +74,7 @@
         </div>
       </div>
 
-      <!-- Ekrani i lojës -->
+      <!-- Game Screen -->
       <div id="game-screen" class="hidden">
         <div id="timer-display">--:--</div>
         <div id="word-display-container">
@@ -88,24 +88,40 @@
         </div>
       </div>
 
-      <!-- Ekrani i votimit -->
-      <div id="voting-screen" class="hidden">
+      <!-- Voting Screen -->
+      <div id="voting-screen" class="hidden screen-container">
         <h2>הצבעה!</h2>
         <p>מי לדעתך המתחזה?</p>
         <div id="vote-options"></div>
       </div>
 
-      <!-- Ekrani i rezultatit -->
-      <div id="result-screen" class="hidden">
+      <!-- Result Screen -->
+      <div id="result-screen" class="hidden screen-container">
         <h2 id="result-title">המתחזה נחשף!</h2>
         <p id="result-info"></p>
         <h3>טבלת ניקוד</h3>
         <ul id="score-list"></ul>
-        <p class="next-round-msg">הסיבוב הבא יתחיל בעוד מספר שניות...</p>
+        <div id="result-controls">
+            <div id="admin-result-controls" class="hidden">
+                <button id="next-round-btn">הסיבוב הבא</button>
+                <button id="end-game-btn-from-result" class="link-style-btn">סיים משחק</button>
+            </div>
+            <p id="waiting-for-admin-msg" class="hidden">ממתין למנהל...</p>
+        </div>
+      </div>
+
+      <!-- End Game Screen -->
+      <div id="end-game-screen" class="hidden screen-container">
+        <h2>המשחק נגמר!</h2>
+        <h3>🏆 המנצח/ים 🏆</h3>
+        <div id="winner-list"></div>
+        <h4 class="final-scores-header">טבלת ניקוד סופית</h4>
+        <ul id="final-score-list"></ul>
+        <button id="play-again-btn">שחק שוב</button>
       </div>
     </div>
 
-    <!-- Modali i cilësimeve -->
+    <!-- Settings Modal -->
     <div id="settings-modal" class="hidden">
       <div class="modal-content">
         <div class="modal-header">
