@@ -1,4 +1,10 @@
-const express = require("express");
+const express = require(      // --- Game State Management ---
+const games = {};
+
+// טיימר עבור כל משחק
+const gameTimers = {};
+
+// --- Word Loading ---ress");
 const http = require("http");
 const socketIo = require("socket.io");
 const fs = require("fs");
@@ -24,6 +30,7 @@ const AVATARS_CONFIG = [
 
 // --- Game State Management ---
 const games = {};
+const gameTimers = {}; // מעקב אחרי טיימרים של משחקים
 
 // --- Word Loading ---
 const wordCategories = {};
@@ -162,10 +169,19 @@ io.on("connection", (socket) => {
       avatar: playerAvatar,
     });
 
-    socket.emit("joinedSuccess", {
-      players: game.players,
-      settings: game.settings,
-    });
+    // בדיקה אם המשחק כבר בעיצומו
+    if (game.gameState === "in-game" || (game.currentRound && !game.currentRound.revealed)) {
+      socket.emit("joinedMidGame", {
+        message: "תכף נצרף אותך למשחק! אנא המתן לסיום הסבב.",
+        players: game.players
+      });
+    } else {
+      socket.emit("joinedSuccess", {
+        players: game.players,
+        settings: game.settings,
+      });
+    }
+    
     io.to(gameCode).emit("updatePlayerList", game.players);
   });
 
@@ -217,15 +233,38 @@ io.on("connection", (socket) => {
     const impostor =
       game.players[Math.floor(Math.random() * game.players.length)];
 
+    // ניקוי טיימר קודם אם קיים
+    if (gameTimers[gameCode]) {
+      clearInterval(gameTimers[gameCode].interval);
+    }
+
     game.currentRound = {
       word: randomWord,
       categoryName: category.categoryName,
       impostorId: impostor.id,
       votes: {},
       revealed: false,
+      startTime: Date.now(),
+      timerDuration: game.settings.timer
     };
 
     game.gameState = "in-game";
+
+    // הגדרת טיימר חדש בשרת
+    let timeLeft = game.settings.timer;
+    gameTimers[gameCode] = {
+      interval: setInterval(() => {
+        timeLeft--;
+        io.to(gameCode).emit('timerUpdate', timeLeft);
+        
+        if (timeLeft <= 0) {
+          clearInterval(gameTimers[gameCode].interval);
+          delete gameTimers[gameCode];
+          io.to(gameCode).emit("startVoting", game.players);
+        }
+      }, 1000),
+      timeLeft: timeLeft
+    };
 
     game.players.forEach((player) => {
       const isImpostor = player.id === impostor.id;
@@ -234,7 +273,8 @@ io.on("connection", (socket) => {
         word: isImpostor ? null : randomWord,
         category: game.settings.showCategory ? category.categoryName : null,
         timer: game.settings.timer,
-        // Pass the showCategory setting to the client
+        timeLeft: timeLeft,
+        startTime: game.currentRound.startTime,
         showCategory: game.settings.showCategory,
       });
     });
@@ -348,18 +388,36 @@ io.on("connection", (socket) => {
     console.log(`👥 Players remaining: ${game.players.length}`);
     console.log(`🎯 Game state: ${game.gameState}`);
 
+    // שליחת הודעה על התנתקות השחקן לכל השחקנים
+    io.to(gameCode).emit("playerDisconnected", {
+      player: leavingPlayer,
+      remainingPlayers: game.players.length
+    });
+
     if (game.players.length === 0) {
       console.log(`[Game ${gameCode}] Game empty, deleting.`);
+      if (gameTimers[gameCode]) {
+        clearInterval(gameTimers[gameCode].interval);
+        delete gameTimers[gameCode];
+      }
       delete games[gameCode];
     } else if (leavingPlayer.isAdmin) {
       io.to(gameCode).emit("gameEnded", game.players);
       console.log(`[Game ${gameCode}] Admin left, ending game.`);
+      if (gameTimers[gameCode]) {
+        clearInterval(gameTimers[gameCode].interval);
+        delete gameTimers[gameCode];
+      }
       delete games[gameCode];
     } else if (game.players.length < 3 && game.gameState === "in-game") {
       console.log(
         `[Game ${gameCode}] Not enough players (${game.players.length}), ending game.`
       );
       io.to(gameCode).emit("gameEnded", game.players);
+      if (gameTimers[gameCode]) {
+        clearInterval(gameTimers[gameCode].interval);
+        delete gameTimers[gameCode];
+      }
       delete games[gameCode];
     } else {
       io.to(gameCode).emit("updatePlayerList", game.players);
@@ -370,16 +428,29 @@ io.on("connection", (socket) => {
       ) {
         if (game.players.length < 2) {
           io.to(gameCode).emit("gameEnded", "אין מספיק שחקנים כדי להמשיך.");
+          if (gameTimers[gameCode]) {
+            clearInterval(gameTimers[gameCode].interval);
+            delete gameTimers[gameCode];
+          }
           delete games[gameCode];
         } else if (game.currentRound.impostorId === sock.id) {
+          // המתחזה התנתק - עוצרים את הסבב
+          if (gameTimers[gameCode]) {
+            clearInterval(gameTimers[gameCode].interval);
+            delete gameTimers[gameCode];
+          }
           io.to(gameCode).emit("roundResult", {
-            correctlyGuessed: true, // Treat as if impostor was found
+            correctlyGuessed: true,
             impostor: leavingPlayer,
             word: game.currentRound.word,
             players: game.players,
-            customMessage: `${leavingPlayer.name} (המתחזה) עזב את המשחק!`,
+            customMessage: `${leavingPlayer.name} (המתחזה) התנתק מהמשחק!`,
+            showAdminControls: true // מציג את כפתורי ההמשך למנהל
           });
-          // REMOVED: setTimeout(() => startNewRound(gameCode), 8000);
+          game.gameState = "lobby";
+        } else {
+          // שחקן רגיל התנתק - ממשיכים כרגיל, רק מעדכנים את רשימת השחקנים
+          io.to(gameCode).emit("updatePlayerList", game.players);
         }
       }
     }

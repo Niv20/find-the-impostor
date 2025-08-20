@@ -83,6 +83,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const headerLogoContainer = document.getElementById("header-logo-container");
   const headerCreateBtn = document.getElementById("header-create-btn");
   const headerSettingsBtn = document.getElementById("header-settings-btn");
+  const headerGameCode = document.createElement("div");
+  headerGameCode.className = "header-game-code";
+  headerGameCode.innerHTML =
+    '<span>קוד: </span><span class="game-code-value"></span>';
+  headerGameCode.style.cssText =
+    "display: none; margin-right: auto; font-size: 1.2em;";
 
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
@@ -133,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     headerCreateBtn.classList.add("hidden");
     headerSettingsBtn.classList.add("hidden");
     headerLogoContainer.classList.remove("hidden");
+    headerGameCode.style.display = "none";
 
     switch (screenName) {
       case "home":
@@ -142,17 +149,28 @@ document.addEventListener("DOMContentLoaded", () => {
         // הסרת כפתור חזרה למשחק חדש
         break;
       case "lobby":
-        if (isAdmin) {
-          const settingsWrapper = document.createElement("div");
-          settingsWrapper.className = "settings-wrapper";
-          headerSettingsBtn.classList.remove("hidden");
-          settingsWrapper.appendChild(headerSettingsBtn);
-          document.querySelector("#app-header").appendChild(settingsWrapper);
-        }
-        break;
       case "game":
       case "voting":
       case "result":
+        if (isAdmin) {
+          // הצגת כפתור הגדרות וקוד משחק בכל המסכים למנהל
+          const header = document.querySelector("#app-header");
+          if (screenName === "lobby") {
+            const settingsWrapper = document.createElement("div");
+            settingsWrapper.className = "settings-wrapper";
+            headerSettingsBtn.classList.remove("hidden");
+            settingsWrapper.appendChild(headerSettingsBtn);
+            header.appendChild(settingsWrapper);
+          }
+
+          // הצגת קוד המשחק
+          headerGameCode.style.display = "flex";
+          headerGameCode.querySelector(".game-code-value").textContent =
+            gameCode;
+          if (!header.contains(headerGameCode)) {
+            header.appendChild(headerGameCode);
+          }
+        }
         break;
       case "endGame":
         // No buttons shown, just logo
@@ -439,6 +457,73 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("connect", () => (myId = socket.id));
   socket.on("avatarList", (avatars) => (availableAvatars = avatars));
 
+  // הוספת מאזין להודעות על התנתקות שחקן
+  socket.on("playerDisconnected", (data) => {
+    const { player } = data;
+
+    // יצירת הודעת התנתקות
+    const notification = document.createElement("div");
+    notification.className = "disconnect-notification";
+    notification.innerHTML = `
+      <div class="disconnect-content">
+        <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
+        <span>${player.name} התנתק מהמשחק</span>
+        <button class="close-notification">×</button>
+      </div>
+    `;
+
+    // הוספת סגנונות לאנימציה
+    const style = document.createElement("style");
+    style.textContent = `
+      .disconnect-notification {
+        position: fixed;
+        bottom: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 9999;
+        transition: bottom 0.3s ease-in-out;
+      }
+      .disconnect-notification.show {
+        bottom: 20px;
+      }
+      .disconnect-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .close-notification {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0 8px;
+      }
+    `;
+
+    document.head.appendChild(style);
+    document.body.appendChild(notification);
+
+    // הפעלת האנימציה
+    setTimeout(() => notification.classList.add("show"), 100);
+
+    // הסרת ההודעה אחרי שתי שניות
+    setTimeout(() => {
+      notification.classList.remove("show");
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
+
+    // הוספת אפשרות לסגירה ידנית
+    notification.querySelector(".close-notification").onclick = () => {
+      notification.classList.remove("show");
+      setTimeout(() => notification.remove(), 300);
+    };
+  });
+
   socket.on("errorMsg", (message) => {
     showModalMessage(message, {
       okText: "אישור",
@@ -490,6 +575,57 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen("lobby");
   });
 
+  // יצירת מסך המתנה להצטרפות באמצע משחק
+  const waitingScreen = document.createElement("div");
+  waitingScreen.id = "waiting-screen";
+  waitingScreen.className = "screen hidden";
+  waitingScreen.innerHTML = `
+    <div class="waiting-content">
+      <div class="loading-circle"></div>
+      <h2 class="waiting-message"></h2>
+      <div class="player-count">
+        <span>שחקנים במשחק: </span>
+        <span class="waiting-player-count"></span>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(waitingScreen);
+  screens.waiting = waitingScreen;
+
+  // הוספת סגנונות למסך ההמתנה
+  const waitingStyles = document.createElement("style");
+  waitingStyles.textContent = `
+    .waiting-content {
+      text-align: center;
+      padding: 2rem;
+    }
+    .loading-circle {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .waiting-message {
+      font-size: 1.5rem;
+      margin: 1rem 0;
+      opacity: 0;
+      animation: fadeInOut 2s ease-in-out infinite;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+  `;
+  document.head.appendChild(waitingStyles);
+
   socket.on("joinedSuccess", (data) => {
     adminControls.classList.add("hidden");
     settingsBtn.classList.add("hidden");
@@ -502,12 +638,32 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen("lobby");
   });
 
+  socket.on("joinedMidGame", (data) => {
+    const waitingMessage = waitingScreen.querySelector(".waiting-message");
+    const playerCountSpan = waitingScreen.querySelector(
+      ".waiting-player-count"
+    );
+
+    waitingMessage.textContent = data.message;
+    playerCountSpan.textContent = data.players.length;
+    showScreen("waiting");
+
+    // עדכון רשימת השחקנים במסך ההמתנה
+    updatePlayerList(data.players);
+    previousPlayers = data.players;
+  });
+
   socket.on("updatePlayerList", (players) => {
     updatePlayerList(players);
     previousPlayers = players;
   });
 
   socket.on("roundStart", (data) => {
+    // אם השחקן היה במסך המתנה, נעביר אותו למשחק
+    if (currentScreen === "waiting") {
+      showScreen("game");
+    }
+
     const impostorWordDisplay = document.getElementById(
       "impostor-word-display"
     );
@@ -521,7 +677,6 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleWordBtn.textContent = "הסתר מילה";
     if (toggleImpostorBtn) toggleImpostorBtn.textContent = "הסתר מילה";
     timerDisplay.style.opacity = 0;
-
     if (data.isImpostor) {
       wordDisplayContainer.classList.add("hidden");
       impostorDisplay.classList.remove("hidden");
@@ -554,13 +709,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setTimeout(() => {
       timerDisplay.style.opacity = 1;
-      startTimer(data.timer);
+      updateTimerDisplay(data.timeLeft);
     }, 3000);
 
     showScreen("game");
   });
 
   socket.on("startVoting", (data) => {
+    // אם השחקן במסך המתנה, נעדכן את ההודעה
+    if (currentScreen === "waiting") {
+      const waitingMessage = document.querySelector(".waiting-message");
+      waitingMessage.textContent = "ממש בעוד כמה רגעים יתחיל הסבב החדש ותיכנס";
+      return;
+    }
+
     if (typeof data === "object" && data.tieBreak) {
       // מקרה של הצבעת שובר שוויון
       showVotingScreen(data.players, {
@@ -577,6 +739,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("roundResult", (data) => {
     const { impostor, word, correctlyGuessed, players } = data;
+
+    // אם השחקן במסך המתנה, נעדכן את ההודעה
+    if (currentScreen === "waiting") {
+      const waitingMessage = document.querySelector(".waiting-message");
+      waitingMessage.textContent = "הסבב הבא מתחיל ממש עכשיו!";
+      return;
+    }
 
     // Remove voting overlay if exists
     const waitingOverlay = document.getElementById("waiting-vote-overlay");
@@ -747,23 +916,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function startTimer(duration) {
-    clearInterval(roundTimerInterval);
-    let timer = duration;
-    const update = () => {
-      const minutes = Math.floor(timer / 60)
-        .toString()
-        .padStart(2, "0");
-      const seconds = (timer % 60).toString().padStart(2, "0");
-      timerDisplay.textContent = `${minutes}:${seconds}`;
-      if (--timer < 0) {
-        clearInterval(roundTimerInterval);
-        socket.emit("timerEnded", gameCode);
-      }
-    };
-    update();
-    roundTimerInterval = setInterval(update, 1000);
+  function updateTimerDisplay(timeLeft) {
+    const minutes = Math.floor(timeLeft / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = (timeLeft % 60).toString().padStart(2, "0");
+    timerDisplay.textContent = `${minutes}:${seconds}`;
   }
+
+  socket.on("timerUpdate", (timeLeft) => {
+    updateTimerDisplay(timeLeft);
+  });
 
   function showVotingScreen(players) {
     // Clear previous voting state if exists
