@@ -36,10 +36,12 @@ fs.readdirSync(dataPath).forEach((file) => {
     wordCategories[categoryKey] = categoryData;
   }
 });
-const allCategoriesForClient = Object.entries(wordCategories).map(([id, data]) => ({
+const allCategoriesForClient = Object.entries(wordCategories).map(
+  ([id, data]) => ({
     id,
-    name: data.categoryName
-}));
+    name: data.categoryName,
+  })
+);
 
 console.log(`✅ Loaded ${Object.keys(wordCategories).length} word categories.`);
 
@@ -168,7 +170,9 @@ io.on("connection", (socket) => {
       return; // Should be prevented by client-side UI
     }
     if (game.settings.enabledCategories.length === 0) {
-        return io.to(socket.id).emit("errorMsg", "חובה לבחור לפחות קטגוריית מילים אחת בהגדרות.");
+      return io
+        .to(socket.id)
+        .emit("errorMsg", "חובה לבחור לפחות קטגוריית מילים אחת בהגדרות.");
     }
     startNewRound(gameCode);
   });
@@ -199,10 +203,17 @@ io.on("connection", (socket) => {
 
     game.players.forEach((player) => {
       const isImpostor = player.id === impostor.id;
+      let categoryForPlayer = null; // Default to no category
+
+      // Only send the category if the player is the impostor AND the setting is enabled
+      if (isImpostor && game.settings.showCategory) {
+        categoryForPlayer = category.categoryName;
+      }
+
       io.to(player.id).emit("roundStart", {
         isImpostor,
         word: isImpostor ? null : randomWord,
-        category: game.settings.showCategory ? category.categoryName : null,
+        category: categoryForPlayer,
         timer: game.settings.timer,
       });
     });

@@ -50,8 +50,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const startGameBtn = document.getElementById("start-game-btn");
   const startGameHint = document.getElementById("start-game-hint");
 
+  // Game Screen
+  const timerDisplay = document.getElementById("timer-display");
+  const wordDisplayContainer = document.getElementById(
+    "word-display-container"
+  );
+  const impostorDisplay = document.getElementById("impostor-display");
+  const wordDisplay = document.getElementById("word-display");
+  const categoryDisplay = document.getElementById("category-display");
+  const impostorCategoryInfo = document.getElementById(
+    "impostor-category-info"
+  );
+
   // Settings
-  const settingsBtn = document.getElementById("header-settings-btn"); // Corrected
+  const settingsBtn = document.getElementById("header-settings-btn");
   const settingsModal = document.getElementById("settings-modal");
   const closeSettingsBtn = document.getElementById("close-settings-btn");
   const categoryListDiv = document.getElementById("category-list");
@@ -62,26 +74,24 @@ document.addEventListener("DOMContentLoaded", () => {
     headerBackBtn.classList.add("hidden");
     headerCreateBtn.classList.add("hidden");
     headerSettingsBtn.classList.add("hidden");
-    headerTitle.classList.remove("hidden"); // Reset title visibility each time
+    headerTitle.classList.remove("hidden");
 
     switch (screenName) {
       case "home":
         headerCreateBtn.classList.remove("hidden");
         break;
       case "nameEntry":
-        headerBackBtn.classList.remove("hidden");
-        break;
       case "lobby":
         headerBackBtn.classList.remove("hidden");
-        if (isAdmin) {
-          headerTitle.classList.add("hidden"); // Hide title for admin
+        if (isAdmin && screenName === "lobby") {
+          headerTitle.classList.add("hidden");
           headerSettingsBtn.classList.remove("hidden");
         }
         break;
       case "game":
       case "voting":
       case "result":
-        // No buttons shown during the game flow
+        // No buttons shown
         break;
     }
   }
@@ -104,8 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Event Listeners ---
-
-  // Header
   headerCreateBtn.addEventListener("click", () => {
     isCreatingGame = true;
     showNameEntryScreen();
@@ -126,13 +134,12 @@ document.addEventListener("DOMContentLoaded", () => {
             socket.emit("endGame", gameCode);
           }
         } else {
-          window.location.reload(); // Player leaves
+          window.location.reload();
         }
         break;
     }
   });
 
-  // Home Screen
   codeInputs.forEach((input, index) => {
     input.addEventListener("input", (e) => {
       e.target.value = e.target.value.replace(/[^0-9]/g, "");
@@ -161,11 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Name Entry Screen
   nameInput.addEventListener("input", () => {
     const len = nameInput.value.length;
     charCounter.textContent = `${len}/10`;
-    // Hebrew name validation
     const hebrewRegex = /^[א-ת\s]*$/;
     if (!hebrewRegex.test(nameInput.value)) {
       nameInput.value = nameInput.value.replace(/[^א-ת\s]/g, "");
@@ -191,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Lobby & Settings
   settingsBtn.addEventListener("click", () =>
     settingsModal.classList.remove("hidden")
   );
@@ -249,13 +253,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("updatePlayerList", (players) => updatePlayerList(players));
 
-  // ... (rest of the socket listeners for game flow remain the same)
   socket.on("roundStart", (data) => {
-    // ... same as before
+    // Hide all game containers first
+    wordDisplayContainer.classList.add("hidden");
+    impostorDisplay.classList.add("hidden");
+
+    // Clear previous round's text
+    categoryDisplay.textContent = "";
+    impostorCategoryInfo.textContent = "";
+
+    if (data.isImpostor) {
+      impostorDisplay.classList.remove("hidden");
+      // If a category was sent from the server, display it. Otherwise, this remains empty.
+      if (data.category) {
+        impostorCategoryInfo.textContent = `הקטגוריה היא: ${data.category}`;
+      }
+    } else {
+      wordDisplayContainer.classList.remove("hidden");
+      wordDisplay.textContent = data.word;
+      // The categoryDisplay for regular players will remain empty as intended.
+    }
+
+    startTimer(data.timer);
+    showScreen("game");
   });
+
   socket.on("roundResult", (data) => {
     // ... same as before
   });
+
   socket.on("gameEnded", (message = "המשחק הסתיים.") => {
     alert(message);
     window.location.reload();
@@ -293,10 +319,9 @@ document.addEventListener("DOMContentLoaded", () => {
         adminSpan.textContent = " (מנהל)";
         adminSpan.style.color = player.avatar.color;
         adminSpan.style.fontWeight = "600";
-        adminSpan.style.marginRight = "auto"; // Pushes to the end in flex container
+        adminSpan.style.marginRight = "auto";
         li.appendChild(adminSpan);
       }
-
       playerListUl.appendChild(li);
     });
     playerCountSpan.textContent = players.length;
@@ -338,15 +363,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       item.appendChild(checkbox);
       item.appendChild(label);
-
-      // Add click listener to the whole item div
       item.addEventListener("click", (e) => {
-        // If the click was directly on the container div (not bubbling from label or checkbox)
         if (e.target === item) {
-          checkbox.click(); // Programmatically click the checkbox
+          checkbox.click();
         }
       });
-
       categoryListDiv.appendChild(item);
     });
   }
@@ -369,10 +390,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Dummy implementations for functions that were collapsed for brevity
   function startTimer(duration) {
-    /* Full implementation exists */
+    clearInterval(roundTimerInterval);
+    let timer = duration;
+    const updateTimerDisplay = () => {
+      const minutes = Math.floor(timer / 60);
+      const seconds = timer % 60;
+      timerDisplay.textContent = `${minutes}:${seconds
+        .toString()
+        .padStart(2, "0")}`;
+      if (--timer < 0) {
+        clearInterval(roundTimerInterval);
+        // Optionally trigger something when timer ends, e.g., auto-vote
+      }
+    };
+    updateTimerDisplay();
+    roundTimerInterval = setInterval(updateTimerDisplay, 1000);
   }
+
   function showVotingScreen() {
     /* Full implementation exists */
   }
@@ -380,5 +415,5 @@ document.addEventListener("DOMContentLoaded", () => {
     /* Full implementation exists */
   }
 
-  showScreen("home"); // Initial screen
+  showScreen("home");
 });
