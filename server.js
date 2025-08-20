@@ -36,10 +36,12 @@ fs.readdirSync(dataPath).forEach((file) => {
     wordCategories[categoryKey] = categoryData;
   }
 });
-const allCategoriesForClient = Object.entries(wordCategories).map(([id, data]) => ({
+const allCategoriesForClient = Object.entries(wordCategories).map(
+  ([id, data]) => ({
     id,
-    name: data.categoryName
-}));
+    name: data.categoryName,
+  })
+);
 
 console.log(`✅ Loaded ${Object.keys(wordCategories).length} word categories.`);
 
@@ -168,17 +170,19 @@ io.on("connection", (socket) => {
       return; // Should be prevented by client-side UI
     }
     if (game.settings.enabledCategories.length === 0) {
-        return io.to(socket.id).emit("errorMsg", "חובה לבחור לפחות קטגוריית מילים אחת בהגדרות.");
+      return io
+        .to(socket.id)
+        .emit("errorMsg", "חובה לבחור לפחות קטגוריית מילים אחת בהגדרות.");
     }
     startNewRound(gameCode);
   });
 
-  socket.on('timerEnded', (gameCode) => {
-      const game = games[gameCode];
-      if (game && game.gameState === 'in-game') {
-          console.log(`[Game ${gameCode}] Timer ended. Starting vote.`);
-          io.to(gameCode).emit('startVoting', game.players);
-      }
+  socket.on("timerEnded", (gameCode) => {
+    const game = games[gameCode];
+    if (game && game.gameState === "in-game") {
+      console.log(`[Game ${gameCode}] Timer ended. Starting vote.`);
+      io.to(gameCode).emit("startVoting", game.players);
+    }
   });
 
   function startNewRound(gameCode) {
@@ -213,7 +217,7 @@ io.on("connection", (socket) => {
         category: game.settings.showCategory ? category.categoryName : null,
         timer: game.settings.timer,
         // Pass the showCategory setting to the client
-        showCategory: game.settings.showCategory 
+        showCategory: game.settings.showCategory,
       });
     });
     console.log(
@@ -224,7 +228,12 @@ io.on("connection", (socket) => {
   socket.on("playerVote", ({ gameCode, votedForId }) => {
     const game = games[gameCode];
     // Renamed from 'vote' to avoid conflicts, and added more checks
-    if (!game || !game.currentRound || game.currentRound.votes[socket.id] || game.currentRound.revealed) {
+    if (
+      !game ||
+      !game.currentRound ||
+      game.currentRound.votes[socket.id] ||
+      game.currentRound.revealed
+    ) {
       return;
     }
 
@@ -349,33 +358,34 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 
 // הצגת כותרת הצבעה
-const votingScreen = document.getElementById('voting-screen');
-const mainTitle = votingScreen.querySelector('h2');
-if (mainTitle) mainTitle.classList.remove('hidden');
+const votingScreen = document.getElementById("voting-screen");
+const mainTitle = votingScreen.querySelector("h2");
+if (mainTitle) mainTitle.classList.remove("hidden");
 
 // יצירת overlay להמתנה (אם לא קיים)
-let waitingOverlay = document.getElementById('waiting-vote-overlay');
+let waitingOverlay = document.getElementById("waiting-vote-overlay");
 if (!waitingOverlay) {
-    waitingOverlay = document.createElement('div');
-    waitingOverlay.id = 'waiting-vote-overlay';
-    waitingOverlay.className = 'hidden';
-    waitingOverlay.style.position = 'fixed';
-    waitingOverlay.style.top = '0';
-    waitingOverlay.style.left = '0';
-    waitingOverlay.style.width = '100vw';
-    waitingOverlay.style.height = '100vh';
-    waitingOverlay.style.background = 'rgba(0,0,0,0.85)';
-    waitingOverlay.style.zIndex = '999';
-    waitingOverlay.style.display = 'flex';
-    waitingOverlay.style.flexDirection = 'column';
-    waitingOverlay.style.justifyContent = 'center';
-    waitingOverlay.style.alignItems = 'center';
-    waitingOverlay.innerHTML = '<h2 style=\"color:white;\">הצבעתך התקבלה</h2><p style=\"color:#eee;font-size:1.2rem;\">אנא המתן לשאר המשתתפים...</p>';
-    votingScreen.appendChild(waitingOverlay);
+  waitingOverlay = document.createElement("div");
+  waitingOverlay.id = "waiting-vote-overlay";
+  waitingOverlay.className = "hidden";
+  waitingOverlay.style.position = "fixed";
+  waitingOverlay.style.top = "0";
+  waitingOverlay.style.left = "0";
+  waitingOverlay.style.width = "100vw";
+  waitingOverlay.style.height = "100vh";
+  waitingOverlay.style.background = "rgba(0,0,0,0.85)";
+  waitingOverlay.style.zIndex = "999";
+  waitingOverlay.style.display = "flex";
+  waitingOverlay.style.flexDirection = "column";
+  waitingOverlay.style.justifyContent = "center";
+  waitingOverlay.style.alignItems = "center";
+  waitingOverlay.innerHTML =
+    '<h2 style="color:white;">הצבעתך התקבלה</h2><p style="color:#eee;font-size:1.2rem;">אנא המתן לשאר המשתתפים...</p>';
+  votingScreen.appendChild(waitingOverlay);
 }
-waitingOverlay.classList.add('hidden');
+waitingOverlay.classList.add("hidden");
 
-voteOptionsDiv.classList.add('voting-done');
-document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
-waitingOverlay.classList.remove('hidden');
+voteOptionsDiv.classList.add("voting-done");
+document.querySelectorAll(".vote-btn").forEach((b) => (b.disabled = true));
+waitingOverlay.classList.remove("hidden");
 socket.emit("playerVote", { gameCode, votedForId: player.id });
