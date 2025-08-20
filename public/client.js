@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let allCategories = [];
   let enabledCategories = [];
   let currentScreen = 'home';
+  let previousPlayers = []; // For score animation
 
   // --- Screen Elements ---
   const screens = {
@@ -249,6 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(shareCodeText) shareCodeText.textContent = "שתף עם חברים את הקוד:";
     populateCategorySettings();
     updatePlayerList(data.players);
+    previousPlayers = data.players;
     showScreen("lobby");
   });
 
@@ -257,10 +259,14 @@ document.addEventListener("DOMContentLoaded", () => {
     settingsBtn.classList.add("hidden");
     if(shareCodeText) shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
     updatePlayerList(data.players);
+    previousPlayers = data.players;
     showScreen("lobby");
   });
 
-  socket.on("updatePlayerList", (players) => updatePlayerList(players));
+  socket.on("updatePlayerList", (players) => {
+      updatePlayerList(players);
+      previousPlayers = players;
+  });
 
   socket.on("roundStart", (data) => {
     wordDisplayContainer.classList.remove('hidden');
@@ -294,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resultTitle.textContent = correctlyGuessed ? "המתחזה נתפס!" : "המתחזה ניצח!";
     resultScreen.dataset.impostorFound = correctlyGuessed;
     resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
-    updateScoreList(players, scoreListUl);
+    updateScoreList(players, scoreListUl, true);
     if (isAdmin) {
         adminResultControls.classList.remove("hidden");
         waitingForAdminMsg.classList.add("hidden");
@@ -325,11 +331,18 @@ document.addEventListener("DOMContentLoaded", () => {
         winnerListDiv.textContent = "אין מנצחים בסבב זה.";
     }
 
-    updateScoreList(players, finalScoreListUl);
+    updateScoreList(players, finalScoreListUl, false); // No animation for final screen
     showScreen("endGame");
   });
 
   // --- Helper Functions ---
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   function validateCodeInputs() {
     const code = Array.from(codeInputs).map((input) => input.value).join("");
     joinGameBtn.disabled = code.length !== 4;
@@ -348,6 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
     playerListUl.innerHTML = "";
     players.forEach((player) => {
       const li = document.createElement("li");
+      li.dataset.id = player.id;
       const avatarImg = `<img src="/avatars/${player.avatar.file}" class="avatar-circle-small">`;
       const nameSpan = `<span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>`;
       li.innerHTML = `${avatarImg}${nameSpan}`;
@@ -374,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
       checkbox.checked = enabledCategories.includes(cat.id);
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
-          enabledCategories.push(cat.id);
+          if(!enabledCategories.includes(cat.id)) enabledCategories.push(cat.id);
         } else {
           enabledCategories = enabledCategories.filter((c) => c !== cat.id);
         }
@@ -430,20 +444,76 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen("voting");
   }
 
-  function updateScoreList(players, listElement) {
+  function updateScoreList(players, listElement, withAnimation) {
+    const oldPositions = {};
+    if (withAnimation) {
+        Array.from(listElement.children).forEach(li => {
+            oldPositions[li.dataset.id] = li.getBoundingClientRect();
+        });
+    }
+
+    const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+    const maxScore = sortedPlayers.length > 0 ? sortedPlayers[0].score : 0;
+
     listElement.innerHTML = "";
-    players.sort((a, b) => b.score - a.score);
-    players.forEach(player => {
+
+    sortedPlayers.forEach(player => {
         const li = document.createElement("li");
+        li.dataset.id = player.id;
+
+        if (maxScore > 0 && player.score === maxScore) {
+            li.classList.add("top-player");
+            li.style.setProperty('--player-highlight-color', hexToRgba(player.avatar.color, 0.3));
+        }
+
+        const scoreDiff = player.score - (previousPlayers.find(p => p.id === player.id)?.score || 0);
+
         li.innerHTML = `
             <div>
                 <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
                 <span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>
             </div>
-            <span class="player-score">${player.score} נק'</span>
+            <div class="player-score-wrapper">
+                <span class="player-score">${player.score} נק'</span>
+            </div>
         `;
+        
+        if (withAnimation && scoreDiff > 0) {
+            const scoreChangeSpan = document.createElement('span');
+            scoreChangeSpan.className = 'score-change';
+            scoreChangeSpan.textContent = `+${scoreDiff}`;
+            li.querySelector('.player-score-wrapper').appendChild(scoreChangeSpan);
+            scoreChangeSpan.addEventListener('animationend', () => scoreChangeSpan.remove());
+        }
+
         listElement.appendChild(li);
     });
+
+    if (withAnimation) {
+        const newPositions = {};
+        Array.from(listElement.children).forEach(li => {
+            newPositions[li.dataset.id] = li.getBoundingClientRect();
+        });
+
+        Array.from(listElement.children).forEach(li => {
+            const oldPos = oldPositions[li.dataset.id];
+            if (!oldPos) return;
+            const newPos = newPositions[li.dataset.id];
+            const deltaX = oldPos.left - newPos.left;
+            const deltaY = oldPos.top - newPos.top;
+
+            requestAnimationFrame(() => {
+                li.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                li.style.transition = 'transform 0s';
+
+                requestAnimationFrame(() => {
+                    li.style.transform = '';
+                    li.style.transition = 'transform 0.6s ease-in-out';
+                });
+            });
+        });
+    }
+    previousPlayers = players;
   }
 
   document.querySelectorAll(".timer-btn").forEach((btn) => {

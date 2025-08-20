@@ -335,6 +335,43 @@ button:disabled {
   display: flex;
   align-items: center;
 }
+
+#score-list li {
+    transition: transform 0.6s ease-in-out, background-color 0.6s ease-in-out;
+}
+
+#score-list li.top-player {
+    background: linear-gradient(to left, var(--player-highlight-color), #2c2c34 80%);
+}
+
+.player-score-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+@keyframes fade-up-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+.score-change {
+    position: absolute;
+    left: -35px; /* Adjust for RTL */
+    top: -5px;
+    color: var(--success-color);
+    font-weight: 700;
+    font-size: 1rem;
+    animation: fade-up-out 1.5s ease-out forwards;
+}
+
+
 #score-list li,
 #final-score-list li {
   justify-content: space-between;
