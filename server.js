@@ -371,7 +371,3 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server is live and running on port ${PORT}`);
 });
 
-voteOptionsDiv.classList.add("voting-done");
-document.querySelectorAll(".vote-btn").forEach((b) => (b.disabled = true));
-waitingOverlay.classList.remove("hidden");
-socket.emit("playerVote", { gameCode, votedForId: player.id });
