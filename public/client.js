@@ -149,11 +149,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // הסרת כפתור חזרה למשחק חדש
         break;
       case "lobby":
-      case "game":
       case "voting":
       case "result":
         if (isAdmin) {
-          // הצגת כפתור הגדרות וקוד משחק בכל המסכים למנהל
+          // הצגת כפתור הגדרות למנהל
           const header = document.querySelector("#app-header");
           if (screenName === "lobby") {
             const settingsWrapper = document.createElement("div");
@@ -162,14 +161,18 @@ document.addEventListener("DOMContentLoaded", () => {
             settingsWrapper.appendChild(headerSettingsBtn);
             header.appendChild(settingsWrapper);
           }
-
-          // הצגת קוד המשחק
-          headerGameCode.style.display = "flex";
-          headerGameCode.querySelector(".game-code-value").textContent =
-            gameCode;
-          if (!header.contains(headerGameCode)) {
-            header.appendChild(headerGameCode);
-          }
+        }
+        break;
+      case "game":
+        // הצגת קוד המשחק בheader רק במסך המשחק
+        const header = document.querySelector("#app-header");
+        headerGameCode.style.display = "flex";
+        headerGameCode.querySelector(".game-code-value").textContent = gameCode;
+        if (!header.contains(headerGameCode)) {
+          header.appendChild(headerGameCode);
+        }
+        if (isAdmin) {
+          headerSettingsBtn.classList.remove("hidden");
         }
         break;
       case "endGame":
@@ -662,6 +665,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // אם השחקן היה במסך המתנה, נעביר אותו למשחק
     if (currentScreen === "waiting") {
       showScreen("game");
+    }
+
+    // הצגת הקוד בheader כשהמשחק מתחיל
+    const headerGameCode = document.querySelector(".header-game-code");
+    if (headerGameCode) {
+      headerGameCode.style.display = "flex";
     }
 
     const impostorWordDisplay = document.getElementById(
