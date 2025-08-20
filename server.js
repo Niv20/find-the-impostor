@@ -176,6 +176,8 @@ io.on("connection", (socket) => {
         ...game.settings,
         ...settings,
       };
+      // !!! FOR DEBUGGING ONLY - DELETE THIS LINE IN PRODUCTION !!!
+      game.settings.timer = 3;
     }
   });
 
