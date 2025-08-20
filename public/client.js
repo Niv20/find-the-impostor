@@ -160,19 +160,62 @@ document.addEventListener("DOMContentLoaded", () => {
   // Home Screen
   codeInputs.forEach((input, index) => {
     input.addEventListener("input", (e) => {
-      e.target.value = e.target.value.replace(/[^0-9]/g, "");
-      if (e.target.value && index < codeInputs.length - 1) {
-        codeInputs[index + 1].focus();
+      // מחיקת כל תו שאינו ספרה
+      const newValue = e.target.value.replace(/[^0-9]/g, "");
+
+      // אם המשתמש הדביק מספר ארוך
+      if (newValue.length > 1) {
+        const digits = newValue.split("");
+        codeInputs.forEach((input, i) => {
+          if (digits[i]) {
+            input.value = digits[i];
+            if (i < codeInputs.length - 1) {
+              codeInputs[i + 1].focus();
+            }
+          }
+        });
+      } else {
+        // הזנה רגילה של ספרה בודדת
+        e.target.value = newValue;
+        if (newValue && index < codeInputs.length - 1) {
+          codeInputs[index + 1].focus();
+        }
       }
       validateCodeInputs();
     });
+
     input.addEventListener("focus", (e) => e.target.select());
+
     input.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace" && !input.value && index > 0) {
-        codeInputs[index - 1].focus();
+      if (e.key === "Backspace") {
+        if (!input.value && index > 0) {
+          codeInputs[index - 1].focus();
+          codeInputs[index - 1].value = "";
+        }
       } else if (e.key === "Enter" && !joinGameBtn.disabled) {
         joinGameBtn.click();
+      } else if (e.key === "ArrowLeft" && index > 0) {
+        codeInputs[index - 1].focus();
+      } else if (e.key === "ArrowRight" && index < codeInputs.length - 1) {
+        codeInputs[index + 1].focus();
       }
+    });
+
+    // מנע הדבקה ישירה בתיבה בודדת
+    input.addEventListener("paste", (e) => {
+      e.preventDefault();
+      const pastedData = e.clipboardData.getData("text");
+      const digits = pastedData.replace(/[^0-9]/g, "").split("");
+
+      codeInputs.forEach((input, i) => {
+        if (digits[i]) {
+          input.value = digits[i];
+          if (i < codeInputs.length - 1) {
+            codeInputs[i + 1].focus();
+          }
+        }
+      });
+      validateCodeInputs();
     });
   });
 
