@@ -17,7 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Screen Elements ---
   const screens = {
-    home: document.getElementById("home-screen"),
+    home      // מצא את המנהל
+      const admin = players.find(p => p.isAdmin);
+      adminResultControls.classList.add("hidden");
+      waitingForAdminMsg.textContent = `${admin.name} ימשיך את המשחק מיד`;
+      waitingForAdminMsg.classList.remove("hidden");ocument.getElementById("home-screen"),
     nameEntry: document.getElementById("name-entry-screen"),
     lobby: document.getElementById("lobby-screen"),
     game: document.getElementById("game-screen"),
@@ -442,8 +446,19 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen("game");
   });
 
-  socket.on("startVoting", (players) => {
-    showVotingScreen(players);
+  socket.on("startVoting", (data) => {
+    if (typeof data === 'object' && data.tieBreak) {
+      // מקרה של הצבעת שובר שוויון
+      showVotingScreen(data.players, {
+        canVote: data.canVote,
+        isPartOfTie: data.isPartOfTie,
+        excludedFromVoting: data.excludedFromVoting,
+        tiePlayers: data.tiePlayers
+      });
+    } else {
+      // הצבעה רגילה
+      showVotingScreen(data);
+    }
   });
 
   socket.on("roundResult", (data) => {
@@ -486,6 +501,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("gameEnded", (players) => {
+    // הפעלת אנימציית קונפטי
+    createConfetti();
+    
     let maxScore = -1;
     players.forEach((p) => {
       if (p.score > maxScore) maxScore = p.score;
@@ -624,7 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
     roundTimerInterval = setInterval(update, 1000);
   }
 
-  function showVotingScreen(players) {
+  function showVotingScreen(players, tieBreakData = null) {
     // Clear previous voting state if exists
     const existingOverlay = document.getElementById("waiting-vote-overlay");
     if (existingOverlay) {
@@ -638,7 +656,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // הצגת כותרת הצבעה
     const votingScreen = document.getElementById("voting-screen");
     const mainTitle = votingScreen.querySelector("h2");
-    if (mainTitle) mainTitle.classList.remove("hidden");
+    
+    if (tieBreakData) {
+      // מקרה של שובר שוויון
+      if (tieBreakData.canVote) {
+        mainTitle.textContent = "הצבעה מכרעת!";
+        const subtitle = document.createElement("p");
+        subtitle.className = "voting-subtitle";
+        subtitle.textContent = "התקבל תיקו! הצביעו שוב בין שני השחקנים הבאים:";
+        mainTitle.after(subtitle);
+      } else if (tieBreakData.isPartOfTie) {
+        mainTitle.textContent = "ממתין לתוצאות...";
+        const subtitle = document.createElement("p");
+        subtitle.className = "voting-subtitle";
+        subtitle.textContent = "חושדים בך! שאר השחקנים מצביעים כעת מי מביניכם הוא המתחזה.";
+        mainTitle.after(subtitle);
+        return; // אין צורך להציג אפשרויות הצבעה
+      } else if (tieBreakData.excludedFromVoting) {
+        mainTitle.textContent = "ממתין לתוצאות...";
+        const subtitle = document.createElement("p");
+        subtitle.className = "voting-subtitle";
+        subtitle.textContent = "נבחרת באופן אקראי לא להשתתף בהצבעה המכרעת כדי להבטיח תוצאה חד משמעית.";
+        mainTitle.after(subtitle);
+        return; // אין צורך להציג אפשרויות הצבעה
+      }
+    } else {
+      mainTitle.textContent = "מי המתחזה?";
+      if (mainTitle) mainTitle.classList.remove("hidden");
+    }
 
     // יצירת overlay חדש להמתנה
     const waitingOverlay = document.createElement("div");
@@ -663,7 +708,16 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     votingScreen.appendChild(waitingOverlay);
 
-    const playersToVoteFor = players.filter((p) => p.id !== myId);
+    let playersToVoteFor;
+    if (tieBreakData && tieBreakData.canVote) {
+      // במקרה של שובר שוויון, מציגים רק את שני השחקנים בתיקו
+      playersToVoteFor = players.filter(p => 
+        tieBreakData.tiePlayers.includes(p.id));
+    } else {
+      // הצבעה רגילה - כל השחקנים חוץ מהמצביע עצמו
+      playersToVoteFor = players.filter((p) => p.id !== myId);
+    }
+
     playersToVoteFor.forEach((player) => {
       const btn = document.createElement("button");
       btn.className = "vote-btn";
@@ -678,7 +732,11 @@ document.addEventListener("DOMContentLoaded", () => {
           .classList.remove("hidden");
 
         // Send vote to server
-        socket.emit("playerVote", { gameCode, votedForId: player.id });
+        socket.emit("playerVote", { 
+          gameCode, 
+          votedForId: player.id,
+          isTieBreaker: !!tieBreakData
+        });
       });
       const avatarImg = document.createElement("img");
       avatarImg.src = `/avatars/${player.avatar.file}`;
@@ -712,10 +770,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (withAnimation && maxScore > 0 && player.score === maxScore) {
         li.classList.add("top-player");
-        li.style.setProperty(
-          "--player-highlight-color",
-          hexToRgba(player.avatar.color, 0.3)
-        );
+        li.style.borderColor = player.avatar.color;
       }
 
       const scoreDiff =

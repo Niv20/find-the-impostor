@@ -504,17 +504,17 @@ button:disabled {
   justify-content: space-between;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
-  width: 92%;
-  max-width: 400px;
+  width: 300px;
   margin-left: auto;
   margin-right: auto;
 }
 #score-list li {
-  transition: transform 0.6s ease-in-out, background-color 0.6s ease-in-out;
+  transition: transform 0.6s ease-in-out;
 }
 #score-list li.top-player {
-  background-color: var(--card-hover);
-  border: 1px solid var(--primary-color);
+  background-color: var(--card-color);
+  border-width: 2px;
+  border-style: solid;
 }
 .player-score-wrapper {
   position: relative;
@@ -533,7 +533,7 @@ button:disabled {
 }
 .score-change {
   position: absolute;
-  left: -35px;
+  right: -35px;
   top: -5px;
   color: var(--success-color);
   font-weight: 700;
@@ -762,6 +762,13 @@ input:checked + .slider:before {
   gap: 15px;
   width: 100%;
 }
+
+.voting-subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin: 10px 0 25px 0;
+  line-height: 1.4;
+}
 .vote-btn {
   width: 100%;
   padding: 15px 10px;
@@ -799,6 +806,44 @@ input:checked + .slider:before {
 }
 #result-screen[data-impostor-found="false"] #result-title {
   color: var(--error-color);
+}
+
+/* Confetti Animation */
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  animation: confettiFall linear forwards;
+  z-index: 1000;
+}
+
+/* Header Adjustments */
+#header-create-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+#header-settings-btn {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.settings-wrapper {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 /* Result Screen Controls */
