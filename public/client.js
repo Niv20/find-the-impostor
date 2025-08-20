@@ -459,7 +459,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const winnerCard = document.createElement("div");
         winnerCard.className = "winner-card";
         winnerCard.innerHTML = `
-                <img src="/avatars/${winner.avatar.file}" class="avatar-circle-small">
+                <div class="winner-avatar" style="background-color: ${winner.avatar.color}20">
+                    <img src="/avatars/${winner.avatar.file}" class="avatar-circle-small">
+                </div>
                 <span class="player-name">${winner.name}</span>
             `;
         winnerListDiv.appendChild(winnerCard);
