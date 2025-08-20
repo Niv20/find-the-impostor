@@ -347,6 +347,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("roundResult", (data) => {
     const { impostor, word, correctlyGuessed, players } = data;
+
+    // Remove voting overlay if exists
+    const waitingOverlay = document.getElementById("waiting-vote-overlay");
+    if (waitingOverlay) {
+      waitingOverlay.classList.add("hidden");
+    }
+
     resultTitle.textContent = correctlyGuessed
       ? "המתחזה נתפס!"
       : "המתחזה ניצח!";
@@ -354,19 +361,18 @@ document.addEventListener("DOMContentLoaded", () => {
     resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
     updateScoreList(players, scoreListUl, true);
 
-    adminResultControls.classList.add("hidden"); // Hide buttons for all
-    waitingForAdminMsg.textContent = "הסבב הבא יתחיל בעוד מספר שניות...";
-    waitingForAdminMsg.classList.remove("hidden");
-
-    // B2: Auto-advance to next round (only admin sends the signal)
+    // Setup for next round
     if (isAdmin) {
+      adminResultControls.classList.add("hidden");
+      waitingForAdminMsg.textContent = "הסבב הבא יתחיל בעוד מספר שניות...";
+      waitingForAdminMsg.classList.remove("hidden");
       setTimeout(() => {
         socket.emit("startGame", gameCode);
-      }, 5000); // 5 second delay before starting next round
+      }, 5000);
     } else {
-      // הצגת כפתור למנהל בלבד, לשאר הודעת המתנה
-      adminResultControls.classList.remove("hidden");
-      waitingForAdminMsg.classList.add("hidden");
+      adminResultControls.classList.add("hidden");
+      waitingForAdminMsg.textContent = "הסבב הבא יתחיל בעוד מספר שניות...";
+      waitingForAdminMsg.classList.remove("hidden");
     }
 
     // הסתרת overlay הצבעה אם קיים
@@ -515,48 +521,59 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showVotingScreen(players) {
+    // Clear previous voting state if exists
+    const existingOverlay = document.getElementById("waiting-vote-overlay");
+    if (existingOverlay) {
+      existingOverlay.remove();
+    }
+
     const voteOptionsDiv = document.getElementById("vote-options");
     voteOptionsDiv.innerHTML = "";
-    voteOptionsDiv.classList.remove("voting-done"); // Reset class for new round
+    voteOptionsDiv.classList.remove("voting-done");
 
     // הצגת כותרת הצבעה
     const votingScreen = document.getElementById("voting-screen");
     const mainTitle = votingScreen.querySelector("h2");
     if (mainTitle) mainTitle.classList.remove("hidden");
 
-    // יצירת overlay להמתנה (אם לא קיים)
-    let waitingOverlay = document.getElementById("waiting-vote-overlay");
-    if (!waitingOverlay) {
-      waitingOverlay = document.createElement("div");
-      waitingOverlay.id = "waiting-vote-overlay";
-      waitingOverlay.className = "hidden";
-      waitingOverlay.style.position = "fixed";
-      waitingOverlay.style.top = "0";
-      waitingOverlay.style.left = "0";
-      waitingOverlay.style.width = "100vw";
-      waitingOverlay.style.height = "100vh";
-      waitingOverlay.style.background = "rgba(0,0,0,0.85)";
-      waitingOverlay.style.zIndex = "999";
-      waitingOverlay.style.display = "flex";
-      waitingOverlay.style.flexDirection = "column";
-      waitingOverlay.style.justifyContent = "center";
-      waitingOverlay.style.alignItems = "center";
-      waitingOverlay.innerHTML =
-        '<h2 style="color:white;">הצבעתך התקבלה</h2><p style="color:#eee;font-size:1.2rem;">אנא המתן לשאר המשתתפים...</p>';
-      votingScreen.appendChild(waitingOverlay);
-    }
-    waitingOverlay.classList.add("hidden");
+    // יצירת overlay חדש להמתנה
+    const waitingOverlay = document.createElement("div");
+    waitingOverlay.id = "waiting-vote-overlay";
+    waitingOverlay.className = "hidden";
+    waitingOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.85);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    `;
+    waitingOverlay.innerHTML = `
+      <h2 style="color:white;">הצבעתך התקבלה</h2>
+      <p style="color:#eee;font-size:1.2rem;">אנא המתן לשאר המשתתפים...</p>
+    `;
+    votingScreen.appendChild(waitingOverlay);
 
     const playersToVoteFor = players.filter((p) => p.id !== myId);
     playersToVoteFor.forEach((player) => {
       const btn = document.createElement("button");
       btn.className = "vote-btn";
       btn.addEventListener("click", () => {
+        // Disable all vote buttons and show overlay
         voteOptionsDiv.classList.add("voting-done");
         document
           .querySelectorAll(".vote-btn")
           .forEach((b) => (b.disabled = true));
-        waitingOverlay.classList.remove("hidden");
+        document
+          .getElementById("waiting-vote-overlay")
+          .classList.remove("hidden");
+
+        // Send vote to server
         socket.emit("playerVote", { gameCode, votedForId: player.id });
       });
       const avatarImg = document.createElement("img");
