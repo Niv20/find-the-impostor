@@ -89,7 +89,7 @@ io.on("connection", (socket) => {
         { id: socket.id, name, score: 0, isAdmin: true, avatar: adminAvatar },
       ],
       settings: {
-        timer: 60, // Default timer set to 60 seconds
+        timer: 60, // Default timer set to 60 seconds but can be changed from settings
         showCategory: true,
         enabledCategories: Object.keys(wordCategories), // Default to all category IDs
       },
@@ -172,11 +172,9 @@ io.on("connection", (socket) => {
   socket.on("changeSettings", ({ gameCode, settings }) => {
     const game = games[gameCode];
     if (game && game.adminId === socket.id) {
-      // בדיבאג תמיד נשמור על טיימר של 5 שניות
       game.settings = {
         ...game.settings,
         ...settings,
-        timer: game.settings.timer || 60, // Use game settings or default to 60 seconds
       };
     }
   });
