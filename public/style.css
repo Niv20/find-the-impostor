@@ -132,6 +132,8 @@
   }
 }
 
+@import url("https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap");
+
 :root {
   /* Dark mode colors inspired by Apple */
   --bg-color: #000000;
@@ -457,6 +459,14 @@ button:disabled {
   color: var(--text-muted);
   margin-bottom: 5px;
 }
+
+.share-code-text.waiting-text {
+  position: fixed;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+}
 #game-code-display {
   background-color: #111;
   color: var(--primary-color);
@@ -569,6 +579,10 @@ button:disabled {
   max-height: 80vh;
   overflow-y: auto;
 }
+.settings-divider {
+  display: none; /* מבטל את הקו המפריד הכפול */
+}
+
 .modal-content .settings-grid:not(:last-child) {
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 15px;

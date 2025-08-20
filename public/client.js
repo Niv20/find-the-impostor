@@ -387,7 +387,10 @@ document.addEventListener("DOMContentLoaded", () => {
     gameCodeDisplay.textContent = gameCode;
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
-    if (shareCodeText) shareCodeText.textContent = "שתף עם חברים את הקוד:";
+    if (shareCodeText) {
+      shareCodeText.textContent = "שתף עם חברים את הקוד:";
+      shareCodeText.classList.remove("waiting-text");
+    }
     populateCategorySettings();
     updatePlayerList(data.players);
     previousPlayers = data.players;
@@ -397,8 +400,10 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("joinedSuccess", (data) => {
     adminControls.classList.add("hidden");
     settingsBtn.classList.add("hidden");
-    if (shareCodeText)
+    if (shareCodeText) {
       shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
+      shareCodeText.classList.add("waiting-text");
+    }
     updatePlayerList(data.players);
     previousPlayers = data.players;
     showScreen("lobby");
@@ -827,18 +832,38 @@ document.addEventListener("DOMContentLoaded", () => {
     cancelBtn.textContent = options.cancelText || "ביטול";
     cancelBtn.classList.toggle("hidden", !options.onCancel);
     overlay.classList.remove("hidden");
+
     function closeModal() {
       overlay.classList.add("hidden");
       okBtn.onclick = null;
       cancelBtn.onclick = null;
+      overlay.onclick = null;
     }
+
+    function handleDefaultAction() {
+      closeModal();
+      if (options.onCancel) {
+        options.onCancel();
+      } else if (options.onOk) {
+        options.onOk();
+      }
+    }
+
     okBtn.onclick = () => {
       closeModal();
       if (options.onOk) options.onOk();
     };
+
     cancelBtn.onclick = () => {
       closeModal();
       if (options.onCancel) options.onCancel();
+    };
+
+    // לחיצה מחוץ לחלון תפעיל את ברירת המחדל
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        handleDefaultAction();
+      }
     };
   }
 });
