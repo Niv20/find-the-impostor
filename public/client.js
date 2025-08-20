@@ -160,27 +160,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // Home Screen
   codeInputs.forEach((input, index) => {
     input.addEventListener("input", (e) => {
+      e.preventDefault();
       // מחיקת כל תו שאינו ספרה
-      const newValue = e.target.value.replace(/[^0-9]/g, "");
+      let newValue = e.target.value.replace(/[^0-9]/g, "");
 
-      // אם המשתמש הדביק מספר ארוך
+      // לקחת רק את הספרה האחרונה אם הוכנס יותר מתו אחד
       if (newValue.length > 1) {
-        const digits = newValue.split("");
-        codeInputs.forEach((input, i) => {
-          if (digits[i]) {
-            input.value = digits[i];
-            if (i < codeInputs.length - 1) {
-              codeInputs[i + 1].focus();
-            }
-          }
-        });
-      } else {
-        // הזנה רגילה של ספרה בודדת
-        e.target.value = newValue;
-        if (newValue && index < codeInputs.length - 1) {
-          codeInputs[index + 1].focus();
-        }
+        newValue = newValue.slice(-1);
       }
+
+      // עדכון הערך בתיבה הנוכחית
+      input.value = newValue;
+
+      // מעבר לתיבה הבאה אם הוכנסה ספרה
+      if (newValue.length === 1 && index < codeInputs.length - 1) {
+        setTimeout(() => {
+          codeInputs[index + 1].focus();
+        }, 0);
+      }
+
       validateCodeInputs();
     });
 
@@ -207,14 +205,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const pastedData = e.clipboardData.getData("text");
       const digits = pastedData.replace(/[^0-9]/g, "").split("");
 
+      // מילוי הערכים בכל התיבות
       codeInputs.forEach((input, i) => {
         if (digits[i]) {
           input.value = digits[i];
-          if (i < codeInputs.length - 1) {
-            codeInputs[i + 1].focus();
-          }
         }
       });
+
+      // מיקוד בתיבה האחרונה שיש בה ערך
+      const lastFilledIndex = Math.min(
+        digits.length - 1,
+        codeInputs.length - 1
+      );
+      if (lastFilledIndex >= 0) {
+        codeInputs[lastFilledIndex].focus();
+      }
+
       validateCodeInputs();
     });
   });
@@ -418,9 +424,6 @@ document.addEventListener("DOMContentLoaded", () => {
       waitingForAdminMsg.classList.remove("hidden");
     }
 
-    // הסתרת overlay הצבעה אם קיים
-    const waitingOverlay = document.getElementById("waiting-vote-overlay");
-    if (waitingOverlay) waitingOverlay.classList.add("hidden");
     showScreen("result");
   });
 

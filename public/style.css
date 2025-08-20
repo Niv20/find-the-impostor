@@ -211,6 +211,12 @@ body {
   color: var(--text-muted);
   cursor: pointer;
   padding: 5px;
+  outline: none;
+}
+
+.header-btn:focus,
+.header-link-btn:focus {
+  outline: none;
 }
 .header-link-btn {
   color: var(--primary-color);
