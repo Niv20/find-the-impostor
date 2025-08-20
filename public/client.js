@@ -143,23 +143,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Event Listeners ---
   headerLogoContainer.addEventListener("click", () => {
-    if (currentScreen !== "home") {
-      const message = isAdmin
-        ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
-        : "האם אתה בטוח שברצונך לצאת מהמשחק?";
-      showModalMessage(message, {
-        okText: isAdmin ? "סיים משחק" : "צא",
-        cancelText: "ביטול",
-        onOk: () => {
-          if (isAdmin) {
-            socket.emit("endGame", gameCode);
-          } else {
-            window.location.reload();
-          }
-        },
-        onCancel: () => {},
-      });
+    // אם אנחנו במסך הבית, לא עושים כלום
+    if (currentScreen === "home") return;
+
+    // במסך הסיום או במסכי ההתחלה (nameEntry), יציאה ישירה
+    if (currentScreen === "endGame" || currentScreen === "nameEntry") {
+      window.location.reload();
+      return;
     }
+
+    // במסך הלובי לפני תחילת המשחק, יציאה ישירה
+    if (
+      currentScreen === "lobby" &&
+      !document.querySelector("#game-code-display.hidden")
+    ) {
+      window.location.reload();
+      return;
+    }
+
+    // בכל מקרה אחר (תוך כדי משחק), מראים הודעת אזהרה
+    const message = isAdmin
+      ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
+      : "האם אתה בטוח שברצונך לצאת מהמשחק?";
+    showModalMessage(message, {
+      okText: isAdmin ? "סיים משחק" : "צא",
+      cancelText: "ביטול",
+      onOk: () => {
+        if (isAdmin) {
+          socket.emit("endGame", gameCode);
+        } else {
+          window.location.reload();
+        }
+      },
+      onCancel: () => {},
+    });
   });
 
   headerCreateBtn.addEventListener("click", () => {
