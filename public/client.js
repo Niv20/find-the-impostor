@@ -42,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const headerLogoContainer = document.getElementById("header-logo-container");
   const headerCreateBtn = document.getElementById("header-create-btn");
   const headerSettingsBtn = document.getElementById("header-settings-btn");
-  const exitGameBtn = document.getElementById("exit-game-btn");
 
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
@@ -92,7 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Hide all actions by default
     headerCreateBtn.classList.add("hidden");
     headerSettingsBtn.classList.add("hidden");
-    exitGameBtn.classList.add("hidden");
     headerLogoContainer.classList.remove("hidden");
 
     switch (screenName) {
@@ -109,14 +107,11 @@ document.addEventListener("DOMContentLoaded", () => {
           headerSettingsBtn.classList.remove("hidden");
           settingsWrapper.appendChild(headerSettingsBtn);
           document.querySelector("#app-header").appendChild(settingsWrapper);
-        } else {
-          exitGameBtn.classList.remove("hidden");
         }
         break;
       case "game":
       case "voting":
       case "result":
-        exitGameBtn.classList.remove("hidden");
         break;
       case "endGame":
         // No buttons shown, just logo
