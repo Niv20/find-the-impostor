@@ -36,10 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // Header
-  const header = document.getElementById('app-header');
+  const headerLogoContainer = document.getElementById('header-logo-container');
   const headerCreateBtn = document.getElementById('header-create-btn');
   const headerSettingsBtn = document.getElementById('header-settings-btn');
-  const headerTitle = document.getElementById('header-title');
+  const exitGameBtn = document.getElementById('exit-game-btn');
 
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
@@ -51,9 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const shareCodeText = document.querySelector(".share-code-text");
 
   // Game Screen
+  const timerDisplay = document.getElementById("timer-display");
   const wordDisplayContainer = document.getElementById('word-display-container');
   const wordDisplay = document.getElementById('word-display');
-  const categoryDisplay = document.getElementById('category-display');
+  const toggleWordBtn = document.getElementById('toggle-word-btn');
   const impostorDisplay = document.getElementById('impostor-display');
   const impostorCategoryInfo = document.getElementById('impostor-category-info');
 
@@ -79,9 +80,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Screen Management ---
   function updateHeader(screenName) {
+    // Hide all actions by default
     headerCreateBtn.classList.add('hidden');
     headerSettingsBtn.classList.add('hidden');
-    headerTitle.classList.remove('hidden');
+    exitGameBtn.classList.add('hidden');
+    headerLogoContainer.classList.remove('hidden');
 
     switch (screenName) {
       case 'home':
@@ -90,15 +93,18 @@ document.addEventListener("DOMContentLoaded", () => {
       case 'lobby':
         if (isAdmin) {
             headerSettingsBtn.classList.remove('hidden');
-            headerTitle.classList.add('hidden');
+        } else {
+            exitGameBtn.classList.remove('hidden');
         }
         break;
-      case 'nameEntry':
       case 'game':
       case 'voting':
       case 'result':
+        exitGameBtn.classList.remove('hidden');
+        break;
+      case 'nameEntry':
       case 'endGame':
-        // No buttons shown
+        // No buttons shown, just logo
         break;
     }
   }
@@ -124,6 +130,19 @@ document.addEventListener("DOMContentLoaded", () => {
   headerCreateBtn.addEventListener("click", () => {
     isCreatingGame = true;
     showNameEntryScreen();
+  });
+
+  exitGameBtn.addEventListener("click", () => {
+      const message = isAdmin 
+          ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
+          : "האם אתה בטוח שברצונך לצאת מהמשחק?";
+      if (confirm(message)) {
+          if (isAdmin) {
+              socket.emit("endGame", gameCode);
+          } else {
+              window.location.reload();
+          }
+      }
   });
 
   // Home Screen
@@ -197,6 +216,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
   });
   playAgainBtn.addEventListener("click", () => window.location.reload());
+  toggleWordBtn.addEventListener("click", () => {
+      wordDisplay.classList.toggle('word-hidden');
+      const isHidden = wordDisplay.classList.contains('word-hidden');
+      toggleWordBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
+  });
 
   // --- Socket Listeners ---
   socket.on("connect", () => (myId = socket.id));
@@ -239,19 +263,25 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("updatePlayerList", (players) => updatePlayerList(players));
 
   socket.on("roundStart", (data) => {
-    wordDisplayContainer.classList.add('hidden');
+    wordDisplayContainer.classList.remove('hidden');
     impostorDisplay.classList.add('hidden');
-    categoryDisplay.textContent = '';
-    impostorCategoryInfo.textContent = '';
+    wordDisplay.classList.remove('word-hidden');
+    toggleWordBtn.textContent = "הסתר מילה";
+
     if (data.isImpostor) {
+        wordDisplayContainer.classList.add('hidden');
         impostorDisplay.classList.remove('hidden');
-        if (data.showCategory) {
+        if (data.settings.showCategory) {
             impostorCategoryInfo.textContent = data.category;
+        } else {
+            impostorCategoryInfo.textContent = "";
         }
     } else {
         wordDisplayContainer.classList.remove('hidden');
+        impostorDisplay.classList.add('hidden');
         wordDisplay.textContent = data.word;
     }
+    startTimer(data.settings.timer);
     showScreen('game');
   });
 
@@ -360,6 +390,21 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       categoryListDiv.appendChild(item);
     });
+  }
+
+  function startTimer(duration) {
+    clearInterval(roundTimerInterval);
+    let timer = duration;
+    const update = () => {
+        const minutes = Math.floor(timer / 60).toString().padStart(2, '0');
+        const seconds = (timer % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+        if (--timer < 0) {
+            clearInterval(roundTimerInterval);
+        }
+    };
+    update();
+    roundTimerInterval = setInterval(update, 1000);
   }
 
   function showVotingScreen(players) {

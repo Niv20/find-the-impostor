@@ -59,10 +59,20 @@ body {
   flex-shrink: 0;
 }
 
-#header-title {
-  font-weight: 700;
-  font-size: 1.2rem;
-  order: 2; /* Title on the right for RTL */
+#header-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    order: 2; /* Logo container on the right for RTL */
+}
+
+#header-logo {
+    height: 35px;
+}
+
+#header-title-text {
+    font-weight: 700;
+    font-size: 1.2rem;
 }
 
 #header-actions {
@@ -538,23 +548,48 @@ input:checked + .slider:before {
 }
 
 /* Game Screen */
+#game-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+
 #timer-display {
   font-size: 2rem;
   font-weight: 700;
   color: var(--primary-color);
   margin-bottom: 30px;
 }
+
+#word-display-container {
+    text-align: center;
+}
+
 #word-display {
   font-size: 3rem;
   margin-bottom: 10px;
+  transition: opacity 0.3s ease-in-out;
 }
+
+#word-display.word-hidden {
+    opacity: 0;
+}
+
 #category-display {
   color: var(--text-muted);
   font-size: 1.2rem;
 }
+
 #impostor-display h1,
 #impostor-display p {
   color: var(--error-color);
+}
+
+#toggle-word-btn {
+    max-width: 200px;
+    margin-top: 20px;
 }
 
 /* Voting Screen */
