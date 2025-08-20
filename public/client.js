@@ -236,13 +236,24 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Name Entry Screen
-  nameInput.addEventListener("input", () => {
-    const len = nameInput.value.length;
-    charCounter.textContent = `${len}/10`;
-    const hebrewRegex = /^[א-ת\s]*$/;
-    if (!hebrewRegex.test(nameInput.value)) {
-      nameInput.value = nameInput.value.replace(/[^א-ת\s]/g, "");
+  nameInput.addEventListener("input", (e) => {
+    // מניעת רווחים ותווים שאינם עברית
+    let newValue = e.target.value.replace(/[^א-ת]/g, "");
+
+    // הגבלה ל-10 תווים
+    if (newValue.length > 10) {
+      newValue = newValue.slice(0, 10);
     }
+
+    // עדכון הערך בשדה
+    nameInput.value = newValue;
+    const len = newValue.length;
+    charCounter.textContent = `${len}/10`;
+  });
+
+  // מניעת הדבקה
+  nameInput.addEventListener("paste", (e) => {
+    e.preventDefault();
   });
   nameInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") submitNameBtn.click();

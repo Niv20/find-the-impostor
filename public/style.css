@@ -5,7 +5,9 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -23,9 +25,10 @@
   flex-direction: column;
   gap: 16px;
   border: 1px solid var(--border-color);
+  animation: modalAppear 0.3s ease-out;
 }
 #modal-message-text {
-  color: #222;
+  color: var(--text-color);
   font-size: 1.15rem;
   margin-bottom: 10px;
   word-break: break-word;
@@ -37,28 +40,42 @@
 }
 #modal-ok-btn,
 #modal-cancel-btn {
-  background-color: #f2f2f7;
-  color: #007aff;
-  border: 1.5px solid #d1d1d6;
+  background-color: var(--card-hover);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
   padding: 10px 28px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1.08rem;
-  font-family: "Assistant", sans-serif;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
   box-shadow: none;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s ease;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 #modal-ok-btn:hover,
 #modal-cancel-btn:hover {
-  background-color: #e9e9ee;
-  color: #005ecb;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 #modal-cancel-btn {
-  color: #888;
+  background-color: #2c2c2e;
+  color: var(--text-muted);
 }
 #modal-cancel-btn:hover {
-  color: #222;
+  background-color: #3a3a3c;
+  color: var(--text-color);
 }
 
 /* --- Waiting Vote Overlay --- */
