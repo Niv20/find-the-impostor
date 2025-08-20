@@ -276,9 +276,13 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen('game');
   });
 
+  socket.on("startVoting", (players) => {
+    showVotingScreen(players);
+  });
+
   socket.on("roundResult", (data) => {
     // ... same as before
-  });
+  });;
   socket.on("gameEnded", (message = "המשחק הסתיים.") => {
     alert(message);
     window.location.reload();
@@ -383,7 +387,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Dummy implementations for functions that were collapsed for brevity
   function startTimer(duration) { /* Full implementation exists */ }
-  function showVotingScreen() { /* Full implementation exists */ }
+  
+  function showVotingScreen(players) {
+    const voteOptionsDiv = document.getElementById("vote-options");
+    voteOptionsDiv.innerHTML = ""; // Clear previous options
+
+    const playersToVoteFor = players.filter(p => p.id !== myId);
+
+    playersToVoteFor.forEach((player) => {
+        const btn = document.createElement("button");
+        btn.className = "vote-btn";
+        btn.addEventListener("click", () => {
+            document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
+            socket.emit("playerVote", { gameCode, votedForId: player.id });
+        });
+
+        const avatarImg = document.createElement("img");
+        avatarImg.src = `/avatars/${player.avatar.file}`;
+        avatarImg.className = "avatar-circle-small";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = player.name;
+        
+        btn.appendChild(avatarImg);
+        btn.appendChild(nameSpan);
+        voteOptionsDiv.appendChild(btn);
+    });
+
+    showScreen("voting");
+  }
+
   function updateScoreList(players) { /* Full implementation exists */ }
 
   showScreen('home'); // Initial screen

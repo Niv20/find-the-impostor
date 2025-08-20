@@ -555,21 +555,46 @@ input:checked + .slider:before {
 
 /* Voting Screen */
 #vote-options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  width: 100%;
 }
+
 .vote-btn {
   width: 100%;
-  padding: 10px;
-  font-size: 1.2rem;
+  padding: 15px 10px;
+  font-size: 1.1rem;
   background-color: var(--card-color);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
+  gap: 8px;
+  height: 120px;
+  font-weight: 600;
+  border: 2px solid transparent; /* For hover effect */
+  transition: background-color 0.2s, border-color 0.2s;
 }
+
 .vote-btn:hover {
   background-color: #3e3e49;
+  border-color: var(--primary-color);
+}
+
+.vote-btn:disabled {
+    opacity: 0.7;
+}
+
+/* Center the last button if it's an odd one out */
+.vote-btn:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.vote-btn .avatar-circle-small {
+    margin-left: 0; /* Override the RTL margin */
+    width: 50px;
+    height: 50px;
 }
 
 /* Result Screen */
