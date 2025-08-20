@@ -17,11 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Screen Elements ---
   const screens = {
-    home      // מצא את המנהל
-      const admin = players.find(p => p.isAdmin);
-      adminResultControls.classList.add("hidden");
-      waitingForAdminMsg.textContent = `${admin.name} ימשיך את המשחק מיד`;
-      waitingForAdminMsg.classList.remove("hidden");ocument.getElementById("home-screen"),
+    home: document.getElementById("home-screen"),
     nameEntry: document.getElementById("name-entry-screen"),
     lobby: document.getElementById("lobby-screen"),
     game: document.getElementById("game-screen"),
@@ -447,13 +443,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("startVoting", (data) => {
-    if (typeof data === 'object' && data.tieBreak) {
+    if (typeof data === "object" && data.tieBreak) {
       // מקרה של הצבעת שובר שוויון
       showVotingScreen(data.players, {
         canVote: data.canVote,
         isPartOfTie: data.isPartOfTie,
         excludedFromVoting: data.excludedFromVoting,
-        tiePlayers: data.tiePlayers
+        tiePlayers: data.tiePlayers,
       });
     } else {
       // הצבעה רגילה
@@ -491,9 +487,10 @@ document.addEventListener("DOMContentLoaded", () => {
       endGameBtnFromResult.className = "text-button";
       endGameBtnFromResult.textContent = "סיום משחק";
     } else {
-      // For non-admin players
+      // Find admin and update message
+      const adminPlayer = players.find((p) => p.isAdmin);
       adminResultControls.classList.add("hidden");
-      waitingForAdminMsg.textContent = "ממתין להחלטת מנהל המשחק...";
+      waitingForAdminMsg.textContent = `${adminPlayer.name} ימשיך את המשחק מיד`;
       waitingForAdminMsg.classList.remove("hidden");
     }
 
@@ -503,7 +500,7 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("gameEnded", (players) => {
     // הפעלת אנימציית קונפטי
     createConfetti();
-    
+
     let maxScore = -1;
     players.forEach((p) => {
       if (p.score > maxScore) maxScore = p.score;
@@ -699,9 +696,9 @@ document.addEventListener("DOMContentLoaded", () => {
           .classList.remove("hidden");
 
         // Send vote to server
-        socket.emit("playerVote", { 
-          gameCode, 
-          votedForId: player.id
+        socket.emit("playerVote", {
+          gameCode,
+          votedForId: player.id,
         });
       });
       const avatarImg = document.createElement("img");
