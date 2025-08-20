@@ -111,10 +111,10 @@ io.on("connection", (socket) => {
       if (game.players.length < 6) {
         socket.emit("gameCodeValid");
       } else {
-        socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
+        socket.emit("errorMsg", "זה לא אישי, אבל אין מקום בחדר בשבילך");
       }
     } else {
-      socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
+      socket.emit("errorMsg", "האממממ אנחנו לא מכירים את הקוד הזה. נסה שוב.");
     }
   });
 
@@ -124,14 +124,14 @@ io.on("connection", (socket) => {
       return socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
     }
     if (game.players.length >= 6) {
-      return socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
+      return socket.emit("errorMsg", "זה לא אישי, אבל אין מקום בחדר בשבילך");
     }
     const isNameTaken = game.players.some((p) => p.name === name);
     if (isNameTaken) {
       // שלח הודעת שגיאה מיוחדת שלא תעיף את המשתמש מהמסך
       return socket.emit(
         "nameTakenError",
-        "השם שבחרת כבר תפוס בחדר זה. אנא בחר שם אחר."
+        "כבר יש מישהו בחדר עם השם הזה. נסה שם אחר."
       );
     }
 

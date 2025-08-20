@@ -290,6 +290,9 @@ document.addEventListener("DOMContentLoaded", () => {
     nameInput.value = newValue;
     const len = newValue.length;
     charCounter.textContent = `${len}/10`;
+
+    // בדיקת תקינות השם ועדכון מצב הכפתור
+    submitNameBtn.disabled = !validateName(newValue);
   });
 
   // מניעת הדבקה
@@ -300,24 +303,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Enter") submitNameBtn.click();
   });
 
+  // פונקציה לבדיקת תקינות השם
+  function validateName(name) {
+    return name.trim().length > 0;
+  }
+
+  // בדיקת תקינות השם בכל שינוי
+  nameInput.addEventListener("input", (e) => {
+    submitNameBtn.disabled = !validateName(nameInput.value);
+  });
+
   submitNameBtn.addEventListener("click", () => {
     const name = nameInput.value.trim();
-    if (name) {
-      myName = name;
-      const payload = { name, requestedAvatarFile: chosenAvatarFile };
-      if (isCreatingGame) {
-        socket.emit("createGame", payload);
-      } else {
-        payload.gameCode = gameCode;
-        socket.emit("joinGame", payload);
-      }
+    myName = name;
+    const payload = { name, requestedAvatarFile: chosenAvatarFile };
+    if (isCreatingGame) {
+      socket.emit("createGame", payload);
     } else {
-      showModalMessage("אנא הזן את שמך.", {
-        okText: "אישור",
-        onOk: () => nameInput.focus(),
-      });
+      payload.gameCode = gameCode;
+      socket.emit("joinGame", payload);
     }
   });
+
+  // הכפתור מתחיל במצב לא פעיל
+  submitNameBtn.disabled = true;
 
   // In-Game Buttons
   settingsBtn.addEventListener("click", () =>
@@ -599,10 +608,18 @@ document.addEventListener("DOMContentLoaded", () => {
       checkbox.checked = enabledCategories.includes(cat.id);
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
-          if (!enabledCategories.includes(cat.id))
+          if (!enabledCategories.includes(cat.id)) {
             enabledCategories.push(cat.id);
+          }
         } else {
-          enabledCategories = enabledCategories.filter((c) => c !== cat.id);
+          // בדיקה שזו לא הקטגוריה האחרונה
+          if (enabledCategories.length > 1) {
+            enabledCategories = enabledCategories.filter((c) => c !== cat.id);
+          } else {
+            // אם זו הקטגוריה האחרונה, מבטלים את השינוי
+            checkbox.checked = true;
+            return;
+          }
         }
         socket.emit("changeSettings", {
           gameCode,
