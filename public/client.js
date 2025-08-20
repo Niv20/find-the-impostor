@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let chosenAvatarFile = null;
   let allCategories = [];
   let enabledCategories = [];
-  let currentScreen = 'home';
+  let currentScreen = "home";
   let previousPlayers = []; // For score animation
 
   // --- Screen Elements ---
@@ -37,10 +37,10 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // Header
-  const headerLogoContainer = document.getElementById('header-logo-container');
-  const headerCreateBtn = document.getElementById('header-create-btn');
-  const headerSettingsBtn = document.getElementById('header-settings-btn');
-  const exitGameBtn = document.getElementById('exit-game-btn');
+  const headerLogoContainer = document.getElementById("header-logo-container");
+  const headerCreateBtn = document.getElementById("header-create-btn");
+  const headerSettingsBtn = document.getElementById("header-settings-btn");
+  const exitGameBtn = document.getElementById("exit-game-btn");
 
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
@@ -53,11 +53,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Game Screen
   const timerDisplay = document.getElementById("timer-display");
-  const wordDisplayContainer = document.getElementById('word-display-container');
-  const wordDisplay = document.getElementById('word-display');
-  const toggleWordBtn = document.getElementById('toggle-word-btn');
-  const impostorDisplay = document.getElementById('impostor-display');
-  const impostorCategoryInfo = document.getElementById('impostor-category-info');
+  const wordDisplayContainer = document.getElementById(
+    "word-display-container"
+  );
+  const wordDisplay = document.getElementById("word-display");
+  const toggleWordBtn = document.getElementById("toggle-word-btn");
+  const impostorDisplay = document.getElementById("impostor-display");
+  const impostorCategoryInfo = document.getElementById(
+    "impostor-category-info"
+  );
 
   // Result Screen
   const resultTitle = document.getElementById("result-title");
@@ -65,7 +69,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const scoreListUl = document.getElementById("score-list");
   const adminResultControls = document.getElementById("admin-result-controls");
   const nextRoundBtn = document.getElementById("next-round-btn");
-  const endGameBtnFromResult = document.getElementById("end-game-btn-from-result");
+  const endGameBtnFromResult = document.getElementById(
+    "end-game-btn-from-result"
+  );
   const waitingForAdminMsg = document.getElementById("waiting-for-admin-msg");
 
   // End Game Screen
@@ -82,29 +88,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Screen Management ---
   function updateHeader(screenName) {
     // Hide all actions by default
-    headerCreateBtn.classList.add('hidden');
-    headerSettingsBtn.classList.add('hidden');
-    exitGameBtn.classList.add('hidden');
-    headerLogoContainer.classList.remove('hidden');
+    headerCreateBtn.classList.add("hidden");
+    headerSettingsBtn.classList.add("hidden");
+    exitGameBtn.classList.add("hidden");
+    headerLogoContainer.classList.remove("hidden");
 
     switch (screenName) {
-      case 'home':
-        headerCreateBtn.classList.remove('hidden');
+      case "home":
+        headerCreateBtn.classList.remove("hidden");
         break;
-      case 'lobby':
+      case "lobby":
         if (isAdmin) {
-            headerSettingsBtn.classList.remove('hidden');
+          headerSettingsBtn.classList.remove("hidden");
         } else {
-            exitGameBtn.classList.remove('hidden');
+          exitGameBtn.classList.remove("hidden");
         }
         break;
-      case 'game':
-      case 'voting':
-      case 'result':
-        exitGameBtn.classList.remove('hidden');
+      case "game":
+      case "voting":
+      case "result":
+        exitGameBtn.classList.remove("hidden");
         break;
-      case 'nameEntry':
-      case 'endGame':
+      case "nameEntry":
+      case "endGame":
         // No buttons shown, just logo
         break;
     }
@@ -134,16 +140,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   exitGameBtn.addEventListener("click", () => {
-      const message = isAdmin 
-          ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
-          : "האם אתה בטוח שברצונך לצאת מהמשחק?";
-      if (confirm(message)) {
-          if (isAdmin) {
-              socket.emit("endGame", gameCode);
-          } else {
-              window.location.reload();
-          }
+    const message = isAdmin
+      ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
+      : "האם אתה בטוח שברצונך לצאת מהמשחק?";
+    if (confirm(message)) {
+      if (isAdmin) {
+        socket.emit("endGame", gameCode);
+      } else {
+        window.location.reload();
       }
+    }
   });
 
   // Home Screen
@@ -205,25 +211,32 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // In-Game Buttons
-  settingsBtn.addEventListener("click", () => settingsModal.classList.remove("hidden"));
+  settingsBtn.addEventListener("click", () =>
+    settingsModal.classList.remove("hidden")
+  );
   settingsModal.addEventListener("click", (e) => {
     if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
   startGameBtn.addEventListener("click", () => {
-    console.log('Start game button clicked, emitting startGame with code:', gameCode);
+    console.log(
+      "Start game button clicked, emitting startGame with code:",
+      gameCode
+    );
     socket.emit("startGame", gameCode);
   });
-  nextRoundBtn.addEventListener("click", () => socket.emit("startGame", gameCode));
+  nextRoundBtn.addEventListener("click", () =>
+    socket.emit("startGame", gameCode)
+  );
   endGameBtnFromResult.addEventListener("click", () => {
-      if (confirm("האם אתה בטוח שברצונך לסיים את המשחק עבור כולם?")) {
-          socket.emit("endGame", gameCode);
-      }
+    if (confirm("האם אתה בטוח שברצונך לסיים את המשחק עבור כולם?")) {
+      socket.emit("endGame", gameCode);
+    }
   });
   playAgainBtn.addEventListener("click", () => window.location.reload());
   toggleWordBtn.addEventListener("click", () => {
-      wordDisplay.classList.toggle('word-hidden');
-      const isHidden = wordDisplay.classList.contains('word-hidden');
-      toggleWordBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
+    wordDisplay.classList.toggle("word-hidden");
+    const isHidden = wordDisplay.classList.contains("word-hidden");
+    toggleWordBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
   });
 
   // --- Socket Listeners ---
@@ -250,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gameCodeDisplay.textContent = gameCode;
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
-    if(shareCodeText) shareCodeText.textContent = "שתף עם חברים את הקוד:";
+    if (shareCodeText) shareCodeText.textContent = "שתף עם חברים את הקוד:";
     populateCategorySettings();
     updatePlayerList(data.players);
     previousPlayers = data.players;
@@ -260,44 +273,45 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("joinedSuccess", (data) => {
     adminControls.classList.add("hidden");
     settingsBtn.classList.add("hidden");
-    if(shareCodeText) shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
+    if (shareCodeText)
+      shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
     updatePlayerList(data.players);
     previousPlayers = data.players;
     showScreen("lobby");
   });
 
   socket.on("updatePlayerList", (players) => {
-      updatePlayerList(players);
-      previousPlayers = players;
+    updatePlayerList(players);
+    previousPlayers = players;
   });
 
   socket.on("roundStart", (data) => {
-    wordDisplayContainer.classList.remove('hidden');
-    impostorDisplay.classList.add('hidden');
-    wordDisplay.classList.remove('word-hidden');
+    wordDisplayContainer.classList.remove("hidden");
+    impostorDisplay.classList.add("hidden");
+    wordDisplay.classList.remove("word-hidden");
     toggleWordBtn.textContent = "הסתר מילה";
     timerDisplay.style.opacity = 0;
 
     if (data.isImpostor) {
-        wordDisplayContainer.classList.add('hidden');
-        impostorDisplay.classList.remove('hidden');
-        if (data.category) {
-            impostorCategoryInfo.textContent = `(קטגוריה: ${data.category})`;
-        } else {
-            impostorCategoryInfo.textContent = "";
-        }
+      wordDisplayContainer.classList.add("hidden");
+      impostorDisplay.classList.remove("hidden");
+      if (data.category) {
+        impostorCategoryInfo.textContent = `(קטגוריה: ${data.category})`;
+      } else {
+        impostorCategoryInfo.textContent = "";
+      }
     } else {
-        wordDisplayContainer.classList.remove('hidden');
-        impostorDisplay.classList.add('hidden');
-        wordDisplay.textContent = data.word;
+      wordDisplayContainer.classList.remove("hidden");
+      impostorDisplay.classList.add("hidden");
+      wordDisplay.textContent = data.word;
     }
-    
+
     setTimeout(() => {
-        timerDisplay.style.opacity = 1;
-        startTimer(data.timer);
+      timerDisplay.style.opacity = 1;
+      startTimer(data.timer);
     }, 3000);
 
-    showScreen('game');
+    showScreen("game");
   });
 
   socket.on("startVoting", (players) => {
@@ -306,7 +320,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("roundResult", (data) => {
     const { impostor, word, correctlyGuessed, players } = data;
-    resultTitle.textContent = correctlyGuessed ? "המתחזה נתפס!" : "המתחזה ניצח!";
+    resultTitle.textContent = correctlyGuessed
+      ? "המתחזה נתפס!"
+      : "המתחזה ניצח!";
     resultScreen.dataset.impostorFound = correctlyGuessed;
     resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
     updateScoreList(players, scoreListUl, true);
@@ -317,9 +333,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // B2: Auto-advance to next round (only admin sends the signal)
     if (isAdmin) {
-        setTimeout(() => {
-            socket.emit("startGame", gameCode);
-        }, 5000); // 5 second delay before starting next round
+      setTimeout(() => {
+        socket.emit("startGame", gameCode);
+      }, 5000); // 5 second delay before starting next round
     } else {
       // הצגת כפתור למנהל בלבד, לשאר הודעת המתנה
       adminResultControls.classList.remove("hidden");
@@ -327,29 +343,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // הסתרת overlay הצבעה אם קיים
-    const waitingOverlay = document.getElementById('waiting-vote-overlay');
-    if (waitingOverlay) waitingOverlay.classList.add('hidden');
+    const waitingOverlay = document.getElementById("waiting-vote-overlay");
+    if (waitingOverlay) waitingOverlay.classList.add("hidden");
     showScreen("result");
   });
 
   socket.on("gameEnded", (players) => {
     let maxScore = -1;
-    players.forEach(p => { if (p.score > maxScore) maxScore = p.score; });
-    const winners = players.filter(p => p.score === maxScore && maxScore > 0);
+    players.forEach((p) => {
+      if (p.score > maxScore) maxScore = p.score;
+    });
+    const winners = players.filter((p) => p.score === maxScore && maxScore > 0);
 
     winnerListDiv.innerHTML = "";
     if (winners.length > 0) {
-        winners.forEach(winner => {
-            const winnerCard = document.createElement('div');
-            winnerCard.className = 'winner-card';
-            winnerCard.innerHTML = `
+      winners.forEach((winner) => {
+        const winnerCard = document.createElement("div");
+        winnerCard.className = "winner-card";
+        winnerCard.innerHTML = `
                 <img src="/avatars/${winner.avatar.file}" class="avatar-circle-small">
                 <span class="player-name">${winner.name}</span>
             `;
-            winnerListDiv.appendChild(winnerCard);
-        });
+        winnerListDiv.appendChild(winnerCard);
+      });
     } else {
-        winnerListDiv.textContent = "אין מנצחים בסבב זה.";
+      winnerListDiv.textContent = "אין מנצחים בסבב זה.";
     }
 
     updateScoreList(players, finalScoreListUl, false); // No animation for final screen
@@ -365,13 +383,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function validateCodeInputs() {
-    const code = Array.from(codeInputs).map((input) => input.value).join("");
+    const code = Array.from(codeInputs)
+      .map((input) => input.value)
+      .join("");
     joinGameBtn.disabled = code.length !== 4;
   }
 
   function showRandomAvatarPreview() {
     if (availableAvatars.length > 0) {
-      const randomFile = availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
+      const randomFile =
+        availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
       avatarPreviewContainer.innerHTML = `<img src="/avatars/${randomFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
       return randomFile;
     }
@@ -384,11 +405,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const li = document.createElement("li");
       li.dataset.id = player.id;
 
-      const playerInfoDiv = document.createElement('div');
+      const playerInfoDiv = document.createElement("div");
       playerInfoDiv.innerHTML = `<img src="/avatars/${player.avatar.file}" class="avatar-circle-small">`;
-      
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'player-name';
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "player-name";
       nameSpan.style.color = player.avatar.color;
       nameSpan.textContent = player.name;
       playerInfoDiv.appendChild(nameSpan);
@@ -396,11 +417,11 @@ document.addEventListener("DOMContentLoaded", () => {
       li.appendChild(playerInfoDiv);
 
       if (player.isAdmin) {
-        const adminSpan = document.createElement('span');
-        adminSpan.className = 'admin-tag';
-        adminSpan.textContent = ' (מנהל)';
+        const adminSpan = document.createElement("span");
+        adminSpan.className = "admin-tag";
+        adminSpan.textContent = " (מנהל)";
         adminSpan.style.color = player.avatar.color;
-        adminSpan.style.opacity = '0.8';
+        adminSpan.style.opacity = "0.8";
         li.appendChild(adminSpan);
       }
 
@@ -426,18 +447,22 @@ document.addEventListener("DOMContentLoaded", () => {
       checkbox.checked = enabledCategories.includes(cat.id);
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
-          if(!enabledCategories.includes(cat.id)) enabledCategories.push(cat.id);
+          if (!enabledCategories.includes(cat.id))
+            enabledCategories.push(cat.id);
         } else {
           enabledCategories = enabledCategories.filter((c) => c !== cat.id);
         }
-        socket.emit("changeSettings", { gameCode, settings: { enabledCategories } });
+        socket.emit("changeSettings", {
+          gameCode,
+          settings: { enabledCategories },
+        });
       });
       const label = document.createElement("label");
       label.htmlFor = `cat-${cat.id}`;
       label.textContent = cat.name;
       item.appendChild(checkbox);
       item.appendChild(label);
-      item.addEventListener('click', (e) => {
+      item.addEventListener("click", (e) => {
         if (e.target === item) checkbox.click();
       });
       categoryListDiv.appendChild(item);
@@ -448,13 +473,15 @@ document.addEventListener("DOMContentLoaded", () => {
     clearInterval(roundTimerInterval);
     let timer = duration;
     const update = () => {
-        const minutes = Math.floor(timer / 60).toString().padStart(2, '0');
-        const seconds = (timer % 60).toString().padStart(2, '0');
-        timerDisplay.textContent = `${minutes}:${seconds}`;
-        if (--timer < 0) {
-            clearInterval(roundTimerInterval);
-            socket.emit('timerEnded', gameCode);
-        }
+      const minutes = Math.floor(timer / 60)
+        .toString()
+        .padStart(2, "0");
+      const seconds = (timer % 60).toString().padStart(2, "0");
+      timerDisplay.textContent = `${minutes}:${seconds}`;
+      if (--timer < 0) {
+        clearInterval(roundTimerInterval);
+        socket.emit("timerEnded", gameCode);
+      }
     };
     update();
     roundTimerInterval = setInterval(update, 1000);
@@ -463,54 +490,57 @@ document.addEventListener("DOMContentLoaded", () => {
   function showVotingScreen(players) {
     const voteOptionsDiv = document.getElementById("vote-options");
     voteOptionsDiv.innerHTML = "";
-    voteOptionsDiv.classList.remove('voting-done'); // Reset class for new round
+    voteOptionsDiv.classList.remove("voting-done"); // Reset class for new round
 
     // הצגת כותרת הצבעה
-    const votingScreen = document.getElementById('voting-screen');
-    const mainTitle = votingScreen.querySelector('h2');
-    if (mainTitle) mainTitle.classList.remove('hidden');
+    const votingScreen = document.getElementById("voting-screen");
+    const mainTitle = votingScreen.querySelector("h2");
+    if (mainTitle) mainTitle.classList.remove("hidden");
 
     // יצירת overlay להמתנה (אם לא קיים)
-    let waitingOverlay = document.getElementById('waiting-vote-overlay');
+    let waitingOverlay = document.getElementById("waiting-vote-overlay");
     if (!waitingOverlay) {
-        waitingOverlay = document.createElement('div');
-        waitingOverlay.id = 'waiting-vote-overlay';
-        waitingOverlay.className = 'hidden';
-        waitingOverlay.style.position = 'fixed';
-        waitingOverlay.style.top = '0';
-        waitingOverlay.style.left = '0';
-        waitingOverlay.style.width = '100vw';
-        waitingOverlay.style.height = '100vh';
-        waitingOverlay.style.background = 'rgba(0,0,0,0.85)';
-        waitingOverlay.style.zIndex = '999';
-        waitingOverlay.style.display = 'flex';
-        waitingOverlay.style.flexDirection = 'column';
-        waitingOverlay.style.justifyContent = 'center';
-        waitingOverlay.style.alignItems = 'center';
-        waitingOverlay.innerHTML = '<h2 style=\"color:white;\">הצבעתך התקבלה</h2><p style=\"color:#eee;font-size:1.2rem;\">אנא המתן לשאר המשתתפים...</p>';
-        votingScreen.appendChild(waitingOverlay);
+      waitingOverlay = document.createElement("div");
+      waitingOverlay.id = "waiting-vote-overlay";
+      waitingOverlay.className = "hidden";
+      waitingOverlay.style.position = "fixed";
+      waitingOverlay.style.top = "0";
+      waitingOverlay.style.left = "0";
+      waitingOverlay.style.width = "100vw";
+      waitingOverlay.style.height = "100vh";
+      waitingOverlay.style.background = "rgba(0,0,0,0.85)";
+      waitingOverlay.style.zIndex = "999";
+      waitingOverlay.style.display = "flex";
+      waitingOverlay.style.flexDirection = "column";
+      waitingOverlay.style.justifyContent = "center";
+      waitingOverlay.style.alignItems = "center";
+      waitingOverlay.innerHTML =
+        '<h2 style="color:white;">הצבעתך התקבלה</h2><p style="color:#eee;font-size:1.2rem;">אנא המתן לשאר המשתתפים...</p>';
+      votingScreen.appendChild(waitingOverlay);
     }
-    waitingOverlay.classList.add('hidden');
+    waitingOverlay.classList.add("hidden");
 
-    const playersToVoteFor = players.filter(p => p.id !== myId);
+    const playersToVoteFor = players.filter((p) => p.id !== myId);
     playersToVoteFor.forEach((player) => {
-        const btn = document.createElement("button");
-        btn.className = "vote-btn";
-        btn.addEventListener("click", () => {
-            voteOptionsDiv.classList.add('voting-done');
-            document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
-            waitingOverlay.classList.remove('hidden');
-            socket.emit("playerVote", { gameCode, votedForId: player.id });
-        });
-        const avatarImg = document.createElement("img");
-        avatarImg.src = `/avatars/${player.avatar.file}`;
-        avatarImg.className = "avatar-circle-small";
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = player.name;
-        nameSpan.style.color = player.avatar.color;
-        btn.appendChild(avatarImg);
-        btn.appendChild(nameSpan);
-        voteOptionsDiv.appendChild(btn);
+      const btn = document.createElement("button");
+      btn.className = "vote-btn";
+      btn.addEventListener("click", () => {
+        voteOptionsDiv.classList.add("voting-done");
+        document
+          .querySelectorAll(".vote-btn")
+          .forEach((b) => (b.disabled = true));
+        waitingOverlay.classList.remove("hidden");
+        socket.emit("playerVote", { gameCode, votedForId: player.id });
+      });
+      const avatarImg = document.createElement("img");
+      avatarImg.src = `/avatars/${player.avatar.file}`;
+      avatarImg.className = "avatar-circle-small";
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = player.name;
+      nameSpan.style.color = player.avatar.color;
+      btn.appendChild(avatarImg);
+      btn.appendChild(nameSpan);
+      voteOptionsDiv.appendChild(btn);
     });
     showScreen("voting");
   }
@@ -518,9 +548,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateScoreList(players, listElement, withAnimation) {
     const oldPositions = {};
     if (withAnimation) {
-        Array.from(listElement.children).forEach(li => {
-            oldPositions[li.dataset.id] = li.getBoundingClientRect();
-        });
+      Array.from(listElement.children).forEach((li) => {
+        oldPositions[li.dataset.id] = li.getBoundingClientRect();
+      });
     }
 
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -528,18 +558,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     listElement.innerHTML = "";
 
-    sortedPlayers.forEach(player => {
-        const li = document.createElement("li");
-        li.dataset.id = player.id;
+    sortedPlayers.forEach((player) => {
+      const li = document.createElement("li");
+      li.dataset.id = player.id;
 
-        if (withAnimation && maxScore > 0 && player.score === maxScore) {
-            li.classList.add("top-player");
-            li.style.setProperty('--player-highlight-color', hexToRgba(player.avatar.color, 0.3));
-        }
+      if (withAnimation && maxScore > 0 && player.score === maxScore) {
+        li.classList.add("top-player");
+        li.style.setProperty(
+          "--player-highlight-color",
+          hexToRgba(player.avatar.color, 0.3)
+        );
+      }
 
-        const scoreDiff = player.score - (previousPlayers.find(p => p.id === player.id)?.score || 0);
+      const scoreDiff =
+        player.score -
+        (previousPlayers.find((p) => p.id === player.id)?.score || 0);
 
-        li.innerHTML = `
+      li.innerHTML = `
             <div>
                 <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
                 <span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>
@@ -548,41 +583,43 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="player-score">${player.score} נק'</span>
             </div>
         `;
-        
-        if (withAnimation && scoreDiff > 0) {
-            const scoreChangeSpan = document.createElement('span');
-            scoreChangeSpan.className = 'score-change';
-            scoreChangeSpan.textContent = `+${scoreDiff}`;
-            li.querySelector('.player-score-wrapper').appendChild(scoreChangeSpan);
-            scoreChangeSpan.addEventListener('animationend', () => scoreChangeSpan.remove());
-        }
 
-        listElement.appendChild(li);
+      if (withAnimation && scoreDiff > 0) {
+        const scoreChangeSpan = document.createElement("span");
+        scoreChangeSpan.className = "score-change";
+        scoreChangeSpan.textContent = `+${scoreDiff}`;
+        li.querySelector(".player-score-wrapper").appendChild(scoreChangeSpan);
+        scoreChangeSpan.addEventListener("animationend", () =>
+          scoreChangeSpan.remove()
+        );
+      }
+
+      listElement.appendChild(li);
     });
 
     if (withAnimation) {
-        const newPositions = {};
-        Array.from(listElement.children).forEach(li => {
-            newPositions[li.dataset.id] = li.getBoundingClientRect();
+      const newPositions = {};
+      Array.from(listElement.children).forEach((li) => {
+        newPositions[li.dataset.id] = li.getBoundingClientRect();
+      });
+
+      Array.from(listElement.children).forEach((li) => {
+        const oldPos = oldPositions[li.dataset.id];
+        if (!oldPos) return;
+        const newPos = newPositions[li.dataset.id];
+        const deltaX = oldPos.left - newPos.left;
+        const deltaY = oldPos.top - newPos.top;
+
+        requestAnimationFrame(() => {
+          li.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+          li.style.transition = "transform 0s";
+
+          requestAnimationFrame(() => {
+            li.style.transform = "";
+            li.style.transition = "transform 0.6s ease-in-out";
+          });
         });
-
-        Array.from(listElement.children).forEach(li => {
-            const oldPos = oldPositions[li.dataset.id];
-            if (!oldPos) return;
-            const newPos = newPositions[li.dataset.id];
-            const deltaX = oldPos.left - newPos.left;
-            const deltaY = oldPos.top - newPos.top;
-
-            requestAnimationFrame(() => {
-                li.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                li.style.transition = 'transform 0s';
-
-                requestAnimationFrame(() => {
-                    li.style.transform = '';
-                    li.style.transition = 'transform 0.6s ease-in-out';
-                });
-            });
-        });
+      });
     }
     previousPlayers = players;
   }
@@ -591,13 +628,19 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       document.querySelector(".timer-btn.active").classList.remove("active");
       btn.classList.add("active");
-      socket.emit("changeSettings", { gameCode, settings: { timer: parseInt(btn.dataset.time) } });
+      socket.emit("changeSettings", {
+        gameCode,
+        settings: { timer: parseInt(btn.dataset.time) },
+      });
     });
   });
 
   showCategoryToggle.addEventListener("change", (e) => {
-    socket.emit("changeSettings", { gameCode, settings: { showCategory: e.target.checked } });
+    socket.emit("changeSettings", {
+      gameCode,
+      settings: { showCategory: e.target.checked },
+    });
   });
 
-  showScreen('home'); // Initial screen
+  showScreen("home"); // Initial screen
 });
