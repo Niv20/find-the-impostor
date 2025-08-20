@@ -1,14 +1,19 @@
 @import url("https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap");
 
 :root {
-  --bg-color: #1a1a1d;
-  --card-color: #2c2c34;
-  --primary-color: #6c63ff;
+  --bg-color: #181820;
+  --card-color: #23233a;
+  --primary-color: #5e81ac;
   --text-color: #e0e0e0;
   --text-muted: #a0a0a0;
   --success-color: #4caf50;
   --error-color: #f44336;
   --header-height: 60px;
+  --header-bar: #23233a;
+  --header-bar-gradient: linear-gradient(90deg, #23233a 60%, #5e81ac 100%);
+  --code-input-bg: #23233a;
+  --code-input-shadow: 0 2px 12px 0 rgba(94,129,172,0.12);
+  --code-box-shadow: 0 4px 24px 0 rgba(94,129,172,0.18);
 }
 
 html, body {
@@ -49,7 +54,8 @@ body {
   left: 0;
   right: 0;
   height: var(--header-height);
-  background-color: var(--card-color);
+  background: var(--header-bar-gradient);
+  box-shadow: 0 2px 12px 0 rgba(94,129,172,0.10);
   display: flex;
   align-items: center;
   justify-content: space-between; /* Title left, actions right */
@@ -220,33 +226,45 @@ button:disabled {
 /* Home Screen */
 .join-game {
   background-color: var(--card-color);
-  padding: 25px;
-  border-radius: 12px;
-  width: 100%;
+  padding: 18px 12px 28px 12px;
+  border-radius: 18px;
+  width: 92%;
+  max-width: 340px;
+  margin: 0 auto;
+  box-shadow: var(--code-box-shadow);
 }
 
 /* New Code Inputs */
 #code-inputs {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin: 20px 0;
+  gap: 8px;
+  margin: 18px 0 10px 0;
 }
 .code-input {
-  width: 55px; /* Adjusted size */
-  height: 70px; /* Adjusted size */
-  font-size: 2.8rem; /* Adjusted font size */
-  line-height: 70px; /* Vertically center text */
+  width: 44px;
+  height: 56px;
+  font-size: 2.2rem;
+  line-height: 56px;
   text-align: center;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0;
-  border: 2px solid #444;
-  background-color: #1a1a1d;
+  border: 2px solid var(--primary-color);
+  background-color: var(--code-input-bg);
   color: var(--text-color);
   font-weight: 700;
+  box-shadow: var(--code-input-shadow);
 }
 .code-input:focus {
-  border-color: var(--primary-color);
+  border-color: #8fbcff;
+  background-color: #23233a;
+  font-size: 1.08rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 1.08rem;
+  box-shadow: 0 2px 8px 0 rgba(94,129,172,0.10);
 }
 
 /* Name Entry Screen */
