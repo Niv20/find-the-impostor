@@ -99,9 +99,25 @@ document.addEventListener("DOMContentLoaded", () => {
       case "home":
         headerCreateBtn.classList.remove("hidden");
         break;
+      case "nameEntry":
+        if (isCreatingGame) {
+          const backBtn = document.createElement("button");
+          backBtn.className = "header-btn";
+          backBtn.innerHTML = '<span class="material-icons">arrow_forward</span>';
+          backBtn.onclick = () => {
+            isCreatingGame = false;
+            showScreen("home");
+          };
+          headerLogoContainer.insertBefore(backBtn, headerLogoContainer.firstChild);
+        }
+        break;
       case "lobby":
         if (isAdmin) {
+          const settingsWrapper = document.createElement("div");
+          settingsWrapper.className = "settings-wrapper";
           headerSettingsBtn.classList.remove("hidden");
+          settingsWrapper.appendChild(headerSettingsBtn);
+          document.querySelector("#app-header").appendChild(settingsWrapper);
         } else {
           exitGameBtn.classList.remove("hidden");
         }
@@ -111,7 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
       case "result":
         exitGameBtn.classList.remove("hidden");
         break;
-      case "nameEntry":
       case "endGame":
         // No buttons shown, just logo
         break;
@@ -136,6 +151,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Event Listeners ---
+  headerLogoContainer.addEventListener("click", () => {
+    if (currentScreen !== "home") {
+      const message = isAdmin
+        ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
+        : "האם אתה בטוח שברצונך לצאת מהמשחק?";
+      showModalMessage(message, {
+        okText: isAdmin ? "סיים משחק" : "צא",
+        cancelText: "ביטול",
+        onOk: () => {
+          if (isAdmin) {
+            socket.emit("endGame", gameCode);
+          } else {
+            window.location.reload();
+          }
+        },
+        onCancel: () => {},
+      });
+    }
+  });
+
   headerCreateBtn.addEventListener("click", () => {
     isCreatingGame = true;
     showNameEntryScreen();
@@ -459,9 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const winnerCard = document.createElement("div");
         winnerCard.className = "winner-card";
         winnerCard.innerHTML = `
-                <div class="winner-avatar" style="background-color: ${winner.avatar.color}20">
-                    <img src="/avatars/${winner.avatar.file}" class="avatar-circle-small">
-                </div>
+                <img src="/avatars/${winner.avatar.file}" class="avatar-circle-large">
                 <span class="player-name">${winner.name}</span>
             `;
         winnerListDiv.appendChild(winnerCard);
