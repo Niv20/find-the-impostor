@@ -11,7 +11,8 @@
   --header-height: 60px;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -39,8 +40,8 @@ body::-webkit-scrollbar {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 body {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 #app-header {
@@ -66,35 +67,37 @@ body {
 }
 
 #header-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    order: 1; /* Actions on the left for RTL */
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  order: 1; /* Actions on the left for RTL */
 }
 
-.header-btn, .header-link-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 5px;
-    margin: 0;
-    width: auto;
-    display: flex;
-    align-items: center;
-    gap: 5px; /* Space between icon and text */
+.header-btn,
+.header-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px;
+  margin: 0;
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Space between icon and text */
 }
-.header-btn:hover, .header-link-btn:hover {
-    color: white;
-    background: transparent;
-    transform: none;
+.header-btn:hover,
+.header-link-btn:hover {
+  color: white;
+  background: transparent;
+  transform: none;
 }
 .header-link-btn {
-    color: var(--primary-color);
-    font-weight: 600;
+  color: var(--primary-color);
+  font-weight: 600;
 }
 .header-link-btn:hover {
-    color: #8c84ff;
+  color: #8c84ff;
 }
 
 .container {
@@ -110,12 +113,12 @@ body {
 }
 
 .screen-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Vertically center content */
-    align-items: center; /* Horizontally center content */
-    flex-grow: 1;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Vertically center content */
+  align-items: center; /* Horizontally center content */
+  flex-grow: 1;
+  width: 100%;
 }
 
 h1,
@@ -241,7 +244,7 @@ button:disabled {
 
 /* Name Entry Screen */
 .name-entry-content {
-    width: 100%;
+  width: 100%;
 }
 .name-input-container {
   position: relative;
@@ -262,23 +265,23 @@ button:disabled {
   font-size: 0.9rem;
 }
 #submit-name-btn {
-    width: 80%;
-    max-width: 300px;
-    margin: 20px auto;
-    display: block;
-    flex-shrink: 0; /* Prevent button from shrinking */
+  width: 80%;
+  max-width: 300px;
+  margin: 20px auto;
+  display: block;
+  flex-shrink: 0; /* Prevent button from shrinking */
 }
 
 /* Lobby Screen */
 #lobby-screen {
-    justify-content: space-between; /* Push content up, controls down */
+  justify-content: space-between; /* Push content up, controls down */
 }
 .lobby-content {
-    width: 100%;
+  width: 100%;
 }
 .share-code-text {
-    color: var(--text-muted);
-    margin-bottom: 5px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
 }
 #game-code-display {
   background-color: #111;
@@ -333,12 +336,6 @@ button:disabled {
 .player-name {
   font-weight: 600;
 }
-#player-list li.admin::after {
-  content: " (מנהל)";
-  color: var(--primary-color);
-  font-weight: 600;
-  margin-right: auto;
-}
 
 /* Settings Modal */
 #settings-modal {
@@ -385,22 +382,22 @@ button:disabled {
 }
 
 .settings-divider {
-    border: none;
-    border-top: 1px solid #444;
-    margin: 20px 0;
+  border: none;
+  border-top: 1px solid #444;
+  margin: 20px 0;
 }
 
 #category-settings {
-    padding-top: 20px;
-    margin-top: 20px;
+  padding-top: 20px;
+  margin-top: 20px;
 }
 
 .settings-label {
-    display: block;
-    text-align: right;
-    color: var(--text-color);
-    font-weight: 600;
-    margin-bottom: 15px;
+  display: block;
+  text-align: right;
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 15px;
 }
 
 #category-list {
@@ -421,7 +418,7 @@ button:disabled {
 }
 
 .category-item label {
-    cursor: pointer; /* Ensure label is also clickable */
+  cursor: pointer; /* Ensure label is also clickable */
 }
 
 .category-item input[type="checkbox"] {
@@ -457,8 +454,8 @@ button:disabled {
 }
 
 .category-item input[type="checkbox"]:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 /* Admin Controls */
@@ -472,7 +469,7 @@ button:disabled {
 }
 
 .settings-grid > div {
-    text-align: left;
+  text-align: left;
 }
 
 .timer-btn {

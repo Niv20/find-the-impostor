@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let chosenAvatarFile = null;
   let allCategories = [];
   let enabledCategories = [];
-  let currentScreen = 'home';
+  let currentScreen = "home";
 
   // --- Screen Elements ---
   const screens = {
@@ -35,12 +35,14 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // Header
-  const header = document.getElementById('app-header');
-  const headerBackBtn = document.getElementById('header-back-btn');
-  const headerCreateBtn = document.getElementById('header-create-btn');
-  const headerSettingsBtn = document.getElementById('header-settings-btn');
+  const header = document.getElementById("app-header");
+  const headerTitle = document.getElementById("header-title");
+  const headerBackBtn = document.getElementById("header-back-btn");
+  const headerCreateBtn = document.getElementById("header-create-btn");
+  const headerSettingsBtn = document.getElementById("header-settings-btn");
 
   // Lobby
+  const shareCodeText = document.querySelector(".share-code-text");
   const gameCodeDisplay = document.getElementById("game-code-display");
   const playerCountSpan = document.getElementById("player-count");
   const playerListUl = document.getElementById("player-list");
@@ -57,24 +59,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Screen Management ---
   function updateHeader(screenName) {
-    headerBackBtn.classList.add('hidden');
-    headerCreateBtn.classList.add('hidden');
-    headerSettingsBtn.classList.add('hidden');
+    headerBackBtn.classList.add("hidden");
+    headerCreateBtn.classList.add("hidden");
+    headerSettingsBtn.classList.add("hidden");
+    headerTitle.classList.remove("hidden"); // Reset title visibility each time
 
     switch (screenName) {
-      case 'home':
-        headerCreateBtn.classList.remove('hidden');
+      case "home":
+        headerCreateBtn.classList.remove("hidden");
         break;
-      case 'nameEntry':
-      case 'lobby':
-        headerBackBtn.classList.remove('hidden');
-        if (isAdmin && screenName === 'lobby') {
-            headerSettingsBtn.classList.remove('hidden');
+      case "nameEntry":
+        headerBackBtn.classList.remove("hidden");
+        break;
+      case "lobby":
+        headerBackBtn.classList.remove("hidden");
+        if (isAdmin) {
+          headerTitle.classList.add("hidden"); // Hide title for admin
+          headerSettingsBtn.classList.remove("hidden");
         }
         break;
-      case 'game':
-      case 'voting':
-      case 'result':
+      case "game":
+      case "voting":
+      case "result":
         // No buttons shown during the game flow
         break;
     }
@@ -105,21 +111,25 @@ document.addEventListener("DOMContentLoaded", () => {
     showNameEntryScreen();
   });
 
-  headerBackBtn.addEventListener('click', () => {
-      switch(currentScreen) {
-          case 'nameEntry':
-              showScreen('home');
-              break;
-          case 'lobby':
-              if (isAdmin) {
-                if (confirm("אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?")) {
-                    socket.emit("endGame", gameCode);
-                }
-              } else {
-                  window.location.reload(); // Player leaves
-              }
-              break;
-      }
+  headerBackBtn.addEventListener("click", () => {
+    switch (currentScreen) {
+      case "nameEntry":
+        showScreen("home");
+        break;
+      case "lobby":
+        if (isAdmin) {
+          if (
+            confirm(
+              "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
+            )
+          ) {
+            socket.emit("endGame", gameCode);
+          }
+        } else {
+          window.location.reload(); // Player leaves
+        }
+        break;
+    }
   });
 
   // Home Screen
@@ -192,7 +202,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
 
-  startGameBtn.addEventListener("click", () => socket.emit("startGame", gameCode));
+  startGameBtn.addEventListener("click", () =>
+    socket.emit("startGame", gameCode)
+  );
 
   // --- Socket Listeners ---
   socket.on("connect", () => (myId = socket.id));
@@ -216,6 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     allCategories = data.allCategories;
     enabledCategories = data.settings.enabledCategories;
 
+    shareCodeText.textContent = "שתף עם חברים את הקוד:";
     gameCodeDisplay.textContent = gameCode;
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
@@ -228,6 +241,8 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("joinedSuccess", (data) => {
     adminControls.classList.add("hidden");
     settingsBtn.classList.add("hidden");
+    shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל";
+    gameCodeDisplay.classList.add("hidden");
     updatePlayerList(data.players);
     showScreen("lobby");
   });
@@ -256,7 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showRandomAvatarPreview() {
     if (availableAvatars.length > 0) {
-      const randomFile = availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
+      const randomFile =
+        availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
       avatarPreviewContainer.innerHTML = `<img src="/avatars/${randomFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
       return randomFile;
     }
@@ -269,8 +285,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const li = document.createElement("li");
       const avatarImg = `<img src="/avatars/${player.avatar.file}" class="avatar-circle-small">`;
       const nameSpan = `<span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>`;
+
       li.innerHTML = `${avatarImg}${nameSpan}`;
-      if (player.isAdmin) li.classList.add("admin");
+
+      if (player.isAdmin) {
+        const adminSpan = document.createElement("span");
+        adminSpan.textContent = " (מנהל)";
+        adminSpan.style.color = player.avatar.color;
+        adminSpan.style.fontWeight = "600";
+        adminSpan.style.marginRight = "auto"; // Pushes to the end in flex container
+        li.appendChild(adminSpan);
+      }
+
       playerListUl.appendChild(li);
     });
     playerCountSpan.textContent = players.length;
@@ -287,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     allCategories.forEach((cat) => {
       const item = document.createElement("div");
       item.className = "category-item";
-      
+
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.id = `cat-${cat.id}`;
@@ -313,6 +339,14 @@ document.addEventListener("DOMContentLoaded", () => {
       item.appendChild(checkbox);
       item.appendChild(label);
 
+      // Add click listener to the whole item div
+      item.addEventListener("click", (e) => {
+        // If the click was directly on the container div (not bubbling from label or checkbox)
+        if (e.target === item) {
+          checkbox.click(); // Programmatically click the checkbox
+        }
+      });
+
       categoryListDiv.appendChild(item);
     });
   }
@@ -336,9 +370,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Dummy implementations for functions that were collapsed for brevity
-  function startTimer(duration) { /* Full implementation exists */ }
-  function showVotingScreen() { /* Full implementation exists */ }
-  function updateScoreList(players) { /* Full implementation exists */ }
+  function startTimer(duration) {
+    /* Full implementation exists */
+  }
+  function showVotingScreen() {
+    /* Full implementation exists */
+  }
+  function updateScoreList(players) {
+    /* Full implementation exists */
+  }
 
-  showScreen('home'); // Initial screen
+  showScreen("home"); // Initial screen
 });
