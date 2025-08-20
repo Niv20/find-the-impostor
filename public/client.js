@@ -10,6 +10,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // הפעלת מנגנון שמירת המסך דלוק מיד עם טעינת האפליקציה
   requestWakeLock();
+
+  // מעקב אחר מצבי ניתוק
+  document.addEventListener("visibilitychange", () => {
+    console.log(`🔍 Tab visibility changed: ${document.visibilityState}`);
+    // כשחוזרים לטאב, מנסים להתחבר מחדש
+    if (document.visibilityState === "visible" && myId && gameCode) {
+      console.log("🔄 Attempting to reconnect...");
+    }
+  });
+
+  window.addEventListener("online", () => {
+    console.log("📶 Browser is online");
+    if (myId && gameCode) {
+      console.log("🔄 Network restored, attempting to reconnect...");
+    }
+  });
+
+  window.addEventListener("offline", () => {
+    console.log("❌ Browser is offline");
+  });
+
+  socket.on("connect", () => {
+    console.log("🟢 Socket connected");
+    myId = socket.id;
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log(`🔴 Socket disconnected. Reason: ${reason}`);
+  });
+
+  socket.on("reconnect", (attemptNumber) => {
+    console.log(`🔄 Socket reconnected after ${attemptNumber} attempts`);
+  });
+
+  socket.on("reconnect_attempt", (attemptNumber) => {
+    console.log(`⏳ Attempting to reconnect... (attempt ${attemptNumber})`);
+  });
   let isCreatingGame = false;
   let roundTimerInterval;
   let availableAvatars = [];

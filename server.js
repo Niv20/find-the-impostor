@@ -315,13 +315,18 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
-    console.log(`🔌 User disconnected: ${socket.id}`);
+  socket.on("disconnect", (reason) => {
+    console.log(`🔌 User disconnected: ${socket.id}, Reason: ${reason}`);
     for (const gameCode in games) {
-      const playerIndex = games[gameCode].players.findIndex(
-        (p) => p.id === socket.id
-      );
+      const game = games[gameCode];
+      const playerIndex = game.players.findIndex((p) => p.id === socket.id);
       if (playerIndex !== -1) {
+        const player = game.players[playerIndex];
+        console.log(
+          `👤 Player "${player.name}" disconnected from game ${gameCode}`
+        );
+        console.log(`📊 Game state before disconnect: ${game.gameState}`);
+        console.log(`👥 Players remaining: ${game.players.length - 1}`);
         handleDisconnect(gameCode, socket);
         break;
       }
@@ -339,12 +344,22 @@ io.on("connection", (socket) => {
     game.players.splice(playerIndex, 1);
     sock.leave(gameCode);
 
+    console.log(`🎮 Game ${gameCode} status after disconnect:`);
+    console.log(`👥 Players remaining: ${game.players.length}`);
+    console.log(`🎯 Game state: ${game.gameState}`);
+
     if (game.players.length === 0) {
       console.log(`[Game ${gameCode}] Game empty, deleting.`);
       delete games[gameCode];
     } else if (leavingPlayer.isAdmin) {
       io.to(gameCode).emit("gameEnded", game.players);
       console.log(`[Game ${gameCode}] Admin left, ending game.`);
+      delete games[gameCode];
+    } else if (game.players.length < 3 && game.gameState === "in-game") {
+      console.log(
+        `[Game ${gameCode}] Not enough players (${game.players.length}), ending game.`
+      );
+      io.to(gameCode).emit("gameEnded", game.players);
       delete games[gameCode];
     } else {
       io.to(gameCode).emit("updatePlayerList", game.players);
