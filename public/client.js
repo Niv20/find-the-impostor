@@ -179,24 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showNameEntryScreen();
   });
 
-  exitGameBtn.addEventListener("click", () => {
-    const message = isAdmin
-      ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
-      : "האם אתה בטוח שברצונך לצאת מהמשחק?";
-    showModalMessage(message, {
-      okText: isAdmin ? "סיים משחק" : "צא",
-      cancelText: "ביטול",
-      onOk: () => {
-        if (isAdmin) {
-          socket.emit("endGame", gameCode);
-        } else {
-          window.location.reload();
-        }
-      },
-      onCancel: () => {},
-    });
-  });
-
   // Home Screen
   codeInputs.forEach((input, index) => {
     input.addEventListener("input", (e) => {
