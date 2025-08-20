@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   startGameBtn.addEventListener("click", () => {
     console.log('Start game button clicked, emitting startGame with code:', gameCode);
-    socket.emit("startGame", gameCode)
+    socket.emit("startGame", gameCode);
   });
   nextRoundBtn.addEventListener("click", () => socket.emit("startGame", gameCode));
   endGameBtnFromResult.addEventListener("click", () => {
