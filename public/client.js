@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
     endGame: document.getElementById("end-game-screen"),
   };
 
+  const resultScreen = screens.result; // Add this line to fix the reference error
+
   // --- UI Elements ---
   const codeInputs = document.querySelectorAll(".code-input");
   const joinGameBtn = document.getElementById("join-game-btn");
@@ -421,17 +423,23 @@ document.addEventListener("DOMContentLoaded", () => {
     resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
     updateScoreList(players, scoreListUl, true);
 
-    // Setup for next round
+    // Setup controls based on user role
     if (isAdmin) {
-      adminResultControls.classList.add("hidden");
-      waitingForAdminMsg.textContent = "הסבב הבא יתחיל בעוד מספר שניות...";
-      waitingForAdminMsg.classList.remove("hidden");
-      setTimeout(() => {
-        socket.emit("startGame", gameCode);
-      }, 5000);
+      // Show admin controls
+      adminResultControls.classList.remove("hidden");
+      waitingForAdminMsg.classList.add("hidden");
+
+      // Update next round button to be primary
+      nextRoundBtn.className = "primary-button";
+      nextRoundBtn.textContent = "המשך משחק";
+
+      // Update end game button to be text-only
+      endGameBtnFromResult.className = "text-button";
+      endGameBtnFromResult.textContent = "סיום משחק";
     } else {
+      // For non-admin players
       adminResultControls.classList.add("hidden");
-      waitingForAdminMsg.textContent = "הסבב הבא יתחיל בעוד מספר שניות...";
+      waitingForAdminMsg.textContent = "ממתין להחלטת מנהל המשחק...";
       waitingForAdminMsg.classList.remove("hidden");
     }
 

@@ -172,8 +172,12 @@ io.on("connection", (socket) => {
   socket.on("changeSettings", ({ gameCode, settings }) => {
     const game = games[gameCode];
     if (game && game.adminId === socket.id) {
-      game.settings = { ...game.settings, ...settings };
-      // Also broadcast to all players if needed, for now just server state is updated
+      // בדיבאג תמיד נשמור על טיימר של 5 שניות
+      game.settings = {
+        ...game.settings,
+        ...settings,
+        timer: 5, // force 5 seconds for debugging
+      };
     }
   });
 
