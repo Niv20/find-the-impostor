@@ -122,8 +122,8 @@ async function createConfetti() {
   });
 
   // אוטומטית נעלם אחרי 5 שניות
-  setTimeout(() => {
-    tsParticles.destroy();
+  setTimeout(async () => {
+    await tsParticles.destroy("tsparticles");
     container.remove();
   }, 5000);
 }
