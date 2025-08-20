@@ -564,12 +564,17 @@ button:disabled {
 }
 .modal-content {
   background-color: var(--card-color);
-  padding: 25px;
+  padding: 20px;
   border-radius: 12px;
   width: 90%;
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+}
+.modal-content .settings-grid:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+  margin-bottom: 15px;
 }
 .modal-header {
   display: flex;
@@ -580,18 +585,18 @@ button:disabled {
 }
 .settings-divider {
   border: none;
-  border-top: 1px solid #444;
-  margin: 20px 0;
+  border-top: 1px solid var(--border-color);
+  margin: 15px 0;
 }
 #category-settings {
-  padding-top: 20px;
-  margin-top: 20px;
+  padding-top: 15px;
+  margin-top: 15px;
 }
 .settings-label {
   display: block;
   text-align: right;
   color: var(--text-color);
-  font-weight: 600;
+  font-weight: normal;
   margin-bottom: 15px;
 }
 #category-list {
@@ -599,9 +604,12 @@ button:disabled {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
   text-align: right;
+  background-color: var(--card-hover);
+  padding: 10px;
+  border-radius: 8px;
 }
 .category-item {
-  background-color: #1a1a1d;
+  background-color: transparent;
   padding: 10px;
   border-radius: 6px;
   display: flex;
@@ -653,8 +661,11 @@ button:disabled {
   grid-template-columns: auto 1fr;
   gap: 15px;
   align-items: center;
-  margin: 15px 0;
+  margin: 10px 0;
   text-align: right;
+  padding: 10px;
+  background-color: var(--card-hover);
+  border-radius: 8px;
 }
 .settings-grid > div {
   text-align: left;

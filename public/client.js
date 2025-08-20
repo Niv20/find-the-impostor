@@ -100,20 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headerCreateBtn.classList.remove("hidden");
         break;
       case "nameEntry":
-        if (isCreatingGame) {
-          const backBtn = document.createElement("button");
-          backBtn.className = "header-btn";
-          backBtn.innerHTML =
-            '<span class="material-icons">arrow_forward</span>';
-          backBtn.onclick = () => {
-            isCreatingGame = false;
-            showScreen("home");
-          };
-          headerLogoContainer.insertBefore(
-            backBtn,
-            headerLogoContainer.firstChild
-          );
-        }
+        // הסרת כפתור חזרה למשחק חדש
         break;
       case "lobby":
         if (isAdmin) {
