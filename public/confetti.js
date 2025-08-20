@@ -1,28 +1,140 @@
-function createConfetti() {
-  const colors = [
-    "#ff0000",
-    "#00ff00",
-    "#0000ff",
-    "#ffff00",
-    "#ff00ff",
-    "#00ffff",
-  ];
-  const numConfetti = 150;
+async function createConfetti() {
+  // Load the tsParticles library
+  await loadTsParticles();
 
-  for (let i = 0; i < numConfetti; i++) {
-    const confetti = document.createElement("div");
-    confetti.className = "confetti";
-    confetti.style.backgroundColor =
-      colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.left = Math.random() * 100 + "vw";
-    confetti.style.animationDuration = Math.random() * 3 + 2 + "s";
-    confetti.style.opacity = Math.random();
-    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+  // Create container
+  const container = document.createElement("div");
+  container.id = "tsparticles";
+  document.body.appendChild(container);
 
-    document.body.appendChild(confetti);
+  // Initialize tsParticles
+  await tsParticles.load({
+    id: "tsparticles",
+    options: {
+      fullScreen: {
+        zIndex: 1,
+      },
+      particles: {
+        color: {
+          value: ["#FFFFFF", "#FFd700"],
+        },
+        move: {
+          direction: "bottom",
+          enable: true,
+          outModes: {
+            default: "out",
+          },
+          size: true,
+          speed: {
+            min: 1,
+            max: 3,
+          },
+        },
+        number: {
+          value: 500,
+          density: {
+            enable: true,
+            area: 800,
+          },
+        },
+        opacity: {
+          value: 1,
+          animation: {
+            enable: false,
+            startValue: "max",
+            destroy: "min",
+            speed: 0.3,
+            sync: true,
+          },
+        },
+        rotate: {
+          value: {
+            min: 0,
+            max: 360,
+          },
+          direction: "random",
+          move: true,
+          animation: {
+            enable: true,
+            speed: 60,
+          },
+        },
+        tilt: {
+          direction: "random",
+          enable: true,
+          move: true,
+          value: {
+            min: 0,
+            max: 360,
+          },
+          animation: {
+            enable: true,
+            speed: 60,
+          },
+        },
+        shape: {
+          type: ["circle", "square", "triangle", "polygon"],
+          options: {
+            polygon: [
+              {
+                sides: 5,
+              },
+              {
+                sides: 6,
+              },
+            ],
+          },
+        },
+        size: {
+          value: {
+            min: 2,
+            max: 4,
+          },
+        },
+        roll: {
+          darken: {
+            enable: true,
+            value: 30,
+          },
+          enlighten: {
+            enable: true,
+            value: 30,
+          },
+          enable: true,
+          speed: {
+            min: 15,
+            max: 25,
+          },
+        },
+        wobble: {
+          distance: 30,
+          enable: true,
+          move: true,
+          speed: {
+            min: -15,
+            max: 15,
+          },
+        },
+      },
+    },
+  });
 
-    confetti.addEventListener("animationend", () => {
-      confetti.remove();
-    });
+  // אוטומטית נעלם אחרי 5 שניות
+  setTimeout(() => {
+    tsParticles.destroy();
+    container.remove();
+  }, 5000);
+}
+
+// פונקציה לטעינת הספרייה
+async function loadTsParticles() {
+  if (typeof tsParticles === "undefined") {
+    const script = document.createElement("script");
+    script.src =
+      "https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js";
+    document.head.appendChild(script);
+
+    // המתנה לטעינת הספרייה
+    await new Promise((resolve) => (script.onload = resolve));
   }
 }

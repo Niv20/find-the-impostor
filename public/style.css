@@ -132,8 +132,6 @@
   }
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap");
-
 :root {
   /* Dark mode colors inspired by Apple */
   --bg-color: #000000;
@@ -163,8 +161,7 @@ body {
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
-  font-family: Assistant, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif !important;
+  font-family: Assistant !important;
   text-align: center;
   direction: rtl;
   -webkit-font-smoothing: antialiased;
@@ -366,7 +363,8 @@ button:disabled {
 
 .settings-wrapper {
   position: fixed;
-  top: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   left: 20px;
 }
 
@@ -591,6 +589,7 @@ button:disabled {
 #category-settings {
   padding-top: 15px;
   margin-top: 15px;
+  border-top: 1px solid var(--border-color);
 }
 .settings-label {
   display: block;
@@ -604,12 +603,9 @@ button:disabled {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
   text-align: right;
-  background-color: var(--card-hover);
-  padding: 10px;
-  border-radius: 8px;
 }
 .category-item {
-  background-color: transparent;
+  background-color: var(--card-hover);
   padding: 10px;
   border-radius: 6px;
   display: flex;
@@ -663,9 +659,6 @@ button:disabled {
   align-items: center;
   margin: 10px 0;
   text-align: right;
-  padding: 10px;
-  background-color: var(--card-hover);
-  border-radius: 8px;
 }
 .settings-grid > div {
   text-align: left;
@@ -817,24 +810,6 @@ input:checked + .slider:before {
 }
 #result-screen[data-impostor-found="false"] #result-title {
   color: var(--error-color);
-}
-
-/* Confetti Animation */
-@keyframes confettiFall {
-  0% {
-    transform: translateY(-100vh) rotate(0deg);
-  }
-  100% {
-    transform: translateY(100vh) rotate(360deg);
-  }
-}
-
-.confetti {
-  position: fixed;
-  width: 10px;
-  height: 10px;
-  animation: confettiFall linear forwards;
-  z-index: 1000;
 }
 
 /* Header Adjustments */
