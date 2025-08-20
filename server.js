@@ -173,6 +173,14 @@ io.on("connection", (socket) => {
     startNewRound(gameCode);
   });
 
+  socket.on('timerEnded', (gameCode) => {
+      const game = games[gameCode];
+      if (game && game.gameState === 'in-game') {
+          console.log(`[Game ${gameCode}] Timer ended. Starting vote.`);
+          io.to(gameCode).emit('startVoting', game.players);
+      }
+  });
+
   function startNewRound(gameCode) {
     const game = games[gameCode];
     if (!game) return;
@@ -204,6 +212,8 @@ io.on("connection", (socket) => {
         word: isImpostor ? null : randomWord,
         category: game.settings.showCategory ? category.categoryName : null,
         timer: game.settings.timer,
+        // Pass the showCategory setting to the client
+        showCategory: game.settings.showCategory 
       });
     });
     console.log(
@@ -211,21 +221,17 @@ io.on("connection", (socket) => {
     );
   }
 
-  socket.on("getPlayersForVoting", (gameCode) => {
+  socket.on("playerVote", ({ gameCode, votedForId }) => {
     const game = games[gameCode];
-    if (game) {
-      socket.emit("playerListForVoting", game.players);
-    }
-  });
-
-  socket.on("vote", ({ gameCode, votedPlayerId }) => {
-    const game = games[gameCode];
-    if (!game || !game.currentRound || game.currentRound.votes[socket.id])
+    // Renamed from 'vote' to avoid conflicts, and added more checks
+    if (!game || !game.currentRound || game.currentRound.votes[socket.id] || game.currentRound.revealed) {
       return;
+    }
 
-    game.currentRound.votes[socket.id] = votedPlayerId;
+    game.currentRound.votes[socket.id] = votedForId;
     const totalVotes = Object.keys(game.currentRound.votes).length;
 
+    // Check if everyone has voted
     if (totalVotes === game.players.length) {
       revealResults(gameCode);
     }
@@ -236,8 +242,9 @@ io.on("connection", (socket) => {
     if (!game || !game.currentRound || game.currentRound.revealed) return;
 
     game.currentRound.revealed = true;
+    game.gameState = "lobby"; // Game returns to a lobby-like state
 
-    const { votes, impostorId, word } = game.currentRound;
+    const { votes, impostorId, word, categoryName } = game.currentRound;
     const voteCounts = {};
     Object.values(votes).forEach((votedId) => {
       voteCounts[votedId] = (voteCounts[votedId] || 0) + 1;
@@ -252,10 +259,10 @@ io.on("connection", (socket) => {
       }
     }
 
-    const impostorFound = mostVotedId === impostorId;
+    const correctlyGuessed = mostVotedId === impostorId;
     const impostor = game.players.find((p) => p.id === impostorId);
 
-    if (impostorFound) {
+    if (correctlyGuessed) {
       game.players.forEach((p) => {
         if (p.id !== impostorId) p.score += 1;
       });
@@ -264,25 +271,21 @@ io.on("connection", (socket) => {
     }
 
     io.to(gameCode).emit("roundResult", {
-      impostorFound,
-      impostorName: impostor ? impostor.name : "לא ידוע",
+      correctlyGuessed,
+      impostor,
       word,
       players: game.players,
     });
 
-    setTimeout(() => startNewRound(gameCode), 8000);
+    // REMOVED: setTimeout(() => startNewRound(gameCode), 8000);
   }
 
   socket.on("endGame", (gameCode) => {
     const game = games[gameCode];
     if (game && game.adminId === socket.id) {
-      io.to(gameCode).emit("gameEnded");
+      io.to(gameCode).emit("gameEnded", game.players);
       delete games[gameCode];
     }
-  });
-
-  socket.on("leaveGame", (gameCode) => {
-    handleDisconnect(gameCode, socket);
   });
 
   socket.on("disconnect", () => {
@@ -313,7 +316,7 @@ io.on("connection", (socket) => {
       console.log(`[Game ${gameCode}] Game empty, deleting.`);
       delete games[gameCode];
     } else if (leavingPlayer.isAdmin) {
-      io.to(gameCode).emit("gameEnded", "המנהל עזב, המשחק הסתיים.");
+      io.to(gameCode).emit("gameEnded", game.players);
       console.log(`[Game ${gameCode}] Admin left, ending game.`);
       delete games[gameCode];
     } else {
@@ -328,13 +331,13 @@ io.on("connection", (socket) => {
           delete games[gameCode];
         } else if (game.currentRound.impostorId === sock.id) {
           io.to(gameCode).emit("roundResult", {
-            impostorFound: true,
-            impostorName: leavingPlayer.name,
+            correctlyGuessed: true, // Treat as if impostor was found
+            impostor: leavingPlayer,
             word: game.currentRound.word,
             players: game.players,
             customMessage: `${leavingPlayer.name} (המתחזה) עזב את המשחק!`,
           });
-          setTimeout(() => startNewRound(gameCode), 8000);
+          // REMOVED: setTimeout(() => startNewRound(gameCode), 8000);
         }
       }
     }

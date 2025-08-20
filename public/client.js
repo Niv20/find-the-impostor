@@ -281,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.isImpostor) {
         wordDisplayContainer.classList.add('hidden');
         impostorDisplay.classList.remove('hidden');
-        if (data.showCategory) {
+        if (data.category) {
             impostorCategoryInfo.textContent = data.category;
         } else {
             impostorCategoryInfo.textContent = "";
