@@ -250,6 +250,15 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen("home");
   });
 
+  // טיפול בשגיאת שם כפול - השארת המשתמש במסך הזנת השם
+  socket.on("nameTakenError", (message) => {
+    alert(message);
+    nameInput.value = "";
+    nameInput.focus();
+    // השאר במסך הזנת השם
+    showScreen("nameEntry");
+  });
+
   socket.on("gameCodeValid", () => {
     isCreatingGame = false;
     showNameEntryScreen();

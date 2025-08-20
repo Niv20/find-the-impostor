@@ -128,15 +128,29 @@ io.on("connection", (socket) => {
     }
     const isNameTaken = game.players.some((p) => p.name === name);
     if (isNameTaken) {
-      return socket.emit("errorMsg", "השם שבחרת כבר תפוס בחדר זה.");
+      // שלח הודעת שגיאה מיוחדת שלא תעיף את המשתמש מהמסך
+      return socket.emit(
+        "nameTakenError",
+        "השם שבחרת כבר תפוס בחדר זה. אנא בחר שם אחר."
+      );
     }
 
-    let playerAvatar;
+    // בחירת אווטר פנוי בלבד
     const usedAvatarFiles = game.players.map((p) => p.avatar.file);
+    let playerAvatar;
     if (requestedAvatarFile && !usedAvatarFiles.includes(requestedAvatarFile)) {
       playerAvatar = getAvatarByFile(requestedAvatarFile);
     } else {
-      playerAvatar = getAvailableAvatar(game);
+      // בחר אווטר פנוי אקראי
+      const availableAvatars = AVATARS_CONFIG.filter(
+        (a) => !usedAvatarFiles.includes(a.file)
+      );
+      playerAvatar =
+        availableAvatars.length > 0
+          ? availableAvatars[
+              Math.floor(Math.random() * availableAvatars.length)
+            ]
+          : AVATARS_CONFIG[Math.floor(Math.random() * AVATARS_CONFIG.length)];
     }
 
     socket.join(gameCode);
