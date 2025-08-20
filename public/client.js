@@ -525,21 +525,26 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.isImpostor) {
       wordDisplayContainer.classList.add("hidden");
       impostorDisplay.classList.remove("hidden");
+      impostorWordDisplay.classList.remove("word-hidden");
+      impostorCategoryInfo.classList.remove("word-hidden");
+
       if (data.category) {
         impostorCategoryInfo.textContent = `(קטגוריה: ${data.category})`;
       } else {
         impostorCategoryInfo.textContent = "";
       }
 
-      // הוספת Event Listener לכפתור של המתחזה - זהה לכפתור הרגיל
+      // הוספת Event Listener לכפתור של המתחזה
       toggleImpostorBtn.onclick = () => {
-        impostorWordDisplay.classList.toggle("word-hidden");
-        impostorCategoryInfo.classList.toggle("word-hidden");
-        toggleImpostorBtn.textContent = impostorWordDisplay.classList.contains(
-          "word-hidden"
-        )
-          ? "הצג מילה"
-          : "הסתר מילה";
+        const isHidden = !impostorWordDisplay.classList.contains("word-hidden");
+        if (isHidden) {
+          impostorWordDisplay.classList.add("word-hidden");
+          impostorCategoryInfo.classList.add("word-hidden");
+        } else {
+          impostorWordDisplay.classList.remove("word-hidden");
+          impostorCategoryInfo.classList.remove("word-hidden");
+        }
+        toggleImpostorBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
       };
     } else {
       wordDisplayContainer.classList.remove("hidden");
