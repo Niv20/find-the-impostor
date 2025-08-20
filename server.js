@@ -87,7 +87,7 @@ io.on("connection", (socket) => {
         { id: socket.id, name, score: 0, isAdmin: true, avatar: adminAvatar },
       ],
       settings: {
-        timer: 60,
+        timer: 5, // Default timer set to 5 seconds for debugging
         showCategory: true,
         enabledCategories: Object.keys(wordCategories), // Default to all category IDs
       },

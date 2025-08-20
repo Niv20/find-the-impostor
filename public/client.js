@@ -282,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
         wordDisplayContainer.classList.add('hidden');
         impostorDisplay.classList.remove('hidden');
         if (data.category) {
-            impostorCategoryInfo.textContent = data.category;
+            impostorCategoryInfo.textContent = `(קטגוריה: ${data.category})`;
         } else {
             impostorCategoryInfo.textContent = "";
         }
@@ -310,12 +310,16 @@ document.addEventListener("DOMContentLoaded", () => {
     resultScreen.dataset.impostorFound = correctlyGuessed;
     resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
     updateScoreList(players, scoreListUl, true);
+
+    adminResultControls.classList.add("hidden"); // Hide buttons for all
+    waitingForAdminMsg.textContent = "הסבב הבא יתחיל בעוד מספר שניות...";
+    waitingForAdminMsg.classList.remove("hidden");
+
+    // B2: Auto-advance to next round (only admin sends the signal)
     if (isAdmin) {
-        adminResultControls.classList.remove("hidden");
-        waitingForAdminMsg.classList.add("hidden");
-    } else {
-        adminResultControls.classList.add("hidden");
-        waitingForAdminMsg.classList.remove("hidden");
+        setTimeout(() => {
+            socket.emit("startGame", gameCode);
+        }, 5000); // 5 second delay before starting next round
     }
     showScreen("result");
   });
@@ -451,11 +455,21 @@ document.addEventListener("DOMContentLoaded", () => {
   function showVotingScreen(players) {
     const voteOptionsDiv = document.getElementById("vote-options");
     voteOptionsDiv.innerHTML = "";
+    voteOptionsDiv.classList.remove('voting-done'); // Reset class for new round
+
+    // Hide the generic "Voting" title if it exists
+    const votingScreen = document.getElementById('voting-screen');
+    const mainTitle = votingScreen.querySelector('h2');
+    if (mainTitle) mainTitle.classList.add('hidden');
+
     const playersToVoteFor = players.filter(p => p.id !== myId);
     playersToVoteFor.forEach((player) => {
         const btn = document.createElement("button");
         btn.className = "vote-btn";
         btn.addEventListener("click", () => {
+            // Add a class to the container to disable hover via CSS
+            voteOptionsDiv.classList.add('voting-done');
+            // Also disable buttons immediately for better feedback
             document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
             socket.emit("playerVote", { gameCode, votedForId: player.id });
         });
@@ -464,6 +478,8 @@ document.addEventListener("DOMContentLoaded", () => {
         avatarImg.className = "avatar-circle-small";
         const nameSpan = document.createElement("span");
         nameSpan.textContent = player.name;
+        // D1: Apply the player's specific color to their name
+        nameSpan.style.color = player.avatar.color;
         btn.appendChild(avatarImg);
         btn.appendChild(nameSpan);
         voteOptionsDiv.appendChild(btn);

@@ -758,3 +758,22 @@ input:checked + .slider:before {
 #play-again-btn {
     max-width: 250px;
 }
+
+/* --- Voting Screen Enhancements --- */
+
+/* Enlarge voting prompt text */
+#voting-screen h3 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 25px;
+}
+
+/* Disable hover effects after a vote has been cast */
+#vote-options.voting-done .vote-btn:hover {
+  background-color: var(--card-color); /* Revert to default */
+  border-color: transparent;
+}
+
+#vote-options.voting-done .vote-btn {
+  cursor: not-allowed;
+}
