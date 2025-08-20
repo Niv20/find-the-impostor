@@ -276,6 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
     impostorDisplay.classList.add('hidden');
     wordDisplay.classList.remove('word-hidden');
     toggleWordBtn.textContent = "הסתר מילה";
+    timerDisplay.style.opacity = 0;
 
     if (data.isImpostor) {
         wordDisplayContainer.classList.add('hidden');
@@ -290,7 +291,12 @@ document.addEventListener("DOMContentLoaded", () => {
         impostorDisplay.classList.add('hidden');
         wordDisplay.textContent = data.word;
     }
-    startTimer(data.timer);
+    
+    setTimeout(() => {
+        timerDisplay.style.opacity = 1;
+        startTimer(data.timer);
+    }, 3000);
+
     showScreen('game');
   });
 
@@ -435,6 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
         timerDisplay.textContent = `${minutes}:${seconds}`;
         if (--timer < 0) {
             clearInterval(roundTimerInterval);
+            socket.emit('timerEnded', gameCode);
         }
     };
     update();
