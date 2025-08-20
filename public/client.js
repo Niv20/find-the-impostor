@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.isImpostor) {
         wordDisplayContainer.classList.add('hidden');
         impostorDisplay.classList.remove('hidden');
-        if (data.settings.showCategory) {
+        if (data.showCategory) {
             impostorCategoryInfo.textContent = data.category;
         } else {
             impostorCategoryInfo.textContent = "";
@@ -290,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
         impostorDisplay.classList.add('hidden');
         wordDisplay.textContent = data.word;
     }
-    startTimer(data.settings.timer);
+    startTimer(data.timer);
     showScreen('game');
   });
 
