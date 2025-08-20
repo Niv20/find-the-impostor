@@ -12,22 +12,19 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
 
-// --- Avatar and Color Configuration ---
 const AVATARS_CONFIG = [
-  { file: "avatar1.png", color: "#f39c12" }, // כתום בוהק
-  { file: "avatar2.png", color: "#3498db" }, // תכלת
-  { file: "avatar3.png", color: "#e84393" }, // ורוד עז
-  { file: "avatar4.png", color: "#e74c3c" }, // אדום חזק
-  { file: "avatar5.png", color: "#f1c40f" }, // צהוב שמשי
-  { file: "avatar6.png", color: "#2ecc71" }, // ירוק חי
+  { file: "avatar1.png", color: "#f39c12" },
+  { file: "avatar2.png", color: "#3498db" },
+  { file: "avatar3.png", color: "#e84393" },
+  { file: "avatar4.png", color: "#e74c3c" },
+  { file: "avatar5.png", color: "#f1c40f" },
+  { file: "avatar6.png", color: "#2ecc71" },
 ];
 
-// --- Game State Management ---
 const games = {};
-
-// --- Word Loading ---
 const wordCategories = {};
 const dataPath = path.join(__dirname, "data");
+
 fs.readdirSync(dataPath).forEach((file) => {
   if (file.endsWith(".json")) {
     const filePath = path.join(dataPath, file);
@@ -36,16 +33,12 @@ fs.readdirSync(dataPath).forEach((file) => {
     wordCategories[categoryKey] = categoryData;
   }
 });
-const allCategoriesForClient = Object.entries(wordCategories).map(
-  ([id, data]) => ({
-    id,
-    name: data.categoryName,
-  })
-);
 
+const allCategoriesForClient = Object.entries(wordCategories).map(
+  ([id, data]) => ({ id, name: data.categoryName })
+);
 console.log(`✅ Loaded ${Object.keys(wordCategories).length} word categories.`);
 
-// --- Helper Functions ---
 function generateGameCode() {
   let code;
   do {
@@ -60,29 +53,146 @@ function getAvatarByFile(fileName) {
 
 function getAvailableAvatar(game) {
   const usedAvatars = game.players.map((p) => p.avatar.file);
-  const availableAvatars = AVATARS_CONFIG.filter(
-    (a) => !usedAvatars.includes(a.file)
+  const available = AVATARS_CONFIG.filter((a) => !usedAvatars.includes(a.file));
+  return available.length > 0
+    ? available[Math.floor(Math.random() * available.length)]
+    : AVATARS_CONFIG[Math.floor(Math.random() * AVATARS_CONFIG.length)];
+}
+
+function startNewRound(gameCode) {
+  const game = games[gameCode];
+  if (!game) return;
+
+  const { enabledCategories } = game.settings;
+  const randomCategoryKey =
+    enabledCategories[Math.floor(Math.random() * enabledCategories.length)];
+  const category = wordCategories[randomCategoryKey];
+  const randomWord =
+    category.words[Math.floor(Math.random() * category.words.length)];
+  const impostor =
+    game.players[Math.floor(Math.random() * game.players.length)];
+
+  game.currentRound = {
+    word: randomWord,
+    categoryName: category.categoryName,
+    impostorId: impostor.id,
+    votes: {},
+    tieBreakVotes: {},
+    tieCandidates: [],
+    revealed: false,
+  };
+  game.gameState = "in-game";
+
+  game.players.forEach((player) => {
+    const isImpostor = player.id === impostor.id;
+    let categoryForPlayer = null;
+    if (isImpostor && game.settings.showCategory) {
+      categoryForPlayer = category.categoryName;
+    }
+    io.to(player.id).emit("roundStart", {
+      isImpostor,
+      word: isImpostor ? null : randomWord,
+      category: categoryForPlayer,
+      timer: game.settings.timer,
+    });
+  });
+  console.log(
+    `[Game ${gameCode}] Round started. Word: ${randomWord}, Impostor: ${impostor.name}`
   );
-  if (availableAvatars.length === 0) {
-    return AVATARS_CONFIG[Math.floor(Math.random() * AVATARS_CONFIG.length)];
+}
+
+function revealResults(gameCode, isTieBreak = false) {
+  const game = games[gameCode];
+  if (!game || !game.currentRound || game.currentRound.revealed) return;
+
+  const voteSource = isTieBreak
+    ? game.currentRound.tieBreakVotes
+    : game.currentRound.votes;
+  const { impostorId, word } = game.currentRound;
+
+  const voteCounts = {};
+  Object.values(voteSource).forEach((votedId) => {
+    voteCounts[votedId] = (voteCounts[votedId] || 0) + 1;
+  });
+
+  let maxVotes = 0;
+  for (const count of Object.values(voteCounts)) {
+    if (count > maxVotes) maxVotes = count;
   }
-  return availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
+
+  const mostVotedIds = Object.keys(voteCounts).filter(
+    (id) => voteCounts[id] === maxVotes
+  );
+
+  if (mostVotedIds.length > 1 && !isTieBreak) {
+    const impostorIsSuspect = mostVotedIds.includes(impostorId);
+
+    if (impostorIsSuspect && mostVotedIds.length === 2) {
+      // Handle tie-break for impostor vs one other
+      game.gameState = "tie-break";
+      game.currentRound.tieCandidates = mostVotedIds;
+
+      const voters = game.players.filter((p) => !mostVotedIds.includes(p.id));
+      let finalVoters = [...voters];
+
+      if (voters.length % 2 === 0 && voters.length > 0) {
+        // If even number of voters, exclude one
+        const excludedVoter = voters[Math.floor(Math.random() * voters.length)];
+        finalVoters = voters.filter((p) => p.id !== excludedVoter.id);
+        io.to(excludedVoter.id).emit("excludedFromTieVote");
+      }
+
+      const candidateData = game.players
+        .filter((p) => mostVotedIds.includes(p.id))
+        .map((p) => ({ id: p.id, name: p.name, avatar: p.avatar }));
+      io.to(gameCode).emit("tieVote", {
+        candidates: candidateData,
+        voterIds: finalVoters.map((p) => p.id),
+      });
+      return; // Stop here and wait for tie-break votes
+    }
+  }
+
+  game.currentRound.revealed = true;
+  const impostorFound =
+    mostVotedIds.length === 1 && mostVotedIds[0] === impostorId;
+  const impostor = game.players.find((p) => p.id === impostorId);
+  let message = "";
+
+  const oldScores = game.players.map((p) => ({ id: p.id, score: p.score }));
+
+  if (impostorFound) {
+    game.players.forEach((p) => {
+      if (p.id !== impostorId) p.score += 1;
+    });
+    message = "המתחזה נחשף!";
+  } else {
+    if (impostor) impostor.score += 2;
+    message = "המתחזה הצליח לברוח!";
+  }
+
+  const scoreChanges = game.players.map((p) => {
+    const oldPlayer = oldScores.find((op) => op.id === p.id);
+    return { id: p.id, change: p.score - oldPlayer.score };
+  });
+
+  io.to(gameCode).emit("roundResult", {
+    impostorFound,
+    impostorName: impostor ? impostor.name : "לא ידוע",
+    word,
+    players: game.players,
+    message,
+    scoreChanges,
+  });
+  // Automatic next round is removed. Waiting for admin.
 }
 
 io.on("connection", (socket) => {
-  console.log(`🔌 New user connected: ${socket.id}`);
-
-  socket.emit(
-    "avatarList",
-    AVATARS_CONFIG.map((a) => a.file)
-  );
-
+  // ... (createGame, joinGame, etc. remain the same)
   socket.on("createGame", ({ name, requestedAvatarFile }) => {
     const gameCode = generateGameCode();
     socket.join(gameCode);
-
     const adminAvatar = getAvatarByFile(requestedAvatarFile);
-
     games[gameCode] = {
       adminId: socket.id,
       players: [
@@ -91,54 +201,40 @@ io.on("connection", (socket) => {
       settings: {
         timer: 60,
         showCategory: true,
-        enabledCategories: Object.keys(wordCategories), // Default to all category IDs
+        enabledCategories: Object.keys(wordCategories),
       },
       gameState: "lobby",
       currentRound: null,
     };
-
     socket.emit("gameCreated", {
       gameCode,
       players: games[gameCode].players,
       settings: games[gameCode].settings,
-      allCategories: allCategoriesForClient, // Send all category objects to admin
+      allCategories: allCategoriesForClient,
     });
   });
-
   socket.on("checkGameCode", (gameCode) => {
     const game = games[gameCode];
     if (game) {
-      if (game.players.length < 6) {
-        socket.emit("gameCodeValid");
-      } else {
-        socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
-      }
-    } else {
-      socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
-    }
+      if (game.players.length < 6) socket.emit("gameCodeValid");
+      else socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
+    } else socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
   });
-
   socket.on("joinGame", ({ gameCode, name, requestedAvatarFile }) => {
     const game = games[gameCode];
-    if (!game) {
-      return socket.emit("errorMsg", "המשחק לא נמצא. בדוק את הקוד שהזנת.");
-    }
-    if (game.players.length >= 6) {
+    if (!game) return socket.emit("errorMsg", "המשחק לא נמצא.");
+    if (game.players.length >= 6)
       return socket.emit("errorMsg", "החדר מלא, לא ניתן להצטרף.");
-    }
-    const isNameTaken = game.players.some((p) => p.name === name);
-    if (isNameTaken) {
-      return socket.emit("errorMsg", "השם שבחרת כבר תפוס בחדר זה.");
-    }
+    if (game.players.some((p) => p.name === name))
+      return socket.emit("errorMsg", "השם שבחרת כבר תפוס.");
 
     let playerAvatar;
-    const usedAvatarFiles = game.players.map((p) => p.avatar.file);
-    if (requestedAvatarFile && !usedAvatarFiles.includes(requestedAvatarFile)) {
+    const usedAvatars = game.players.map((p) => p.avatar.file);
+    if (requestedAvatarFile && !usedAvatars.includes(requestedAvatarFile)) {
       playerAvatar = getAvatarByFile(requestedAvatarFile);
     } else {
       playerAvatar = getAvailableAvatar(game);
     }
-
     socket.join(gameCode);
     game.players.push({
       id: socket.id,
@@ -147,85 +243,35 @@ io.on("connection", (socket) => {
       isAdmin: false,
       avatar: playerAvatar,
     });
-
     socket.emit("joinedSuccess", {
       players: game.players,
       settings: game.settings,
     });
     io.to(gameCode).emit("updatePlayerList", game.players);
   });
-
   socket.on("changeSettings", ({ gameCode, settings }) => {
     const game = games[gameCode];
     if (game && game.adminId === socket.id) {
       game.settings = { ...game.settings, ...settings };
-      // Also broadcast to all players if needed, for now just server state is updated
+      io.to(gameCode).emit("settingsUpdated", game.settings);
     }
   });
 
   socket.on("startGame", (gameCode) => {
     const game = games[gameCode];
     if (!game || game.adminId !== socket.id) return;
-    if (game.players.length < 3) {
-      return; // Should be prevented by client-side UI
-    }
-    if (game.settings.enabledCategories.length === 0) {
+    if (game.players.length < 3) return;
+    if (game.settings.enabledCategories.length === 0)
       return io
         .to(socket.id)
-        .emit("errorMsg", "חובה לבחור לפחות קטגוריית מילים אחת בהגדרות.");
-    }
+        .emit("errorMsg", "חובה לבחור לפחות קטגוריית מילים אחת.");
     startNewRound(gameCode);
   });
 
-  function startNewRound(gameCode) {
+  socket.on("startNextRound", (gameCode) => {
     const game = games[gameCode];
-    if (!game) return;
-
-    const { enabledCategories } = game.settings;
-    const randomCategoryKey =
-      enabledCategories[Math.floor(Math.random() * enabledCategories.length)];
-    const category = wordCategories[randomCategoryKey];
-    const randomWord =
-      category.words[Math.floor(Math.random() * category.words.length)];
-
-    const impostor =
-      game.players[Math.floor(Math.random() * game.players.length)];
-
-    game.currentRound = {
-      word: randomWord,
-      categoryName: category.categoryName,
-      impostorId: impostor.id,
-      votes: {},
-      revealed: false,
-    };
-
-    game.gameState = "in-game";
-
-    game.players.forEach((player) => {
-      const isImpostor = player.id === impostor.id;
-      let categoryForPlayer = null; // Default to no category
-
-      // Only send the category if the player is the impostor AND the setting is enabled
-      if (isImpostor && game.settings.showCategory) {
-        categoryForPlayer = category.categoryName;
-      }
-
-      io.to(player.id).emit("roundStart", {
-        isImpostor,
-        word: isImpostor ? null : randomWord,
-        category: categoryForPlayer,
-        timer: game.settings.timer,
-      });
-    });
-    console.log(
-      `[Game ${gameCode}] Round started. Word: ${randomWord}, Impostor: ${impostor.name}`
-    );
-  }
-
-  socket.on("getPlayersForVoting", (gameCode) => {
-    const game = games[gameCode];
-    if (game) {
-      socket.emit("playerListForVoting", game.players);
+    if (game && game.adminId === socket.id) {
+      startNewRound(gameCode);
     }
   });
 
@@ -233,123 +279,65 @@ io.on("connection", (socket) => {
     const game = games[gameCode];
     if (!game || !game.currentRound || game.currentRound.votes[socket.id])
       return;
-
     game.currentRound.votes[socket.id] = votedPlayerId;
     const totalVotes = Object.keys(game.currentRound.votes).length;
-
-    if (totalVotes === game.players.length) {
-      revealResults(gameCode);
-    }
+    if (totalVotes === game.players.length) revealResults(gameCode);
   });
 
-  function revealResults(gameCode) {
+  socket.on("submitTieVote", ({ gameCode, votedPlayerId }) => {
     const game = games[gameCode];
-    if (!game || !game.currentRound || game.currentRound.revealed) return;
+    if (
+      !game ||
+      game.gameState !== "tie-break" ||
+      game.currentRound.tieBreakVotes[socket.id]
+    )
+      return;
+    game.currentRound.tieBreakVotes[socket.id] = votedPlayerId;
 
-    game.currentRound.revealed = true;
+    const voters = game.players.filter(
+      (p) => !game.currentRound.tieCandidates.includes(p.id)
+    );
+    let expectedVotes = voters.length;
+    if (voters.length % 2 === 0 && voters.length > 0) expectedVotes--;
 
-    const { votes, impostorId, word } = game.currentRound;
-    const voteCounts = {};
-    Object.values(votes).forEach((votedId) => {
-      voteCounts[votedId] = (voteCounts[votedId] || 0) + 1;
-    });
-
-    let mostVotedId = null;
-    let maxVotes = -1;
-    for (const playerId in voteCounts) {
-      if (voteCounts[playerId] > maxVotes) {
-        maxVotes = voteCounts[playerId];
-        mostVotedId = playerId;
-      }
+    if (Object.keys(game.currentRound.tieBreakVotes).length === expectedVotes) {
+      revealResults(gameCode, true); // Process as a tie-break result
     }
-
-    const impostorFound = mostVotedId === impostorId;
-    const impostor = game.players.find((p) => p.id === impostorId);
-
-    if (impostorFound) {
-      game.players.forEach((p) => {
-        if (p.id !== impostorId) p.score += 1;
-      });
-    } else {
-      if (impostor) impostor.score += 2;
-    }
-
-    io.to(gameCode).emit("roundResult", {
-      impostorFound,
-      impostorName: impostor ? impostor.name : "לא ידוע",
-      word,
-      players: game.players,
-    });
-
-    setTimeout(() => startNewRound(gameCode), 8000);
-  }
+  });
 
   socket.on("endGame", (gameCode) => {
     const game = games[gameCode];
     if (game && game.adminId === socket.id) {
-      io.to(gameCode).emit("gameEnded");
+      io.to(gameCode).emit("gameOver", { players: game.players });
       delete games[gameCode];
     }
   });
 
-  socket.on("leaveGame", (gameCode) => {
-    handleDisconnect(gameCode, socket);
-  });
-
+  // ... (disconnect logic remains similar)
   socket.on("disconnect", () => {
-    console.log(`🔌 User disconnected: ${socket.id}`);
     for (const gameCode in games) {
-      const playerIndex = games[gameCode].players.findIndex(
-        (p) => p.id === socket.id
-      );
+      const game = games[gameCode];
+      const playerIndex = game.players.findIndex((p) => p.id === socket.id);
       if (playerIndex !== -1) {
-        handleDisconnect(gameCode, socket);
+        const leavingPlayer = game.players[playerIndex];
+        game.players.splice(playerIndex, 1);
+        socket.leave(gameCode);
+
+        if (game.players.length === 0) {
+          delete games[gameCode];
+        } else if (leavingPlayer.isAdmin) {
+          io.to(gameCode).emit("gameOver", {
+            players: game.players,
+            customMessage: "המנהל עזב, המשחק הסתיים.",
+          });
+          delete games[gameCode];
+        } else {
+          io.to(gameCode).emit("updatePlayerList", game.players);
+        }
         break;
       }
     }
   });
-
-  function handleDisconnect(gameCode, sock) {
-    const game = games[gameCode];
-    if (!game) return;
-
-    const playerIndex = game.players.findIndex((p) => p.id === sock.id);
-    if (playerIndex === -1) return;
-
-    const leavingPlayer = game.players[playerIndex];
-    game.players.splice(playerIndex, 1);
-    sock.leave(gameCode);
-
-    if (game.players.length === 0) {
-      console.log(`[Game ${gameCode}] Game empty, deleting.`);
-      delete games[gameCode];
-    } else if (leavingPlayer.isAdmin) {
-      io.to(gameCode).emit("gameEnded", "המנהל עזב, המשחק הסתיים.");
-      console.log(`[Game ${gameCode}] Admin left, ending game.`);
-      delete games[gameCode];
-    } else {
-      io.to(gameCode).emit("updatePlayerList", game.players);
-      if (
-        game.gameState === "in-game" &&
-        game.currentRound &&
-        !game.currentRound.revealed
-      ) {
-        if (game.players.length < 2) {
-          io.to(gameCode).emit("gameEnded", "אין מספיק שחקנים כדי להמשיך.");
-          delete games[gameCode];
-        } else if (game.currentRound.impostorId === sock.id) {
-          io.to(gameCode).emit("roundResult", {
-            impostorFound: true,
-            impostorName: leavingPlayer.name,
-            word: game.currentRound.word,
-            players: game.players,
-            customMessage: `${leavingPlayer.name} (המתחזה) עזב את המשחק!`,
-          });
-          setTimeout(() => startNewRound(gameCode), 8000);
-        }
-      }
-    }
-  }
 });
 
 server.listen(PORT, "0.0.0.0", () => {

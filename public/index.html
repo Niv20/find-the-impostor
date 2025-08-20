@@ -14,73 +14,70 @@
     <header id="app-header">
       <span id="header-title">מי המתחזה? 🤔</span>
       <div id="header-actions">
-          <button id="header-create-btn" class="header-link-btn">צור משחק חדש</button>
-          <button id="header-back-btn" class="header-btn hidden">
-              <span class="material-icons">arrow_forward_ios</span>
-              <span>חזור</span>
-          </button>
-          <button id="header-settings-btn" class="header-btn hidden">
-              <span class="material-icons">settings</span>
-          </button>
+        <button id="header-create-btn" class="header-link-btn">
+          צור משחק חדש
+        </button>
+        <button id="header-back-btn" class="header-btn hidden">
+          <span class="material-icons">arrow_forward_ios</span><span>חזור</span>
+        </button>
+        <button id="header-settings-btn" class="header-btn hidden">
+          <span class="material-icons">settings</span>
+        </button>
       </div>
     </header>
 
     <div class="container">
-      <!-- Ekrani fillestar -->
       <div id="home-screen" class="screen-container">
         <div class="join-game">
           <p>הזן את קוד המשחק בן 4 הספרות:</p>
           <div id="code-inputs" dir="ltr">
-            <input type="tel" class="code-input" maxlength="1" />
-            <input type="tel" class="code-input" maxlength="1" />
-            <input type="tel" class="code-input" maxlength="1" />
-            <input type="tel" class="code-input" maxlength="1" />
+            <input type="tel" class="code-input" maxlength="1" /><input
+              type="tel"
+              class="code-input"
+              maxlength="1"
+            /><input type="tel" class="code-input" maxlength="1" /><input
+              type="tel"
+              class="code-input"
+              maxlength="1"
+            />
           </div>
           <button id="join-game-btn" disabled>הצטרף למשחק</button>
         </div>
       </div>
 
-      <!-- Ekrani i hyrjes së emrit -->
       <div id="name-entry-screen" class="hidden screen-container">
         <div class="name-entry-content">
-            <div id="avatar-preview-container"></div>
-            <div class="name-input-container">
-              <input
-                type="text"
-                id="name-input"
-                class="name-input"
-                placeholder="השם שלך"
-                maxlength="10"
-              />
-              <span id="char-counter">0/10</span>
-            </div>
+          <div id="avatar-preview-container"></div>
+          <div class="name-input-container">
+            <input
+              type="text"
+              id="name-input"
+              placeholder="השם שלך"
+              maxlength="10"
+            />
+            <span id="char-counter">0/10</span>
+          </div>
         </div>
         <button id="submit-name-btn">המשך</button>
       </div>
 
-      <!-- Ekrani i lobit -->
       <div id="lobby-screen" class="hidden screen-container">
         <div class="lobby-content">
-            <p class="share-code-text">שתף עם חברים את הקוד:</p>
-            <div id="game-code-display" class="game-code hidden">----</div>
-            <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
-            <ul id="player-list"></ul>
+          <p class="share-code-text">שתף עם חברים את הקוד:</p>
+          <div id="game-code-display">----</div>
+          <h3>שחקנים מחוברים (<span id="player-count">0</span>)</h3>
+          <ul id="player-list"></ul>
         </div>
-        <div id="admin-controls">
-          <p id="start-game-hint" class="hidden">
-            צריך לפחות 3 שחקנים בשביל להתחיל
-          </p>
+        <div id="admin-controls" class="hidden">
+          <p id="start-game-hint">צריך לפחות 3 שחקנים בשביל להתחיל</p>
           <button id="start-game-btn" disabled>התחל משחק</button>
         </div>
       </div>
 
-      <!-- Ekrani i lojës -->
-      <div id="game-screen" class="hidden">
+      <div id="game-screen" class="hidden screen-container">
         <div id="timer-display">--:--</div>
-        <div id="word-display-container">
+        <div id="word-display-container" class="hidden">
           <h1 id="word-display">המילה שלך היא...</h1>
-          <p id="category-display"></p>
-          <button id="toggle-word-btn">הסתר מילה</button>
         </div>
         <div id="impostor-display" class="hidden">
           <h1>אתה המתחזה!</h1>
@@ -88,50 +85,76 @@
         </div>
       </div>
 
-      <!-- Ekrani i votimit -->
-      <div id="voting-screen" class="hidden">
-        <h2>הצבעה!</h2>
-        <p>מי לדעתך המתחזה?</p>
+      <div id="voting-screen" class="hidden screen-container">
+        <h2 id="voting-title">הצבעה!</h2>
+        <p id="voting-subtitle">מי לדעתך המתחזה?</p>
         <div id="vote-options"></div>
       </div>
 
-      <!-- Ekrani i rezultatit -->
-      <div id="result-screen" class="hidden">
-        <h2 id="result-title">המתחזה נחשף!</h2>
-        <p id="result-info"></p>
-        <h3>טבלת ניקוד</h3>
-        <ul id="score-list"></ul>
-        <p class="next-round-msg">הסיבוב הבא יתחיל בעוד מספר שניות...</p>
+      <div id="result-screen" class="hidden screen-container">
+        <div class="result-content">
+          <h2 id="result-title">המתחזה נחשף!</h2>
+          <p id="result-info"></p>
+          <h3>טבלת ניקוד</h3>
+          <ul id="score-list"></ul>
+        </div>
+        <div id="result-admin-controls" class="hidden">
+          <button id="continue-btn">המשך לסיבוב הבא</button>
+          <div class="admin-minor-actions">
+            <button id="settings-after-round-btn" class="btn-secondary">
+              הגדרות
+            </button>
+            <button id="end-game-btn" class="btn-secondary">סיים משחק</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="game-over-screen" class="hidden screen-container">
+        <h2>המשחק הסתיים!</h2>
+        <div id="winner-display">
+          <span class="material-icons trophy-icon">emoji_events</span>
+          <h3 id="winner-name">המנצח הוא...</h3>
+        </div>
+        <h4>ניקוד סופי:</h4>
+        <ul id="final-score-list"></ul>
+        <button id="back-to-home-btn">חזור למסך הראשי</button>
       </div>
     </div>
 
-    <!-- Modali i cilësimeve -->
     <div id="settings-modal" class="hidden">
       <div class="modal-content">
-        <div class="modal-header">
-          <button id="close-settings-btn">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
         <div class="settings-grid">
           <label>זמן לדיון (בשניות):</label>
           <div>
             <button class="timer-btn" data-time="30">30</button>
-            <button class="timer-btn active" data-time="60">60</button>
+            <button class="timer-btn" data-time="60">60</button>
             <button class="timer-btn" data-time="90">90</button>
           </div>
         </div>
         <hr class="settings-divider" />
         <div class="settings-grid">
-            <label>הצג קטגוריה למתחזה:</label>
-            <label class="switch">
-                <input type="checkbox" id="show-category-toggle" checked />
-                <span class="slider round"></span>
-            </label>
+          <label>הצג קטגוריה למתחזה:</label>
+          <label class="switch"
+            ><input type="checkbox" id="show-category-toggle" checked /><span
+              class="slider round"
+            ></span
+          ></label>
         </div>
         <div id="category-settings">
-          <label class="settings-label">קטגוריות שמהן יילקחו מילים:</label>
+          <label class="settings-label">קטגוריות מילים:</label>
           <div id="category-list"></div>
+        </div>
+        <button id="close-settings-btn" class="btn-secondary">סגור</button>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <div id="confirmation-dialog" class="hidden">
+      <div class="dialog-content">
+        <p id="confirmation-message"></p>
+        <div class="dialog-buttons">
+          <button id="confirm-yes-btn">כן</button>
+          <button id="confirm-no-btn" class="btn-secondary">לא</button>
         </div>
       </div>
     </div>

@@ -6,15 +6,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let myName = "";
   let gameCode = "";
   let isAdmin = false;
-  let isCreatingGame = false;
-  let roundTimerInterval;
-  let availableAvatars = [];
-  let chosenAvatarFile = null;
-  let allCategories = [];
-  let enabledCategories = [];
   let currentScreen = "home";
+  let confirmationCallback = null;
 
-  // --- Screen Elements ---
+  // --- Screen & UI Elements ---
   const screens = {
     home: document.getElementById("home-screen"),
     nameEntry: document.getElementById("name-entry-screen"),
@@ -22,9 +17,14 @@ document.addEventListener("DOMContentLoaded", () => {
     game: document.getElementById("game-screen"),
     voting: document.getElementById("voting-screen"),
     result: document.getElementById("result-screen"),
+    gameOver: document.getElementById("game-over-screen"),
   };
 
-  // --- UI Elements ---
+  const header = document.getElementById("app-header");
+  const headerTitle = document.getElementById("header-title");
+  const headerBackBtn = document.getElementById("header-back-btn");
+  const headerCreateBtn = document.getElementById("header-create-btn");
+  const headerSettingsBtn = document.getElementById("header-settings-btn");
   const codeInputs = document.querySelectorAll(".code-input");
   const joinGameBtn = document.getElementById("join-game-btn");
   const nameInput = document.getElementById("name-input");
@@ -33,15 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const avatarPreviewContainer = document.getElementById(
     "avatar-preview-container"
   );
-
-  // Header
-  const header = document.getElementById("app-header");
-  const headerTitle = document.getElementById("header-title");
-  const headerBackBtn = document.getElementById("header-back-btn");
-  const headerCreateBtn = document.getElementById("header-create-btn");
-  const headerSettingsBtn = document.getElementById("header-settings-btn");
-
-  // Lobby
   const shareCodeText = document.querySelector(".share-code-text");
   const gameCodeDisplay = document.getElementById("game-code-display");
   const playerCountSpan = document.getElementById("player-count");
@@ -49,25 +40,51 @@ document.addEventListener("DOMContentLoaded", () => {
   const adminControls = document.getElementById("admin-controls");
   const startGameBtn = document.getElementById("start-game-btn");
   const startGameHint = document.getElementById("start-game-hint");
-
-  // Game Screen
   const timerDisplay = document.getElementById("timer-display");
   const wordDisplayContainer = document.getElementById(
     "word-display-container"
   );
   const impostorDisplay = document.getElementById("impostor-display");
   const wordDisplay = document.getElementById("word-display");
-  const categoryDisplay = document.getElementById("category-display");
   const impostorCategoryInfo = document.getElementById(
     "impostor-category-info"
   );
-
-  // Settings
-  const settingsBtn = document.getElementById("header-settings-btn");
+  const votingTitle = document.getElementById("voting-title");
+  const votingSubtitle = document.getElementById("voting-subtitle");
+  const voteOptions = document.getElementById("vote-options");
   const settingsModal = document.getElementById("settings-modal");
   const closeSettingsBtn = document.getElementById("close-settings-btn");
-  const categoryListDiv = document.getElementById("category-list");
-  const showCategoryToggle = document.getElementById("show-category-toggle");
+  const toastContainer = document.getElementById("toast-container");
+  const confirmationDialog = document.getElementById("confirmation-dialog");
+  const confirmMsg = document.getElementById("confirmation-message");
+  const confirmYesBtn = document.getElementById("confirm-yes-btn");
+  const confirmNoBtn = document.getElementById("confirm-no-btn");
+
+  // --- Toast Notification System ---
+  function showToast(message, type = "info", duration = 3000) {
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      toast.remove();
+    }, duration);
+  }
+
+  function showConfirmation(message, callback) {
+    confirmationCallback = callback;
+    confirmMsg.textContent = message;
+    confirmationDialog.classList.remove("hidden");
+  }
+
+  confirmYesBtn.addEventListener("click", () => {
+    if (confirmationCallback) confirmationCallback(true);
+    confirmationDialog.classList.add("hidden");
+  });
+  confirmNoBtn.addEventListener("click", () => {
+    if (confirmationCallback) confirmationCallback(false);
+    confirmationDialog.classList.add("hidden");
+  });
 
   // --- Screen Management ---
   function updateHeader(screenName) {
@@ -88,11 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
           headerSettingsBtn.classList.remove("hidden");
         }
         break;
-      case "game":
-      case "voting":
-      case "result":
-        // No buttons shown
-        break;
     }
   }
 
@@ -105,59 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHeader(screenName);
   }
 
-  function showNameEntryScreen() {
-    chosenAvatarFile = showRandomAvatarPreview();
-    nameInput.value = "";
-    charCounter.textContent = "0/10";
-    showScreen("nameEntry");
-    nameInput.focus();
-  }
-
   // --- Event Listeners ---
-  headerCreateBtn.addEventListener("click", () => {
-    isCreatingGame = true;
-    showNameEntryScreen();
-  });
-
-  headerBackBtn.addEventListener("click", () => {
-    switch (currentScreen) {
-      case "nameEntry":
-        showScreen("home");
-        break;
-      case "lobby":
-        if (isAdmin) {
-          if (
-            confirm(
-              "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
-            )
-          ) {
-            socket.emit("endGame", gameCode);
-          }
-        } else {
-          window.location.reload();
-        }
-        break;
-    }
-  });
-
-  codeInputs.forEach((input, index) => {
-    input.addEventListener("input", (e) => {
-      e.target.value = e.target.value.replace(/[^0-9]/g, "");
-      if (e.target.value && index < codeInputs.length - 1) {
-        codeInputs[index + 1].focus();
-      }
-      validateCodeInputs();
-    });
-    input.addEventListener("focus", (e) => e.target.select());
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Backspace" && !input.value && index > 0) {
-        codeInputs[index - 1].focus();
-      } else if (e.key === "Enter" && !joinGameBtn.disabled) {
-        joinGameBtn.click();
-      }
-    });
-  });
-
   joinGameBtn.addEventListener("click", () => {
     const code = Array.from(codeInputs)
       .map((input) => input.value)
@@ -168,85 +128,54 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  nameInput.addEventListener("input", () => {
-    const len = nameInput.value.length;
-    charCounter.textContent = `${len}/10`;
-    const hebrewRegex = /^[א-ת\s]*$/;
-    if (!hebrewRegex.test(nameInput.value)) {
-      nameInput.value = nameInput.value.replace(/[^א-ת\s]/g, "");
-    }
-  });
-  nameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") submitNameBtn.click();
-  });
-
   submitNameBtn.addEventListener("click", () => {
     const name = nameInput.value.trim();
     if (name) {
       myName = name;
-      const payload = { name, requestedAvatarFile: chosenAvatarFile };
-      if (isCreatingGame) {
-        socket.emit("createGame", payload);
-      } else {
-        payload.gameCode = gameCode;
-        socket.emit("joinGame", payload);
-      }
+      socket.emit("joinGame", { gameCode, name });
     } else {
-      alert("אנא הזן את שמך.");
+      showToast("אנא הזן את שמך", "error");
     }
-  });
-
-  settingsBtn.addEventListener("click", () =>
-    settingsModal.classList.remove("hidden")
-  );
-  closeSettingsBtn.addEventListener("click", () =>
-    settingsModal.classList.add("hidden")
-  );
-  settingsModal.addEventListener("click", (e) => {
-    if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
 
   startGameBtn.addEventListener("click", () =>
     socket.emit("startGame", gameCode)
   );
+  closeSettingsBtn.addEventListener("click", () =>
+    settingsModal.classList.add("hidden")
+  );
+
+  document
+    .getElementById("continue-btn")
+    .addEventListener("click", () => socket.emit("startNextRound", gameCode));
+
+  document.getElementById("end-game-btn").addEventListener("click", () => {
+    showConfirmation("האם אתה בטוח? המשחק יסתיים לכולם.", (confirmed) => {
+      if (confirmed) socket.emit("endGame", gameCode);
+    });
+  });
+
+  document
+    .getElementById("settings-after-round-btn")
+    .addEventListener("click", () => settingsModal.classList.remove("hidden"));
+  document
+    .getElementById("back-to-home-btn")
+    .addEventListener("click", () => window.location.reload());
 
   // --- Socket Listeners ---
   socket.on("connect", () => (myId = socket.id));
-  socket.on("avatarList", (avatars) => (availableAvatars = avatars));
 
-  socket.on("errorMsg", (message) => {
-    alert(message);
-    codeInputs.forEach((input) => (input.value = ""));
-    joinGameBtn.disabled = true;
-    showScreen("home");
-  });
-
-  socket.on("gameCodeValid", () => {
-    isCreatingGame = false;
-    showNameEntryScreen();
-  });
+  socket.on("errorMsg", (message) => showToast(message, "error"));
 
   socket.on("gameCreated", (data) => {
     gameCode = data.gameCode;
     isAdmin = true;
-    allCategories = data.allCategories;
-    enabledCategories = data.settings.enabledCategories;
-
-    shareCodeText.textContent = "שתף עם חברים את הקוד:";
-    gameCodeDisplay.textContent = gameCode;
-    gameCodeDisplay.classList.remove("hidden");
-    adminControls.classList.remove("hidden");
-
-    populateCategorySettings();
     updatePlayerList(data.players);
     showScreen("lobby");
   });
 
   socket.on("joinedSuccess", (data) => {
-    adminControls.classList.add("hidden");
-    settingsBtn.classList.add("hidden");
-    shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל";
-    gameCodeDisplay.classList.add("hidden");
+    gameCode = data.gameCode;
     updatePlayerList(data.players);
     showScreen("lobby");
   });
@@ -254,66 +183,141 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("updatePlayerList", (players) => updatePlayerList(players));
 
   socket.on("roundStart", (data) => {
-    // Hide all game containers first
     wordDisplayContainer.classList.add("hidden");
     impostorDisplay.classList.add("hidden");
-
-    // Clear previous round's text
-    categoryDisplay.textContent = "";
     impostorCategoryInfo.textContent = "";
 
     if (data.isImpostor) {
       impostorDisplay.classList.remove("hidden");
-      // If a category was sent from the server, display it. Otherwise, this remains empty.
       if (data.category) {
         impostorCategoryInfo.textContent = `הקטגוריה היא: ${data.category}`;
       }
     } else {
       wordDisplayContainer.classList.remove("hidden");
       wordDisplay.textContent = data.word;
-      // The categoryDisplay for regular players will remain empty as intended.
     }
-
-    startTimer(data.timer);
     showScreen("game");
   });
 
-  socket.on("roundResult", (data) => {
-    // ... same as before
+  socket.on("playerListForVoting", (players) => {
+    votingTitle.textContent = "הצבעה!";
+    votingSubtitle.textContent = "מי לדעתך המתחזה?";
+    voteOptions.innerHTML = "";
+
+    players
+      .filter((p) => p.id !== myId)
+      .forEach((player) => {
+        const btn = createVoteButton(player);
+        btn.addEventListener("click", () => {
+          voteOptions.innerHTML = `<p style="color: var(--text-color);">תודה על הצבעתך!</p>`;
+          socket.emit("vote", { gameCode, votedPlayerId: player.id });
+        });
+        voteOptions.appendChild(btn);
+      });
+    showScreen("voting");
   });
 
-  socket.on("gameEnded", (message = "המשחק הסתיים.") => {
-    alert(message);
-    window.location.reload();
+  socket.on("roundResult", (data) => {
+    updateScoreList(data.players, data.scoreChanges);
+    const resultTitle = document.getElementById("result-title");
+    const resultInfo = document.getElementById("result-info");
+
+    resultTitle.textContent = data.message;
+    resultInfo.textContent = `המילה הייתה: ${data.word}. המתחזה היה ${data.impostorName}.`;
+
+    const adminControls = document.getElementById("result-admin-controls");
+    adminControls.classList.toggle("hidden", !isAdmin);
+
+    showScreen("result");
+  });
+
+  socket.on("tieVote", ({ candidates, voterIds }) => {
+    votingTitle.textContent = "דו-קרב!";
+    voteOptions.innerHTML = "";
+
+    const isVoter = voterIds.includes(myId);
+    const isCandidate = candidates.some((c) => c.id === myId);
+
+    if (isCandidate) {
+      votingSubtitle.textContent = `נוצר תיקו! ממתין להכרעת שאר השחקנים...`;
+    } else if (isVoter) {
+      votingSubtitle.textContent = `הכרע: מי המתחזה מבין השניים?`;
+      candidates.forEach((player) => {
+        const btn = createVoteButton(player);
+        btn.addEventListener("click", () => {
+          voteOptions.innerHTML =
+            '<p style="color: var(--text-color);">תודה על הצבעתך!</p>';
+          socket.emit("submitTieVote", { gameCode, votedPlayerId: player.id });
+        });
+        voteOptions.appendChild(btn);
+      });
+    } else {
+      votingSubtitle.textContent = "ממתין להכרעת המצביעים...";
+    }
+    showScreen("voting");
+  });
+
+  socket.on("excludedFromTieVote", () => {
+    showToast("נבחרת לא להצביע בסיבוב זה כדי למנוע תיקו נוסף.");
+  });
+
+  socket.on("gameOver", ({ players, customMessage }) => {
+    if (customMessage) showToast(customMessage);
+
+    const maxScore = Math.max(...players.map((p) => p.score));
+    const winners = players.filter((p) => p.score === maxScore);
+    document.getElementById("winner-name").textContent = winners
+      .map((w) => w.name)
+      .join(", ");
+
+    const finalScoreList = document.getElementById("final-score-list");
+    finalScoreList.innerHTML = "";
+    players
+      .sort((a, b) => b.score - a.score)
+      .forEach((p) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <div>
+                <img src="/avatars/${p.avatar.file}" class="avatar-circle-small">
+                <span class="player-name" style="color: ${p.avatar.color};">${p.name}</span>
+            </div>
+            <span class="score-value">${p.score}</span>`;
+        finalScoreList.appendChild(li);
+      });
+
+    showScreen("gameOver");
   });
 
   // --- Helper Functions ---
-  function validateCodeInputs() {
-    const code = Array.from(codeInputs)
-      .map((input) => input.value)
-      .join("");
-    joinGameBtn.disabled = code.length !== 4;
+  function createVoteButton(player) {
+    const btn = document.createElement("button");
+    btn.className = "vote-btn";
+    btn.innerHTML = `
+        <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
+        <span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>`;
+    return btn;
   }
 
-  function showRandomAvatarPreview() {
-    if (availableAvatars.length > 0) {
-      const randomFile =
-        availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
-      avatarPreviewContainer.innerHTML = `<img src="/avatars/${randomFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
-      return randomFile;
-    }
-    return null;
+  function lightenHexColor(hex, percent) {
+    hex = hex.replace(/^#/, "");
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const newR = Math.min(255, Math.floor(r * (1 + percent / 100)));
+    const newG = Math.min(255, Math.floor(g * (1 + percent / 100)));
+    const newB = Math.min(255, Math.floor(b * (1 + percent / 100)));
+    return `#${newR.toString(16).padStart(2, "0")}${newG
+      .toString(16)
+      .padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
   }
 
   function updatePlayerList(players) {
     playerListUl.innerHTML = "";
     players.forEach((player) => {
       const li = document.createElement("li");
-      const avatarImg = `<img src="/avatars/${player.avatar.file}" class="avatar-circle-small">`;
-      const nameSpan = `<span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>`;
-
-      li.innerHTML = `${avatarImg}${nameSpan}`;
-
+      li.innerHTML = `
+            <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
+            <span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>`;
       if (player.isAdmin) {
         const adminSpan = document.createElement("span");
         adminSpan.textContent = " (מנהל)";
@@ -325,95 +329,54 @@ document.addEventListener("DOMContentLoaded", () => {
       playerListUl.appendChild(li);
     });
     playerCountSpan.textContent = players.length;
-
-    if (isAdmin) {
-      const canStart = players.length >= 3;
-      startGameBtn.disabled = !canStart;
-      startGameHint.classList.toggle("hidden", canStart);
-    }
+    adminControls.classList.toggle("hidden", !isAdmin);
+    startGameBtn.disabled = players.length < 3;
+    startGameHint.classList.toggle("hidden", players.length >= 3);
   }
 
-  function populateCategorySettings() {
-    categoryListDiv.innerHTML = "";
-    allCategories.forEach((cat) => {
-      const item = document.createElement("div");
-      item.className = "category-item";
+  function updateScoreList(players, scoreChanges) {
+    const scoreList = document.getElementById("score-list");
+    const maxScore = Math.max(...players.map((p) => p.score));
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.id = `cat-${cat.id}`;
-      checkbox.value = cat.id;
-      checkbox.checked = enabledCategories.includes(cat.id);
+    players.sort((a, b) => b.score - a.score);
 
-      checkbox.addEventListener("change", () => {
-        if (checkbox.checked) {
-          enabledCategories.push(cat.id);
-        } else {
-          enabledCategories = enabledCategories.filter((c) => c !== cat.id);
-        }
-        socket.emit("changeSettings", {
-          gameCode,
-          settings: { enabledCategories },
-        });
-      });
-
-      const label = document.createElement("label");
-      label.htmlFor = `cat-${cat.id}`;
-      label.textContent = cat.name;
-
-      item.appendChild(checkbox);
-      item.appendChild(label);
-      item.addEventListener("click", (e) => {
-        if (e.target === item) {
-          checkbox.click();
-        }
-      });
-      categoryListDiv.appendChild(item);
-    });
-  }
-
-  document.querySelectorAll(".timer-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelector(".timer-btn.active").classList.remove("active");
-      btn.classList.add("active");
-      socket.emit("changeSettings", {
-        gameCode,
-        settings: { timer: parseInt(btn.dataset.time) },
-      });
-    });
-  });
-
-  showCategoryToggle.addEventListener("change", (e) => {
-    socket.emit("changeSettings", {
-      gameCode,
-      settings: { showCategory: e.target.checked },
-    });
-  });
-
-  function startTimer(duration) {
-    clearInterval(roundTimerInterval);
-    let timer = duration;
-    const updateTimerDisplay = () => {
-      const minutes = Math.floor(timer / 60);
-      const seconds = timer % 60;
-      timerDisplay.textContent = `${minutes}:${seconds
-        .toString()
-        .padStart(2, "0")}`;
-      if (--timer < 0) {
-        clearInterval(roundTimerInterval);
-        // Optionally trigger something when timer ends, e.g., auto-vote
+    players.forEach((player, index) => {
+      let li = scoreList.querySelector(`[data-id="${player.id}"]`);
+      if (!li) {
+        li = document.createElement("li");
+        li.dataset.id = player.id;
+        scoreList.appendChild(li);
       }
-    };
-    updateTimerDisplay();
-    roundTimerInterval = setInterval(updateTimerDisplay, 1000);
+
+      li.style.order = index;
+      li.innerHTML = `
+            <div>
+                <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
+                <span class="player-name" style="color: ${player.avatar.color};">${player.name}</span>
+            </div>
+            <span class="score-value">${player.score}</span>
+        `;
+
+      li.classList.toggle("leader", player.score === maxScore && maxScore > 0);
+      if (li.classList.contains("leader")) {
+        const highlightColor = lightenHexColor(player.avatar.color, 40);
+        li.style.setProperty("--highlight-color", highlightColor);
+      } else {
+        li.style.removeProperty("--highlight-color");
+        li.style.borderColor = "transparent";
+      }
+
+      const changeData = scoreChanges.find((sc) => sc.id === player.id);
+      if (changeData && changeData.change > 0) {
+        const scoreSpan = li.querySelector(".score-value");
+        const increaseAnim = document.createElement("span");
+        increaseAnim.className = "score-increase";
+        increaseAnim.textContent = `+${changeData.change}`;
+        scoreSpan.appendChild(increaseAnim);
+        setTimeout(() => increaseAnim.remove(), 1500);
+      }
+    });
   }
 
-  function showVotingScreen() {
-    /* Full implementation exists */
-  }
-  function updateScoreList(players) {
-    /* Full implementation exists */
-  }
-
-  showScreen("home");
+  showScreen("home"); // Initial screen
 });
