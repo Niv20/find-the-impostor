@@ -161,14 +161,13 @@ button {
   font-size: 1.1rem; /* Slightly larger font */
   cursor: pointer;
   font-family: "Assistant", sans-serif;
-  transition: background-color 0.3s, transform 0.2s;
+  transition: background-color 0.3s;
   font-weight: 600;
   margin-top: 10px;
   width: 100%; /* Adjusted width */
 }
 button:hover {
   background-color: #5a52e0;
-  transform: translateY(-2px);
 }
 button:disabled {
   background-color: #555;
@@ -268,16 +267,6 @@ button:disabled {
     margin: 20px auto;
     display: block;
     flex-shrink: 0; /* Prevent button from shrinking */
-}
-
-#submit-name-btn:hover {
-    transform: none; /* Remove the lift effect */
-    background-color: #5a52e0; /* Keep the color change */
-}
-
-#submit-name-btn:hover {
-    transform: none;
-    background-color: #5a52e0;
 }
 
 /* Lobby Screen */
@@ -491,8 +480,9 @@ button:disabled {
   margin: 0 4px;
   background-color: #444;
   width: auto;
-  transition: background-color 0.3s, transform 0.2s; /* Add transition */
+  transition: background-color 0.3s;
 }
+
 .timer-btn.active {
   background-color: var(--primary-color);
 }
