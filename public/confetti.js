@@ -38,13 +38,13 @@ async function createConfetti() {
           },
         },
         opacity: {
-          value: 1,
+          value: 0,
           animation: {
-            enable: false,
-            startValue: "max",
-            destroy: "min",
-            speed: 0.3,
-            sync: true,
+            enable: true,
+            startValue: "min",
+            endValue: "max",
+            speed: 2,
+            sync: false,
           },
         },
         rotate: {

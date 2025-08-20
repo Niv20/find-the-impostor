@@ -163,7 +163,7 @@ body {
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
-  font-family: Assistant !important;
+  font-family: "Assistant", sans-serif !important;
   text-align: center;
   direction: rtl;
   -webkit-font-smoothing: antialiased;
@@ -521,7 +521,7 @@ button:disabled {
 }
 #score-list li.top-player {
   background-color: var(--card-color);
-  border-width: 2px;
+  border-width: 0.5px;
   border-style: solid;
 }
 .player-score-wrapper {
