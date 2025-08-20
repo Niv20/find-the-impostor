@@ -89,7 +89,7 @@ io.on("connection", (socket) => {
         { id: socket.id, name, score: 0, isAdmin: true, avatar: adminAvatar },
       ],
       settings: {
-        timer: 5, // Default timer set to 5 seconds for debugging
+        timer: 60, // Default timer set to 60 seconds
         showCategory: true,
         enabledCategories: Object.keys(wordCategories), // Default to all category IDs
       },
@@ -176,7 +176,7 @@ io.on("connection", (socket) => {
       game.settings = {
         ...game.settings,
         ...settings,
-        timer: 5, // force 5 seconds for debugging
+        timer: game.settings.timer || 60, // Use game settings or default to 60 seconds
       };
     }
   });
