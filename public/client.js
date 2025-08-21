@@ -1112,7 +1112,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function populateCategorySettings() {
+    // מחיקת התוכן הקיים
     categoryListDiv.innerHTML = "";
+
+    // יצירת מיכל הקטגוריות
+    const categoriesContainer = document.createElement("div");
+    categoriesContainer.style.marginBottom = "20px";
+
+    // הוספת הקטגוריות
     allCategories.forEach((cat) => {
       const item = document.createElement("div");
       item.className = "category-item";
@@ -1149,8 +1156,63 @@ document.addEventListener("DOMContentLoaded", () => {
       item.addEventListener("click", (e) => {
         if (e.target === item) checkbox.click();
       });
-      categoryListDiv.appendChild(item);
+      categoriesContainer.appendChild(item);
     });
+
+    categoryListDiv.appendChild(categoriesContainer);
+
+    // יצירת מיכל הכפתורים
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "settings-footer";
+
+    // כפתור איפוס הגדרות
+    const resetButton = document.createElement("button");
+    resetButton.id = "reset-settings-btn";
+    resetButton.className = "settings-footer-btn";
+    resetButton.textContent = "אפס הגדרות";
+    resetButton.onclick = () => {
+      // שחזור ברירות המחדל של הגדרות המשחק
+      showModalMessage("האם אתה בטוח שברצונך לאפס את ההגדרות?", {
+        okText: "אפס",
+        cancelText: "ביטול",
+        onOk: () => {
+          // איפוס הטיימר ל-60 שניות
+          document.querySelectorAll(".timer-btn").forEach((btn) => {
+            if (btn.dataset.time === "60") {
+              btn.click();
+            }
+          });
+
+          // הפעלת כל הקטגוריות
+          const checkboxes = document.querySelectorAll(
+            '#category-list input[type="checkbox"]'
+          );
+          checkboxes.forEach((checkbox) => {
+            if (!checkbox.checked) {
+              checkbox.click();
+            }
+          });
+
+          // הפעלת הצגת קטגוריה למתחזה
+          if (!showCategoryToggle.checked) {
+            showCategoryToggle.click();
+          }
+        },
+      });
+    };
+
+    // כפתור שמירה
+    const saveButton = document.createElement("button");
+    saveButton.id = "save-settings-btn";
+    saveButton.className = "settings-footer-btn settings-footer-btn-primary";
+    saveButton.textContent = "שמור";
+    saveButton.onclick = () => {
+      settingsModal.classList.add("hidden");
+    };
+
+    buttonsContainer.appendChild(resetButton);
+    buttonsContainer.appendChild(saveButton);
+    categoryListDiv.appendChild(buttonsContainer);
   }
 
   function updateTimerDisplay(timeLeft) {
