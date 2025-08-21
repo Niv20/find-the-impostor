@@ -635,10 +635,9 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.on("joinedSuccess", (data) => {
     adminControls.classList.add("hidden");
     settingsBtn.classList.add("hidden");
-    if (shareCodeText) {
-      shareCodeText.textContent = "אנא המתן עד שמנהל המשחק יתחיל...";
-      shareCodeText.classList.add("waiting-text");
-    }
+    // הסתרת הקוד והטקסט עבור שחקנים רגילים
+    gameCodeDisplay.classList.add("hidden");
+    shareCodeText.classList.add("hidden");
     updatePlayerList(data.players);
     previousPlayers = data.players;
     showScreen("lobby");
