@@ -203,6 +203,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const showCategoryToggle = document.getElementById("show-category-toggle");
 
   // --- Screen Management ---
+  function updateHeaderForAdmin() {
+    if (isAdmin) {
+      // הצגת קוד המשחק בheader
+      headerGameCode.style.display = "flex";
+      headerGameCode.querySelector(".game-code-value").textContent = gameCode;
+      const header = document.querySelector("#app-header");
+      if (!header.contains(headerGameCode)) {
+        header.appendChild(headerGameCode);
+      }
+    }
+  }
+
+  function refreshCurrentScreen() {
+    // רענון הממשק בהתאם למסך הנוכחי
+    switch (currentScreen) {
+      case "result":
+        const currentAdmin = games[gameCode]?.players.find((p) => p.isAdmin);
+        if (currentAdmin && currentAdmin.id === myId) {
+          adminResultControls.classList.remove("hidden");
+          waitingForAdminMsg.classList.add("hidden");
+        } else {
+          adminResultControls.classList.add("hidden");
+          waitingForAdminMsg.classList.remove("hidden");
+        }
+        break;
+      case "voting":
+        // רענון מסך ההצבעה אם צריך
+        if (votingInProgress) {
+          showVotingScreen(currentVotePlayers);
+        }
+        break;
+    }
+  }
+
   function updateHeader(screenName) {
     // Hide all actions by default
     headerCreateBtn.classList.add("hidden");
@@ -916,8 +950,10 @@ document.addEventListener("DOMContentLoaded", () => {
     resultScreen.dataset.impostorFound = correctlyGuessed;
     updateScoreList(players, scoreListUl, true);
 
-    // Setup controls based on user role
-    if (isAdmin) {
+    // Setup controls based on user role and current admin status
+    const currentAdmin = players.find((p) => p.isAdmin);
+    // בדיקה אם השחקן הוא המנהל הנוכחי
+    if (currentAdmin && currentAdmin.id === myId) {
       // Show admin controls
       adminResultControls.classList.remove("hidden");
       waitingForAdminMsg.classList.add("hidden");
@@ -1105,7 +1141,11 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTimerDisplay(timeLeft);
   });
 
-  function showVotingScreen(players) {
+  function showVotingScreen(players, resetVotes = false) {
+    // שמירת המצב הנוכחי של ההצבעות
+    currentVotePlayers = players;
+    votingInProgress = true;
+
     // Clear previous voting state if exists
     const existingOverlay = document.getElementById("waiting-vote-overlay");
     if (existingOverlay) {
@@ -1114,7 +1154,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const voteOptionsDiv = document.getElementById("vote-options");
     voteOptionsDiv.innerHTML = "";
-    voteOptionsDiv.classList.remove("voting-done");
+    if (resetVotes) {
+      voteOptionsDiv.classList.remove("voting-done");
+    }
 
     // הצגת כותרת הצבעה
     const votingScreen = document.getElementById("voting-screen");
@@ -1286,20 +1328,25 @@ document.addEventListener("DOMContentLoaded", () => {
       isAdmin = true;
       // הצגת הודעה למנהל החדש
       showModalMessage(
-        "המנהל יצא מהמשחק ומעכשיו אתה מנהל המשחק. אתה קובע את קצב הסבבים. קוד המשחק נמצא בצד שמאל למעלה.",
+        "המנהל יצא מהמשחק ומעכשיו אתה מנהל המשחק. אתה קובע את קצב הסבבים.",
         {
           okText: "הבנתי",
           onOk: () => {
-            // מציג את כפתור ההגדרות והקוד למנהל החדש
-            const headerGameCode = document.getElementById("header-game-code");
-            headerGameCode.classList.remove("hidden");
-            headerGameCode.textContent = gameCode;
-            document
-              .getElementById("header-settings-btn")
-              .classList.remove("hidden");
+            // עדכון ממשק המנהל החדש
+            updateHeaderForAdmin();
+            // רענון המסך הנוכחי כדי להציג את כפתורי המנהל
+            refreshCurrentScreen();
           },
         }
       );
+    } else {
+      // אם זה לא המנהל החדש, מוודאים שאין לו גישה לכפתורי ניהול
+      isAdmin = false;
+      headerSettingsBtn.classList.add("hidden");
+      const headerGameCode = document.getElementById("header-game-code");
+      if (headerGameCode) {
+        headerGameCode.classList.add("hidden");
+      }
     }
 
     // עדכון רשימת השחקנים

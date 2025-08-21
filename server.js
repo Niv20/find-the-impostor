@@ -425,12 +425,21 @@ io.on("connection", (socket) => {
     const correctlyGuessed = mostVotedId === impostorId;
     const impostor = game.players.find((p) => p.id === impostorId);
 
+    // רשימת השחקנים שהשתתפו בסיבוב הנוכחי
+    const roundParticipants = Object.keys(game.currentRound.votes);
+
     if (correctlyGuessed) {
       game.players.forEach((p) => {
-        if (p.id !== impostorId) p.score += 1;
+        // רק שחקנים שהשתתפו בהצבעה מקבלים ניקוד
+        if (p.id !== impostorId && roundParticipants.includes(p.id)) {
+          p.score += 1;
+        }
       });
     } else {
-      if (impostor) impostor.score += 2;
+      // המתחזה מקבל ניקוד רק אם הוא עדיין במשחק
+      if (impostor && game.players.find((p) => p.id === impostorId)) {
+        impostor.score += 2;
+      }
     }
 
     io.to(gameCode).emit("roundResult", {
@@ -627,11 +636,17 @@ io.on("connection", (socket) => {
             word: game.currentRound.word,
             players: game.players,
             customMessage: `${leavingPlayer.name} (המתחזה) התנתק מהמשחק!`,
-            showAdminControls: true, // מציג את כפתורי ההמשך למנהל
+            showAdminControls: true,
           });
           game.gameState = "lobby";
         } else {
-          // שחקן רגיל התנתק - ממשיכים כרגיל, רק מעדכנים את רשימת השחקנים
+          // שחקן רגיל התנתק - אם בהצבעה, מתחילים הצבעה מחדש
+          if (Object.keys(game.currentRound.votes || {}).length > 0) {
+            // מחיקת ההצבעות ��קיימות
+            game.currentRound.votes = {};
+            // התחלת הצבעה חדשה
+            io.to(gameCode).emit("startVoting", game.players, true);
+          }
           io.to(gameCode).emit("updatePlayerList", game.players);
         }
       }
