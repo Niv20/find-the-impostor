@@ -85,10 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const headerSettingsBtn = document.getElementById("header-settings-btn");
   const headerGameCode = document.createElement("div");
   headerGameCode.className = "header-game-code";
-  headerGameCode.innerHTML =
-    '<span>קוד: </span><span class="game-code-value"></span>';
+  headerGameCode.innerHTML = '<span class="game-code-value"></span>';
   headerGameCode.style.cssText =
-    "display: none; margin-right: auto; font-size: 1.2em;";
+    "display: none; margin-left: auto; font-size: 1.2em; color: var(--text-muted);";
 
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
@@ -670,6 +669,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("updatePlayerList", (players) => {
+    // בדיקה אם נותרו פחות משלושה שחקנים
+    if (
+      players.length < 3 &&
+      currentScreen !== "home" &&
+      currentScreen !== "nameEntry" &&
+      currentScreen !== "endGame"
+    ) {
+      socket.emit("endGame", gameCode, "not_enough_players");
+    }
     updatePlayerList(players);
     previousPlayers = players;
   });
@@ -711,13 +719,22 @@ document.addEventListener("DOMContentLoaded", () => {
         impostorCategoryInfo.textContent = "";
       }
 
-      // הוספת Event Listener לכפתור של המתחזה
-      toggleImpostorBtn.onclick = () => {
-        impostorWordDisplay.classList.toggle("word-hidden");
-        impostorCategoryInfo.classList.toggle("word-hidden");
-        const isHidden = impostorWordDisplay.classList.contains("word-hidden");
-        toggleImpostorBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
-      };
+      // וידוא שיש כפתור הסתרה למתחזה ואתחול שלו
+      const toggleImpostorBtn = document.getElementById("toggle-impostor-btn");
+      if (toggleImpostorBtn) {
+        toggleImpostorBtn.onclick = () => {
+          const impostorWordDisplay = document.getElementById(
+            "impostor-word-display"
+          );
+          if (impostorWordDisplay) {
+            impostorWordDisplay.classList.toggle("word-hidden");
+            impostorCategoryInfo.classList.toggle("word-hidden");
+            const isHidden =
+              impostorWordDisplay.classList.contains("word-hidden");
+            toggleImpostorBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
+          }
+        };
+      }
     } else {
       wordDisplayContainer.classList.remove("hidden");
       impostorDisplay.classList.add("hidden");
@@ -773,23 +790,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // בדיקה האם יש customMessage (במקרה שהמתחזה יצא באמצע)
     if (data.customMessage) {
       resultTitle.textContent = "אהמממ נראה שהמתחזה יצא מהמשחק...";
+      resultTitle.style.color = "white"; // צבע ניטרלי
       resultInfo.textContent = "עצרנו את הסבב הזה מוקדם, אף אחד לא קיבל ניקוד";
     } else {
       // הצגת הודעה מותאמת לפי זהות השחקן והתוצאה
+      const successColor = "#4CAF50"; // ירוק
+      const failureColor = "#f44336"; // אדום
+
       if (correctlyGuessed) {
         if (myId === impostor.id) {
           resultTitle.textContent = "תפסו אותך!";
+          resultTitle.style.color = failureColor;
+          resultInfo.textContent = `המילה הייתה "${word}"`;
         } else {
           resultTitle.textContent = "הצלחתם לתפוס את המתחזה!";
+          resultTitle.style.color = successColor;
+          resultInfo.textContent = `המתחזה היה ${impostor.name}`;
         }
       } else {
         if (myId === impostor.id) {
           resultTitle.textContent = "ניצחת!";
+          resultTitle.style.color = successColor;
+          resultInfo.textContent = `המילה הייתה "${word}"`;
         } else {
           resultTitle.textContent = "המתחזה הצליח לברוח...";
+          resultTitle.style.color = failureColor;
+          resultInfo.textContent = `המתחזה היה ${impostor.name}`;
         }
       }
-      resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
     }
     resultScreen.dataset.impostorFound = correctlyGuessed;
     updateScoreList(players, scoreListUl, true);
@@ -831,7 +859,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // עדכון כותרת לפי סיבת הסיום
     const endGameTitle = document.querySelector("#end-game-screen h2");
     if (reason === "not_enough_players") {
-      endGameTitle.textContent = "עצרנו את המשחק כי נותרו פחות מ־3 שחקנים";
+      endGameTitle.textContent = "המשחק נעצר כי נותרו פחות מ־3 שחקנים";
     } else {
       endGameTitle.textContent = "המשחק נגמר!";
     }
