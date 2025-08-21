@@ -398,6 +398,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   headerCreateBtn.addEventListener("click", () => {
     isCreatingGame = true;
+    // בחירת אווטר אקראי חדש
+    chosenAvatarFile =
+      availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
     showNameEntryScreen();
   });
 
@@ -759,12 +762,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("updatePlayerList", (players) => {
-    // בדיקה אם נותרו פחות משלושה שחקנים
+    // בדיקה אם נותרו פחות משלושה שחקנים באמצע משחק
     if (
       players.length < 3 &&
       currentScreen !== "home" &&
       currentScreen !== "nameEntry" &&
-      currentScreen !== "endGame"
+      currentScreen !== "endGame" &&
+      currentScreen !== "lobby" // לא לבדוק בלובי
     ) {
       socket.emit("endGame", gameCode, "not_enough_players");
     }

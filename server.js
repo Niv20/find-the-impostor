@@ -219,7 +219,9 @@ io.on("connection", (socket) => {
     // בדיקה אם המשחק כבר בעיצומו
     if (
       game.gameState === "in-game" ||
-      (game.currentRound && !game.currentRound.revealed)
+      (game.currentRound &&
+        !game.currentRound.revealed &&
+        game.gameState !== "lobby")
     ) {
       // יצירת רשימת ממתינים אם לא קיימת
       if (!game.waitingPlayers) {
