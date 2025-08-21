@@ -265,31 +265,47 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // במסך הלובי לפני תחילת המשחק, יציאה ישירה
-    if (
-      currentScreen === "lobby" &&
-      !document.querySelector("#game-code-display.hidden")
-    ) {
+    // במסך הלובי לפני תחילת המשחק, יציאה ישירה אם לא מנהל
+    if (currentScreen === "lobby" && !isAdmin) {
       window.location.reload();
       return;
     }
 
-    // בכל מקרה אחר (תוך כדי משחק), מראים הודעת אזהרה
-    const message = isAdmin
-      ? "אתה מנהל המשחק. יציאה תסיים את המשחק עבור כולם. האם אתה בטוח?"
-      : "האם אתה בטוח שברצונך לצאת מהמשחק?";
-    showModalMessage(message, {
-      okText: isAdmin ? "סיים משחק" : "צא",
-      cancelText: "ביטול",
-      onOk: () => {
-        if (isAdmin) {
-          socket.emit("endGame", gameCode);
-        } else {
-          window.location.reload();
-        }
-      },
-      onCancel: () => {},
-    });
+    // אם זה המנהל, נציג אפשרויות מיוחדות
+    if (isAdmin) {
+      showModalMessage("מה ברצונך לעשות?", {
+        type: "admin_leave",
+        buttons: [
+          {
+            text: "סיים את המשחק לכולם",
+            action: () => socket.emit("endGame", gameCode),
+            style: "danger",
+          },
+          {
+            text: "העבר את ניהול המשחק לשחקן אחר",
+            action: () => {
+              socket.emit("adminLeaving", gameCode);
+              window.location.reload();
+            },
+            style: "primary",
+          },
+          {
+            text: "ביטול",
+            action: () => {},
+            style: "cancel",
+          },
+        ],
+        message: "שים לב: אם תצא מהמשחק, השחקן הבא בתור יקבל את תפקיד המנהל",
+      });
+    } else {
+      // שחקן רגיל
+      showModalMessage("האם אתה בטוח שברצונך לצאת מהמשחק?", {
+        okText: "צא",
+        cancelText: "ביטול",
+        onOk: () => window.location.reload(),
+        onCancel: () => {},
+      });
+    }
   });
 
   headerCreateBtn.addEventListener("click", () => {
@@ -1132,49 +1148,98 @@ document.addEventListener("DOMContentLoaded", () => {
   showScreen("home"); // Initial screen
 
   // --- Modal Message ---
+  // טיפול בהעברת תפקיד המנהל
+  socket.on("adminChanged", (data) => {
+    const { newAdminId, newAdminName, players } = data;
+
+    // עדכון המשתנים הגלובליים
+    if (myId === newAdminId) {
+      isAdmin = true;
+      // הצגת הודעה למנהל החדש
+      showModalMessage(
+        "המנהל יצא מהמשחק ומעכשיו אתה מנהל המשחק. אתה קובע את קצב הסבבים. קוד המשחק נמצא בצד שמאל למעלה.",
+        {
+          okText: "הבנתי",
+          onOk: () => {
+            // מציג את כפתור ההגדרות והקוד למנהל החדש
+            const headerGameCode = document.getElementById("header-game-code");
+            headerGameCode.classList.remove("hidden");
+            headerGameCode.textContent = gameCode;
+            document
+              .getElementById("header-settings-btn")
+              .classList.remove("hidden");
+          },
+        }
+      );
+    }
+
+    // עדכון רשימת השחקנים
+    updatePlayerList(players);
+  });
+
   function showModalMessage(message, options = {}) {
-    // options: { okText, cancelText, onOk, onCancel }
     const overlay = document.getElementById("modal-overlay");
     const box = document.getElementById("modal-message-box");
     const textDiv = document.getElementById("modal-message-text");
-    const okBtn = document.getElementById("modal-ok-btn");
-    const cancelBtn = document.getElementById("modal-cancel-btn");
+    const actionsDiv = document.getElementById("modal-message-actions");
+
     textDiv.textContent = message;
-    okBtn.textContent = options.okText || "אישור";
-    cancelBtn.textContent = options.cancelText || "ביטול";
-    cancelBtn.classList.toggle("hidden", !options.onCancel);
     overlay.classList.remove("hidden");
 
-    function closeModal() {
-      overlay.classList.add("hidden");
-      okBtn.onclick = null;
-      cancelBtn.onclick = null;
-      overlay.onclick = null;
-    }
+    // ניקוי כפתורים קיימים
+    actionsDiv.innerHTML = "";
 
-    function handleDefaultAction() {
-      closeModal();
+    if (options.type === "admin_leave") {
+      // הוספת הודעת הסבר אם יש
+      if (options.message) {
+        const explanationDiv = document.createElement("div");
+        explanationDiv.className = "modal-explanation";
+        explanationDiv.textContent = options.message;
+        explanationDiv.style.color = "var(--text-muted)";
+        explanationDiv.style.fontSize = "0.9rem";
+        explanationDiv.style.marginTop = "10px";
+        textDiv.appendChild(explanationDiv);
+      }
+
+      // יצירת כפתורים מותאמים
+      options.buttons.forEach((button) => {
+        const btn = document.createElement("button");
+        btn.textContent = button.text;
+        btn.className = `modal-btn modal-btn-${button.style}`;
+        btn.onclick = () => {
+          overlay.classList.add("hidden");
+          button.action();
+        };
+        actionsDiv.appendChild(btn);
+      });
+    } else {
+      // הלוגיקה המקורית לכפתורי אישור/ביטול
+      const okBtn = document.createElement("button");
+      okBtn.textContent = options.okText || "אישור";
+      okBtn.className = "modal-btn";
+      okBtn.onclick = () => {
+        overlay.classList.add("hidden");
+        if (options.onOk) options.onOk();
+      };
+      actionsDiv.appendChild(okBtn);
+
       if (options.onCancel) {
-        options.onCancel();
-      } else if (options.onOk) {
-        options.onOk();
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = options.cancelText || "ביטול";
+        cancelBtn.className = "modal-btn modal-btn-cancel";
+        cancelBtn.onclick = () => {
+          overlay.classList.add("hidden");
+          options.onCancel();
+        };
+        actionsDiv.appendChild(cancelBtn);
       }
     }
 
-    okBtn.onclick = () => {
-      closeModal();
-      if (options.onOk) options.onOk();
-    };
-
-    cancelBtn.onclick = () => {
-      closeModal();
-      if (options.onCancel) options.onCancel();
-    };
-
-    // לחיצה מחוץ לחלון תפעיל את ברירת המחדל
+    // לחיצה מחוץ לחלון תסגור את החלון
     overlay.onclick = (e) => {
       if (e.target === overlay) {
-        handleDefaultAction();
+        overlay.classList.add("hidden");
+        if (options.onCancel) options.onCancel();
       }
     };
   }

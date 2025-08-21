@@ -436,13 +436,33 @@ io.on("connection", (socket) => {
       }
       delete games[gameCode];
     } else if (leavingPlayer.isAdmin) {
-      io.to(gameCode).emit("gameEnded", game.players);
-      console.log(`[Game ${gameCode}] Admin left, ending game.`);
-      if (gameTimers[gameCode]) {
-        clearInterval(gameTimers[gameCode].interval);
-        delete gameTimers[gameCode];
+      // מוצאים את השחקן הבא בתור להיות מנהל (השני שנכנס למשחק)
+      const newAdmin = game.players[0];
+      if (newAdmin) {
+        newAdmin.isAdmin = true;
+        game.adminId = newAdmin.id;
+        console.log(
+          `[Game ${gameCode}] Admin role transferred to ${newAdmin.name}`
+        );
+
+        // שולחים הודעה לכולם על העברת התפקיד
+        io.to(gameCode).emit("adminChanged", {
+          newAdminId: newAdmin.id,
+          newAdminName: newAdmin.name,
+          players: game.players,
+        });
+      } else {
+        // אם אין שחקנים אחרים, סוגרים את המשחק
+        io.to(gameCode).emit("gameEnded", {
+          players: game.players,
+          reason: "admin_left_no_players",
+        });
+        if (gameTimers[gameCode]) {
+          clearInterval(gameTimers[gameCode].interval);
+          delete gameTimers[gameCode];
+        }
+        delete games[gameCode];
       }
-      delete games[gameCode];
     } else if (game.players.length < 3 && game.gameState === "in-game") {
       console.log(
         `[Game ${gameCode}] Not enough players (${game.players.length}), ending game.`
