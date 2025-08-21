@@ -667,7 +667,9 @@ button:disabled {
   color: var(--text-color);
   font-weight: normal;
 }
+
 #category-list {
+  padding-top: 10px;
   display: grid;
   gap: 15px;
   text-align: right;
@@ -706,7 +708,7 @@ button:disabled {
 
 .category-item {
   background-color: var(--card-hover);
-  padding: 15px;
+  padding: 10px 15px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -936,35 +938,6 @@ input:checked + .slider:before {
   display: flex;
   align-items: self-end;
   height: 100%;
-}
-
-/* Settings Footer */
-.settings-footer {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
-}
-
-.settings-footer-btn {
-  flex: 1;
-  padding: 12px;
-  font-size: 1rem;
-  background-color: var(--card-hover);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  margin: 0;
-}
-
-.settings-footer-btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
-}
-
-.settings-footer-btn:hover {
-  transform: translateY(-1px);
 }
 
 /* Result Screen Controls */
