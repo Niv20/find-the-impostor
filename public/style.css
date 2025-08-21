@@ -220,11 +220,12 @@ body {
   gap: 15px;
   order: 2;
 }
-.header-game-code {
+#header-game-code {
   color: var(--text-muted);
   font-size: 1.1rem;
   margin-left: auto;
   padding-left: 20px;
+  order: 1;
 }
 /* עיצוב הקוד בתוך המסך */
 #game-code-display {

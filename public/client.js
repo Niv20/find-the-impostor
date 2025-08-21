@@ -163,13 +163,18 @@ document.addEventListener("DOMContentLoaded", () => {
       case "result":
         if (isAdmin) {
           // הצגת קוד המשחק בheader רק למנהל
-          headerSettingsBtn.classList.remove("hidden");
           headerGameCode.style.display = "flex";
           headerGameCode.querySelector(".game-code-value").textContent =
             gameCode;
           const header = document.querySelector("#app-header");
           if (!header.contains(headerGameCode)) {
             header.appendChild(headerGameCode);
+          }
+          // הסתרת כפתור ההגדרות במהלך המשחק
+          headerSettingsBtn.classList.add("hidden");
+          const settingsWrapper = document.querySelector(".settings-wrapper");
+          if (settingsWrapper) {
+            settingsWrapper.classList.add("hidden");
           }
         }
         break;
