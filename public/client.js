@@ -851,14 +851,14 @@ document.addEventListener("DOMContentLoaded", () => {
     wordDisplayContainer.classList.remove("hidden");
     impostorDisplay.classList.add("hidden");
     wordDisplay.classList.remove("word-hidden");
-    if (impostorWordDisplay)
-      impostorWordDisplay.classList.remove("word-hidden");
     toggleWordBtn.textContent = "הסתר מילה";
-    if (toggleImpostorBtn) toggleImpostorBtn.textContent = "הסתר מילה";
     timerDisplay.style.opacity = 0;
     if (data.isImpostor) {
       wordDisplayContainer.classList.add("hidden");
       impostorDisplay.classList.remove("hidden");
+      const impostorWordDisplay = document.getElementById(
+        "impostor-word-display"
+      );
       impostorWordDisplay.classList.remove("word-hidden");
       impostorCategoryInfo.classList.remove("word-hidden");
 
@@ -868,22 +868,25 @@ document.addEventListener("DOMContentLoaded", () => {
         impostorCategoryInfo.textContent = "";
       }
 
-      // וידוא שיש כפתור הסתרה למתחזה ואתחול שלו
+      // הגדרת פעולת כפתור ההסתרה של המתחזה
       const toggleImpostorBtn = document.getElementById("toggle-impostor-btn");
-      if (toggleImpostorBtn) {
-        toggleImpostorBtn.onclick = () => {
-          const impostorWordDisplay = document.getElementById(
-            "impostor-word-display"
-          );
-          if (impostorWordDisplay) {
-            impostorWordDisplay.classList.toggle("word-hidden");
-            impostorCategoryInfo.classList.toggle("word-hidden");
-            const isHidden =
-              impostorWordDisplay.classList.contains("word-hidden");
-            toggleImpostorBtn.textContent = isHidden ? "הצג מילה" : "הסתר מילה";
-          }
-        };
-      }
+      toggleImpostorBtn.textContent = "הסתר מילה";
+      toggleImpostorBtn.onclick = () => {
+        const impostorWordDisplay = document.getElementById(
+          "impostor-word-display"
+        );
+        const impostorCategoryInfo = document.getElementById(
+          "impostor-category-info"
+        );
+
+        impostorWordDisplay.classList.toggle("word-hidden");
+        impostorCategoryInfo.classList.toggle("word-hidden");
+        toggleImpostorBtn.textContent = impostorWordDisplay.classList.contains(
+          "word-hidden"
+        )
+          ? "הצג מילה"
+          : "הסתר מילה";
+      };
     } else {
       wordDisplayContainer.classList.remove("hidden");
       impostorDisplay.classList.add("hidden");
