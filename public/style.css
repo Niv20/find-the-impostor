@@ -706,14 +706,54 @@ button:disabled {
 }
 
 .category-item {
-  padding: 8px 16px;
-  border: 1px solid #555;
-  border-radius: 20px;
+  background-color: var(--card-hover);
+  padding: 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex: 1;
+  min-width: 0;
+}
+.category-item label {
+  cursor: pointer;
+  flex: 1;
+}
+.category-item input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
   background-color: #333;
-  color: white;
-  display: flex; /* נוסף כדי למרכז את התוכן */
-  align-items: center; /* נוסף כדי למרכז את התוכן */
-  gap: 8px; /* נוסף כדי לתת רווח בין התיבה לטקסט */
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  width: 1.15em;
+  height: 1.15em;
+  border: 0.15em solid #555;
+  border-radius: 0.15em;
+  transform: translateY(-0.075em);
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+}
+.category-item input[type="checkbox"]::before {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em white;
+  background-color: CanvasText;
+  transform-origin: bottom left;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+.category-item input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+.category-item input[type="checkbox"]:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 /* Admin Controls */
