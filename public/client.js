@@ -11,12 +11,82 @@ document.addEventListener("DOMContentLoaded", () => {
   // הפעלת מנגנון שמירת המסך דלוק מיד עם טעינת האפליקציה
   requestWakeLock();
 
-  // מעקב אחר מצבי ניתוק
+  // מעקב אחר מצבי ניתוק וחיבור מחדש
+  let reconnectionAttempts = 0;
+  const maxReconnectionAttempts = 5;
+  let reconnectionTimeout;
+
+  function attemptReconnection() {
+    if (reconnectionAttempts >= maxReconnectionAttempts) {
+      console.log("⚠️ Max reconnection attempts reached");
+      showModalMessage(
+        "מצטערים, לא הצלחנו להתחבר מחדש למשחק. נסה לרענן את הדף.",
+        {
+          okText: "רענן דף",
+          onOk: () => window.location.reload(),
+        }
+      );
+      return;
+    }
+
+    console.log(
+      `🔄 Reconnecting... (attempt ${
+        reconnectionAttempts + 1
+      }/${maxReconnectionAttempts})`
+    );
+    socket.connect();
+
+    reconnectionTimeout = setTimeout(() => {
+      if (socket.disconnected) {
+        reconnectionAttempts++;
+        attemptReconnection();
+      }
+    }, 2000); // Try again after 2 seconds if failed
+  }
+
   document.addEventListener("visibilitychange", () => {
     console.log(`🔍 Tab visibility changed: ${document.visibilityState}`);
-    // כשחוזרים לטאב, מנסים להתחבר מחדש
-    if (document.visibilityState === "visible" && myId && gameCode) {
-      console.log("🔄 Attempting to reconnect...");
+
+    if (document.visibilityState === "visible") {
+      if (socket.disconnected && myId && gameCode && myName) {
+        reconnectionAttempts = 0;
+        clearTimeout(reconnectionTimeout);
+        attemptReconnection();
+      }
+    }
+  });
+
+  socket.on("connect", () => {
+    console.log("🟢 Socket connected");
+    myId = socket.id;
+
+    // If we have game info, try to rejoin
+    if (gameCode && myName) {
+      console.log("🔄 Attempting to rejoin game...");
+      socket.emit("rejoinGame", { gameCode, name: myName });
+    }
+
+    // Reset reconnection state
+    reconnectionAttempts = 0;
+    clearTimeout(reconnectionTimeout);
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log(`🔴 Socket disconnected. Reason: ${reason}`);
+
+    // Don't attempt reconnect for these reasons
+    if (
+      reason === "io client disconnect" ||
+      reason === "io server disconnect"
+    ) {
+      console.log("💡 Intentional disconnect - not attempting reconnection");
+      return;
+    }
+
+    // Start reconnection attempts
+    if (myId && gameCode && myName) {
+      reconnectionAttempts = 0;
+      attemptReconnection();
     }
   });
 

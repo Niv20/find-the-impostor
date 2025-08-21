@@ -6,7 +6,10 @@ const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  pingTimeout: 60000, // 60 שניות לטיימאאוט
+  pingInterval: 25000, // שולח ping כל 25 שניות
+});
 
 const PORT = process.env.PORT || 3000;
 
@@ -443,6 +446,59 @@ io.on("connection", (socket) => {
     if (game && game.adminId === socket.id) {
       io.to(gameCode).emit("gameEnded", game.players);
       delete games[gameCode];
+    }
+  });
+
+  socket.on("rejoinGame", ({ gameCode, name }) => {
+    console.log(`🔄 Player "${name}" attempting to rejoin game ${gameCode}`);
+    const game = games[gameCode];
+    if (!game) {
+      return socket.emit("errorMsg", "המשחק לא נמצא יותר");
+    }
+
+    // Check if player was previously disconnected
+    if (game.disconnectedPlayers && game.disconnectedPlayers[name]) {
+      const disconnectedPlayer = game.disconnectedPlayers[name];
+      const returnedPlayer = {
+        id: socket.id,
+        name: name,
+        score: disconnectedPlayer.score,
+        isAdmin: false,
+        avatar: disconnectedPlayer.avatar,
+      };
+
+      // Remove from disconnected list
+      delete game.disconnectedPlayers[name];
+
+      // Handle rejoin based on game state
+      if (
+        game.gameState === "in-game" &&
+        game.currentRound &&
+        !game.currentRound.revealed
+      ) {
+        // Add to waiting list if game is in progress
+        if (!game.waitingPlayers) game.waitingPlayers = [];
+        game.waitingPlayers.push(returnedPlayer);
+        socket.join(gameCode);
+        socket.emit("joinedMidGame", {
+          message: "תכף נצרף אותך למשחק! אנא המתן לסיום הסבב.",
+          players: game.players,
+        });
+      } else {
+        // Add directly to players if in lobby
+        game.players.push(returnedPlayer);
+        socket.join(gameCode);
+        socket.emit("joinedSuccess", {
+          players: game.players,
+          settings: game.settings,
+          gameState: game.gameState,
+        });
+        io.to(gameCode).emit("updatePlayerList", game.players);
+      }
+
+      console.log(`✅ Player "${name}" successfully rejoined game ${gameCode}`);
+    } else {
+      socket.emit("errorMsg", "לא נמצא שחקן מנותק עם השם הזה");
     }
   });
 
