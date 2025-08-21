@@ -615,7 +615,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="disconnect-content">
         <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
         <span class="disconnect-text">${player.name} התנתק מהמשחק</span>
-        <button class="close-notification">×</button>
       </div>
     `;
 
@@ -646,14 +645,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .disconnect-text {
         white-space: nowrap;
       }
-      .close-notification {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 20px;
-        cursor: pointer;
-        padding: 0 8px;
-      }
     `;
 
     document.head.appendChild(style);
@@ -667,12 +658,6 @@ document.addEventListener("DOMContentLoaded", () => {
       notification.classList.remove("show");
       setTimeout(() => notification.remove(), 300);
     }, 2000);
-
-    // הוספת אפשרות לסגירה ידנית
-    notification.querySelector(".close-notification").onclick = () => {
-      notification.classList.remove("show");
-      setTimeout(() => notification.remove(), 300);
-    };
   });
 
   // הוספת מאזין לאישור עדכון הגדרות
@@ -693,7 +678,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="skip-word-content">
         <span class="material-icons">skip_next</span>
         <span class="skip-word-text">המנהל החליף את המילה</span>
-        <button class="close-notification">×</button>
       </div>
     `;
 
@@ -721,18 +705,12 @@ document.addEventListener("DOMContentLoaded", () => {
         display: flex;
         align-items: center;
         gap: 12px;
+        padding: 4px 0;
       }
       .skip-word-text {
         white-space: nowrap;
         font-weight: 600;
-      }
-      .close-notification {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 20px;
-        cursor: pointer;
-        padding: 0 8px;
+        font-size: 1.1rem;
       }
     `;
 
@@ -747,12 +725,6 @@ document.addEventListener("DOMContentLoaded", () => {
       notification.classList.remove("show");
       setTimeout(() => notification.remove(), 300);
     }, 3000);
-
-    // הוספת אפשרות לסגירה ידנית
-    notification.querySelector(".close-notification").onclick = () => {
-      notification.classList.remove("show");
-      setTimeout(() => notification.remove(), 300);
-    };
   });
 
   socket.on("errorMsg", (message) => {
@@ -934,6 +906,9 @@ document.addEventListener("DOMContentLoaded", () => {
           onOk: () => {
             socket.emit("skipWord", gameCode);
           },
+          onCancel: () => {
+            // פשוט סוגר את המודל
+          },
         });
       };
     } else {
@@ -999,6 +974,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("startVoting", (data) => {
+    // סגירת פופאפ דילוג על מילה אם פתוח
+    const modalOverlay = document.getElementById("modal-overlay");
+    if (!modalOverlay.classList.contains("hidden")) {
+      modalOverlay.classList.add("hidden");
+    }
+
     // אם השחקן במסך המתנה, נעדכן את ההודעה
     if (currentScreen === "waiting") {
       const waitingMessage = document.querySelector(".waiting-message");
