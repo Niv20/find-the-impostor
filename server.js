@@ -447,7 +447,10 @@ io.on("connection", (socket) => {
       console.log(
         `[Game ${gameCode}] Not enough players (${game.players.length}), ending game.`
       );
-      io.to(gameCode).emit("gameEnded", game.players);
+      io.to(gameCode).emit("gameEnded", {
+        players: game.players,
+        reason: "not_enough_players",
+      });
       if (gameTimers[gameCode]) {
         clearInterval(gameTimers[gameCode].interval);
         delete gameTimers[gameCode];

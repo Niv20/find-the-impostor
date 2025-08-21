@@ -799,9 +799,23 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen("result");
   });
 
-  socket.on("gameEnded", (players) => {
-    // הפעלת אנימציית קונפטי
-    createConfetti();
+  socket.on("gameEnded", (data) => {
+    // בדיקה האם קיבלנו אובייקט עם מידע נוסף או רק רשימת שחקנים
+    const players = Array.isArray(data) ? data : data.players;
+    const reason = data.reason;
+
+    // הפעלת אנימציית קונפטי רק אם זה סיום משחק רגיל
+    if (!reason) {
+      createConfetti();
+    }
+
+    // עדכון כותרת לפי סיבת הסיום
+    const endGameTitle = document.querySelector("#end-game-screen h2");
+    if (reason === "not_enough_players") {
+      endGameTitle.textContent = "עצרנו את המשחק כי נותרו פחות מ־3 שחקנים";
+    } else {
+      endGameTitle.textContent = "המשחק נגמר!";
+    }
 
     let maxScore = -1;
     players.forEach((p) => {
