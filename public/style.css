@@ -663,15 +663,13 @@ button:disabled {
 }
 
 .settings-label {
-  display: block;
   text-align: right;
   color: var(--text-color);
   font-weight: normal;
-  margin-bottom: 15px;
 }
 #category-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   text-align: right;
 }
