@@ -155,31 +155,46 @@ io.on("connection", (socket) => {
     }
 
     socket.join(gameCode);
-    game.players.push({
-      id: socket.id,
-      name,
-      score: 0,
-      isAdmin: false,
-      avatar: playerAvatar,
-    });
 
     // בדיקה אם המשחק כבר בעיצומו
     if (
       game.gameState === "in-game" ||
       (game.currentRound && !game.currentRound.revealed)
     ) {
+      // יצירת רשימת ממתינים אם לא קיימת
+      if (!game.waitingPlayers) {
+        game.waitingPlayers = [];
+      }
+
+      // הוספה לרשימת הממתינים במקום לרשימת השחקנים
+      game.waitingPlayers.push({
+        id: socket.id,
+        name,
+        score: 0,
+        isAdmin: false,
+        avatar: playerAvatar,
+      });
+
       socket.emit("joinedMidGame", {
         message: "תכף נצרף אותך למשחק! אנא המתן לסיום הסבב.",
-        players: game.players,
       });
     } else {
+      // אם אין משחק פעיל, מוסיפים ישירות לרשימת השחקנים
+      game.players.push({
+        id: socket.id,
+        name,
+        score: 0,
+        isAdmin: false,
+        avatar: playerAvatar,
+      });
+
       socket.emit("joinedSuccess", {
         players: game.players,
         settings: game.settings,
       });
-    }
 
-    io.to(gameCode).emit("updatePlayerList", game.players);
+      io.to(gameCode).emit("updatePlayerList", game.players);
+    }
   });
 
   socket.on("changeSettings", ({ gameCode, settings }) => {
