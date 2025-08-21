@@ -366,9 +366,7 @@ button {
   margin-top: 10px;
   width: 100%;
 }
-button:hover {
-  background-color: #005ecb;
-}
+
 button:disabled {
   background-color: #3a3a3c;
   color: #6e6e73;
