@@ -1059,3 +1059,13 @@ input:checked + .slider:before {
 #vote-options.voting-done .vote-btn {
   cursor: not-allowed;
 }
+
+/* הוספת סגנון חדש עבור הודעת שחקן חוזר */
+.returning-hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 5px auto 15px;
+  max-width: 80%;
+  line-height: 1.4;
+  text-align: center;
+}

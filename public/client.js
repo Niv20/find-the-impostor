@@ -245,10 +245,25 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHeader(screenName);
   }
 
-  function showNameEntryScreen() {
+  function showNameEntryScreen(gameInProgress) {
     chosenAvatarFile = showRandomAvatarPreview();
     nameInput.value = "";
     charCounter.textContent = "0/10";
+
+    // הצגה או הסתרה של הודעת החזרה למשחק
+    const returningPlayerHint = document.getElementById(
+      "returning-player-hint"
+    );
+    if (returningPlayerHint) {
+      if (gameInProgress) {
+        returningPlayerHint.textContent =
+          "שיחקת כבר במשחק הזה? השתמש באותו השם כדי לחזור עם הניקוד שלך";
+        returningPlayerHint.classList.remove("hidden");
+      } else {
+        returningPlayerHint.classList.add("hidden");
+      }
+    }
+
     showScreen("nameEntry");
     nameInput.focus();
   }
@@ -572,9 +587,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  socket.on("gameCodeValid", () => {
+  socket.on("gameCodeValid", (data) => {
     isCreatingGame = false;
-    showNameEntryScreen();
+    showNameEntryScreen(data?.gameInProgress);
   });
 
   socket.on("gameCreated", (data) => {

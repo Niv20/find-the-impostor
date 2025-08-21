@@ -110,7 +110,11 @@ io.on("connection", (socket) => {
     const game = games[gameCode];
     if (game) {
       if (game.players.length < 6) {
-        socket.emit("gameCodeValid");
+        // שליחת מידע על מצב המשחק
+        const gameInProgress =
+          game.gameState === "in-game" ||
+          (game.currentRound && !game.currentRound.revealed);
+        socket.emit("gameCodeValid", { gameInProgress });
       } else {
         socket.emit("errorMsg", "זה לא אישי, אבל אין מקום בחדר בשבילך");
       }
@@ -127,6 +131,44 @@ io.on("connection", (socket) => {
     if (game.players.length >= 6) {
       return socket.emit("errorMsg", "זה לא אישי, אבל אין מקום בחדר בשבילך");
     }
+
+    // בדיקה אם השחקן היה קיים בעבר והתנתק
+    if (game.disconnectedPlayers && game.disconnectedPlayers[name]) {
+      const disconnectedPlayer = game.disconnectedPlayers[name];
+      // מחזירים את השחקן עם הניקוד הקודם שלו
+      const returnedPlayer = {
+        id: socket.id,
+        name: name,
+        score: disconnectedPlayer.score,
+        isAdmin: false, // תמיד false כי מנהל חדש כבר נבחר
+        avatar: disconnectedPlayer.avatar,
+      };
+
+      // מוחקים אותו מרשימת המנותקים
+      delete game.disconnectedPlayers[name];
+
+      // הוספת השחקן למשחק עם הניקוד והאווטאר הישנים
+      if (
+        game.gameState === "in-game" ||
+        (game.currentRound && !game.currentRound.revealed)
+      ) {
+        if (!game.waitingPlayers) game.waitingPlayers = [];
+        game.waitingPlayers.push(returnedPlayer);
+        socket.emit("joinedMidGame", {
+          message: "תכף נצרף אותך למשחק! אנא המתן לסיום הסבב.",
+        });
+      } else {
+        game.players.push(returnedPlayer);
+        socket.emit("joinedSuccess", {
+          players: game.players,
+          settings: game.settings,
+        });
+        io.to(gameCode).emit("updatePlayerList", game.players);
+      }
+      socket.join(gameCode);
+      return;
+    }
+
     const isNameTaken = game.players.some((p) => p.name === name);
     if (isNameTaken) {
       // שלח הודעת שגיאה מיוחדת שלא תעיף את המשתמש מהמסך
@@ -416,6 +458,16 @@ io.on("connection", (socket) => {
 
     const leavingPlayer = game.players[playerIndex];
     game.players.splice(playerIndex, 1);
+
+    // שמירת מידע על השחקן שהתנתק
+    if (!game.disconnectedPlayers) {
+      game.disconnectedPlayers = {};
+    }
+    game.disconnectedPlayers[leavingPlayer.name] = {
+      score: leavingPlayer.score,
+      avatar: leavingPlayer.avatar,
+    };
+
     sock.leave(gameCode);
 
     console.log(`🎮 Game ${gameCode} status after disconnect:`);
