@@ -40,10 +40,38 @@
         <div class="join-game">
           <p>הזן את קוד המשחק בן 4 הספרות:</p>
           <div id="code-inputs" dir="ltr">
-            <input type="tel" class="code-input" maxlength="1" />
-            <input type="tel" class="code-input" maxlength="1" />
-            <input type="tel" class="code-input" maxlength="1" />
-            <input type="tel" class="code-input" maxlength="1" />
+            <input
+              type="tel"
+              class="code-input"
+              maxlength="1"
+              id="code-input-1"
+              name="code-1"
+              aria-label="ספרה ראשונה"
+            />
+            <input
+              type="tel"
+              class="code-input"
+              maxlength="1"
+              id="code-input-2"
+              name="code-2"
+              aria-label="ספרה שנייה"
+            />
+            <input
+              type="tel"
+              class="code-input"
+              maxlength="1"
+              id="code-input-3"
+              name="code-3"
+              aria-label="ספרה שלישית"
+            />
+            <input
+              type="tel"
+              class="code-input"
+              maxlength="1"
+              id="code-input-4"
+              name="code-4"
+              aria-label="ספרה רביעית"
+            />
           </div>
           <button id="join-game-btn" disabled>הצטרף למשחק</button>
         </div>
@@ -154,24 +182,51 @@
           </button>
         </div>
         <div class="settings-grid">
-          <label>זמן לדיון (בשניות):</label>
-          <div>
-            <button class="timer-btn" data-time="30">30</button>
-            <button class="timer-btn active" data-time="60">60</button>
-            <button class="timer-btn" data-time="90">90</button>
+          <label id="timer-label">זמן לדיון (בשניות):</label>
+          <div role="radiogroup" aria-labelledby="timer-label">
+            <button
+              class="timer-btn"
+              data-time="30"
+              role="radio"
+              aria-checked="false"
+            >
+              30
+            </button>
+            <button
+              class="timer-btn active"
+              data-time="60"
+              role="radio"
+              aria-checked="true"
+            >
+              60
+            </button>
+            <button
+              class="timer-btn"
+              data-time="90"
+              role="radio"
+              aria-checked="false"
+            >
+              90
+            </button>
           </div>
         </div>
         <hr class="settings-divider" />
         <div class="settings-grid">
-          <label>הצג קטגוריה למתחזה:</label>
+          <label for="show-category-toggle">הצג קטגוריה למתחזה:</label>
           <label class="switch">
             <input type="checkbox" id="show-category-toggle" checked />
             <span class="slider round"></span>
           </label>
         </div>
         <div id="category-settings">
-          <label class="settings-label">קטגוריות שמהן יילקחו מילים:</label>
-          <div id="category-list"></div>
+          <label id="categories-label" class="settings-label"
+            >קטגוריות שמהן יילקחו מילים:</label
+          >
+          <div
+            id="category-list"
+            role="group"
+            aria-labelledby="categories-label"
+          ></div>
         </div>
       </div>
     </div>
