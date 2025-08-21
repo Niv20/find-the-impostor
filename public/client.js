@@ -473,7 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
     notification.innerHTML = `
       <div class="disconnect-content">
         <img src="/avatars/${player.avatar.file}" class="avatar-circle-small">
-        <span>${player.name} התנתק מהמשחק</span>
+        <span class="disconnect-text">${player.name} התנתק מהמשחק</span>
         <button class="close-notification">×</button>
       </div>
     `;
@@ -492,6 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
         border-radius: 8px;
         z-index: 9999;
         transition: bottom 0.3s ease-in-out;
+        white-space: nowrap;
       }
       .disconnect-notification.show {
         bottom: 20px;
@@ -500,6 +501,9 @@ document.addEventListener("DOMContentLoaded", () => {
         display: flex;
         align-items: center;
         gap: 12px;
+      }
+      .disconnect-text {
+        white-space: nowrap;
       }
       .close-notification {
         background: none;
