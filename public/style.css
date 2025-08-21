@@ -37,14 +37,16 @@
 }
 #modal-message-actions {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
+
 .modal-btn {
   background-color: var(--card-hover);
   color: var(--text-color);
   border: 1px solid var(--border-color);
-  padding: 10px 28px;
+  padding: 12px 20px;
   border-radius: 12px;
   font-size: 1.08rem;
   font-family: inherit;
@@ -52,8 +54,8 @@
   cursor: pointer;
   box-shadow: none;
   transition: all 0.2s ease;
-  margin: 5px;
-  min-width: 120px;
+  margin: 0;
+  width: 100%;
 }
 
 .modal-btn-danger {
@@ -541,6 +543,7 @@ button:disabled {
 #admin-controls {
   width: 100%;
   padding-top: 20px;
+  padding-bottom: 10px;
   flex-shrink: 0;
 }
 #start-game-hint {
@@ -658,11 +661,7 @@ button:disabled {
   border-top: 1px solid var(--border-color);
   margin: 15px 0;
 }
-#category-settings {
-  padding-top: 15px;
-  margin-top: 15px;
-  border-top: 1px solid var(--border-color);
-}
+
 .settings-label {
   display: block;
   text-align: right;
@@ -902,7 +901,7 @@ input:checked + .slider:before {
 
 .settings-wrapper {
   display: flex;
-  align-items: center;
+  align-items: self-end;
   height: 100%;
 }
 

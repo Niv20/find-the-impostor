@@ -349,37 +349,41 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // במסך הלובי לפני תחילת המשחק, יציאה ישירה אם לא מנהל
-    if (currentScreen === "lobby" && !isAdmin) {
+    // בדיקה אם המשחק התחיל
+    const isGameStarted = ["game", "voting", "result"].includes(currentScreen);
+
+    // במסך הלובי או אם המשחק לא התחיל, יציאה ישירה
+    if (!isGameStarted) {
       window.location.reload();
       return;
     }
 
-    // אם זה המנהל, נציג אפשרויות מיוחדות
+    // אם זה המנהל והמשחק התחיל, נציג אפשרויות מיוחדות
     if (isAdmin) {
       showModalMessage("מה ברצונך לעשות?", {
         type: "admin_leave",
         buttons: [
+          {
+            text: "חזרה למשחק",
+            action: () => {},
+            style: "primary",
+          },
           {
             text: "סיים את המשחק לכולם",
             action: () => socket.emit("endGame", gameCode),
             style: "danger",
           },
           {
-            text: "העבר את ניהול המשחק לשחקן אחר",
+            text: "צא רק בעצמך",
             action: () => {
               socket.emit("adminLeaving", gameCode);
               window.location.reload();
             },
-            style: "primary",
-          },
-          {
-            text: "ביטול",
-            action: () => {},
-            style: "cancel",
+            style: "danger",
           },
         ],
-        message: "שים לב: אם תצא מהמשחק, השחקן הבא בתור יקבל את תפקיד המנהל",
+        message:
+          "שים לב: אם תחליט לצאת מהמשחק רק בעצמך, השחקן הבא בתור יקבל את תפקיד המנהל",
       });
     } else {
       // שחקן רגיל
