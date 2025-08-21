@@ -675,6 +675,86 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   });
 
+  // הוספת מאזין לאישור עדכון הגדרות
+  socket.on("settingsUpdated", (updatedSettings) => {
+    console.log("Settings updated:", updatedSettings);
+    // עדכון המשתנים המקומיים
+    if (updatedSettings.enabledCategories) {
+      enabledCategories = updatedSettings.enabledCategories;
+    }
+  });
+
+  // הוספת מאזין להודעות על דילוג על מילה
+  socket.on("wordSkipped", (data) => {
+    // יצירת הודעת דילוג על מילה
+    const notification = document.createElement("div");
+    notification.className = "skip-word-notification";
+    notification.innerHTML = `
+      <div class="skip-word-content">
+        <span class="material-icons">skip_next</span>
+        <span class="skip-word-text">המנהל החליף את המילה</span>
+        <button class="close-notification">×</button>
+      </div>
+    `;
+
+    // הוספת סגנונות לאנימציה
+    const style = document.createElement("style");
+    style.textContent = `
+      .skip-word-notification {
+        position: fixed;
+        bottom: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 165, 0, 0.9);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 9999;
+        transition: bottom 0.3s ease-in-out;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      .skip-word-notification.show {
+        bottom: 20px;
+      }
+      .skip-word-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .skip-word-text {
+        white-space: nowrap;
+        font-weight: 600;
+      }
+      .close-notification {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0 8px;
+      }
+    `;
+
+    document.head.appendChild(style);
+    document.body.appendChild(notification);
+
+    // הפעלת האנימציה
+    setTimeout(() => notification.classList.add("show"), 100);
+
+    // הסרת ההודעה אחרי שלוש שניות
+    setTimeout(() => {
+      notification.classList.remove("show");
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+
+    // הוספת אפשרות לסגירה ידנית
+    notification.querySelector(".close-notification").onclick = () => {
+      notification.classList.remove("show");
+      setTimeout(() => notification.remove(), 300);
+    };
+  });
+
   socket.on("errorMsg", (message) => {
     showModalMessage(message, {
       okText: "אישור",
@@ -717,6 +797,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
+
+    // הצגת הקוד והגדרות בפס העליון למנהל
+    const headerGameCode = document.getElementById("header-game-code");
+    const headerGameCodeValue = document.getElementById(
+      "header-game-code-value"
+    );
+    const headerSettingsBtn = document.getElementById("header-settings-btn");
+
+    if (headerGameCode && headerGameCodeValue) {
+      headerGameCodeValue.textContent = gameCode;
+      headerGameCode.classList.remove("hidden");
+    }
+
+    if (headerSettingsBtn) {
+      headerSettingsBtn.classList.remove("hidden");
+    }
+
     if (shareCodeText) {
       shareCodeText.textContent = "שתף עם חברים את הקוד:";
       shareCodeText.classList.remove("waiting-text");
@@ -1099,6 +1196,28 @@ document.addEventListener("DOMContentLoaded", () => {
         adminSpan.style.color = player.avatar.color;
         adminSpan.style.opacity = "0.8";
         li.appendChild(adminSpan);
+
+        // אם השחקן הזה הוא המנהל וזה אני, להציג את הקוד והגדרות בפס העליון
+        if (player.id === myId && gameCode) {
+          const headerGameCode = document.getElementById("header-game-code");
+          const headerGameCodeValue = document.getElementById(
+            "header-game-code-value"
+          );
+          const headerSettingsBtn = document.getElementById(
+            "header-settings-btn"
+          );
+
+          if (headerGameCode && headerGameCodeValue) {
+            headerGameCodeValue.textContent = gameCode;
+            headerGameCode.classList.remove("hidden");
+          }
+
+          if (headerSettingsBtn) {
+            headerSettingsBtn.classList.remove("hidden");
+          }
+
+          isAdmin = true;
+        }
       }
 
       playerListUl.appendChild(li);
@@ -1142,10 +1261,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
         }
-        socket.emit("changeSettings", {
-          gameCode,
-          settings: { enabledCategories },
-        });
+        socket.emit("updateGameSettings", gameCode, { enabledCategories });
       });
       const label = document.createElement("label");
       label.htmlFor = `cat-${cat.id}`;
@@ -1206,6 +1322,28 @@ document.addEventListener("DOMContentLoaded", () => {
     saveButton.className = "settings-footer-btn settings-footer-btn-primary";
     saveButton.textContent = "שמור";
     saveButton.onclick = () => {
+      // איסוף ההגדרות הנוכחיות
+      const selectedTimer =
+        document.querySelector(".timer-btn.active")?.dataset.time || "60";
+      const showCategoryToImpostor = showCategoryToggle.checked;
+
+      // איסוף הקטגוריות שנבחרו
+      const selectedCategories = [];
+      const categoryCheckboxes = document.querySelectorAll(
+        '.category-item input[type="checkbox"]:checked'
+      );
+      categoryCheckboxes.forEach((checkbox) => {
+        selectedCategories.push(checkbox.value);
+      });
+
+      // שליחת ההגדרות לשרת
+      const newSettings = {
+        discussionTime: parseInt(selectedTimer),
+        showCategoryToImpostor: showCategoryToImpostor,
+        enabledCategories: selectedCategories,
+      };
+
+      socket.emit("updateGameSettings", gameCode, newSettings);
       settingsModal.classList.add("hidden");
     };
 

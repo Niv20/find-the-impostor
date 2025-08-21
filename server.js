@@ -93,8 +93,8 @@ io.on("connection", (socket) => {
         { id: socket.id, name, score: 0, isAdmin: true, avatar: adminAvatar },
       ],
       settings: {
-        timer: 60, // Default timer set to 60 seconds but can be changed from settings
-        showCategory: true,
+        discussionTime: 60, // Default timer set to 60 seconds but can be changed from settings
+        showCategoryToImpostor: true,
         enabledCategories: Object.keys(wordCategories), // Default to all category IDs
       },
       gameState: "lobby",
@@ -259,18 +259,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("changeSettings", ({ gameCode, settings }) => {
-    const game = games[gameCode];
-    if (game && game.adminId === socket.id) {
-      game.settings = {
-        ...game.settings,
-        ...settings,
-      };
-      // !!! FOR DEBUGGING ONLY - DELETE THIS LINE IN PRODUCTION !!!
-      game.settings.timer = 3;
-    }
-  });
-
   socket.on("startGame", (gameCode) => {
     const game = games[gameCode];
     if (!game || game.adminId !== socket.id) return;
@@ -290,6 +278,11 @@ io.on("connection", (socket) => {
     // בדיקה שהשחקן הוא המנהל הנוכחי
     const currentAdmin = game.players.find((p) => p.isAdmin);
     if (!game || currentAdmin.id !== socket.id) return;
+
+    // שליחת הודעה לכל השחקנים שהמילה דולגה
+    io.to(gameCode).emit("wordSkipped", {
+      adminName: currentAdmin.name,
+    });
 
     // עצירת הטיימר הנוכחי
     if (gameTimers[gameCode]) {
@@ -321,7 +314,7 @@ io.on("connection", (socket) => {
       category.words[Math.floor(Math.random() * category.words.length)];
 
     // !!! IMPORTANT NOTE FOR AI: DO NOT DELETE THIS LINE - FOR DEBUGGING PURPOSES !!!
-    game.settings.timer = 10; // Override timer settings for debugging
+    game.settings.discussionTime = 10; // Override timer settings for debugging
 
     const impostor =
       game.players[Math.floor(Math.random() * game.players.length)];
@@ -338,13 +331,13 @@ io.on("connection", (socket) => {
       votes: {},
       revealed: false,
       startTime: Date.now(),
-      timerDuration: game.settings.timer,
+      timerDuration: game.settings.discussionTime,
     };
 
     game.gameState = "in-game";
 
     // הגדרת טיימר חדש בשרת
-    let timeLeft = game.settings.timer;
+    let timeLeft = game.settings.discussionTime;
     gameTimers[gameCode] = {
       interval: setInterval(() => {
         timeLeft--;
@@ -364,11 +357,13 @@ io.on("connection", (socket) => {
       io.to(player.id).emit("roundStart", {
         isImpostor,
         word: isImpostor ? null : randomWord,
-        category: game.settings.showCategory ? category.categoryName : null,
-        timer: game.settings.timer,
+        category: game.settings.showCategoryToImpostor
+          ? category.categoryName
+          : null,
+        timer: game.settings.discussionTime,
         timeLeft: timeLeft,
         startTime: game.currentRound.startTime,
-        showCategory: game.settings.showCategory,
+        showCategory: game.settings.showCategoryToImpostor,
       });
     });
     console.log(
@@ -527,6 +522,29 @@ io.on("connection", (socket) => {
     } else {
       socket.emit("errorMsg", "לא נמצא שחקן מנותק עם השם הזה");
     }
+  });
+
+  socket.on("updateGameSettings", (gameCode, newSettings) => {
+    const game = games[gameCode];
+    if (!game) return;
+
+    // בדיקה שהשחקן הוא המנהל
+    const player = game.players.find((p) => p.id === socket.id);
+    if (!player || !player.isAdmin) return;
+
+    console.log(
+      `⚙️ Admin ${player.name} updated game settings for ${gameCode}:`,
+      newSettings
+    );
+
+    // עדכון ההגדרות
+    game.settings = {
+      ...game.settings,
+      ...newSettings,
+    };
+
+    // שליחת אישור למנהל
+    socket.emit("settingsUpdated", game.settings);
   });
 
   socket.on("disconnect", (reason) => {
