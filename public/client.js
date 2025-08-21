@@ -146,33 +146,31 @@ document.addEventListener("DOMContentLoaded", () => {
         headerCreateBtn.classList.remove("hidden");
         break;
       case "nameEntry":
-        // הסרת כפתור חזרה למשחק חדש
         break;
       case "lobby":
-      case "voting":
-      case "result":
         if (isAdmin) {
-          // הצגת כפתור הגדרות למנהל
+          // הצגת כפתור הגדרות למנהל בלובי
           const header = document.querySelector("#app-header");
-          if (screenName === "lobby") {
-            const settingsWrapper = document.createElement("div");
-            settingsWrapper.className = "settings-wrapper";
-            headerSettingsBtn.classList.remove("hidden");
-            settingsWrapper.appendChild(headerSettingsBtn);
-            header.appendChild(settingsWrapper);
-          }
+          const settingsWrapper = document.createElement("div");
+          settingsWrapper.className = "settings-wrapper";
+          headerSettingsBtn.classList.remove("hidden");
+          settingsWrapper.appendChild(headerSettingsBtn);
+          header.appendChild(settingsWrapper);
         }
         break;
       case "game":
-        // הצגת קוד המשחק בheader רק במסך המשחק
-        const header = document.querySelector("#app-header");
-        headerGameCode.style.display = "flex";
-        headerGameCode.querySelector(".game-code-value").textContent = gameCode;
-        if (!header.contains(headerGameCode)) {
-          header.appendChild(headerGameCode);
-        }
+      case "voting":
+      case "result":
         if (isAdmin) {
+          // הצגת קוד המשחק בheader רק למנהל
           headerSettingsBtn.classList.remove("hidden");
+          headerGameCode.style.display = "flex";
+          headerGameCode.querySelector(".game-code-value").textContent =
+            gameCode;
+          const header = document.querySelector("#app-header");
+          if (!header.contains(headerGameCode)) {
+            header.appendChild(headerGameCode);
+          }
         }
         break;
       case "endGame":

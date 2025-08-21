@@ -214,23 +214,37 @@ body {
   font-weight: 700;
   font-size: 1.2rem;
 }
-#game-code-display {
-  margin: 0;
-  display: flex;
-  gap: 6px;
-  order: 1;
-}
-#game-code-display .code-digit {
-  width: 30px;
-  height: 40px;
-  line-height: 40px;
-  font-size: 1.5rem;
-}
 #header-actions {
   display: flex;
   align-items: center;
   gap: 15px;
   order: 2;
+}
+.header-game-code {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin-left: auto;
+  padding-left: 20px;
+}
+/* עיצוב הקוד בתוך המסך */
+#game-code-display {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px auto 20px auto;
+}
+#game-code-display .code-digit {
+  width: 44px;
+  height: 56px;
+  font-size: 2.2rem;
+  line-height: 56px;
+  text-align: center;
+  border-radius: 12px;
+  background-color: var(--code-input-bg);
+  color: var(--primary-color);
+  font-weight: 700;
+  box-shadow: var(--code-input-shadow);
+  border: 1px solid var(--border-color);
 }
 .header-btn,
 .header-link-btn {
