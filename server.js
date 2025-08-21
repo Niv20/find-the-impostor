@@ -314,17 +314,21 @@ io.on("connection", (socket) => {
     // צירוף שחקנים ממתינים למשחק
     if (game.waitingPlayers && game.waitingPlayers.length > 0) {
       game.players.push(...game.waitingPlayers);
-      
+
       // שליחת עדכון לשחקנים הממתינים
-      game.waitingPlayers.forEach(player => {
+      game.waitingPlayers.forEach((player) => {
         io.to(player.id).emit("joinedSuccess", {
           players: game.players,
           settings: game.settings,
         });
       });
-      
+
+      // עדכון כל השחקנים על המצטרפים החדשים
+      io.to(gameCode).emit("updatePlayerList", game.players);
+
       // איפוס רשימת הממתינים
       game.waitingPlayers = [];
+    }
 
     const { votes, impostorId, word, categoryName } = game.currentRound;
     const voteCounts = {};
