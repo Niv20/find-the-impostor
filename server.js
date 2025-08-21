@@ -110,11 +110,26 @@ io.on("connection", (socket) => {
     const game = games[gameCode];
     if (game) {
       if (game.players.length < 6) {
-        // שליחת מידע על מצב המשחק
+        // בחירת אווטר פנוי
+        const usedAvatarFiles = game.players.map((p) => p.avatar.file);
+        const availableAvatars = AVATARS_CONFIG.filter(
+          (a) => !usedAvatarFiles.includes(a.file)
+        );
+        const selectedAvatar =
+          availableAvatars.length > 0
+            ? availableAvatars[
+                Math.floor(Math.random() * availableAvatars.length)
+              ]
+            : AVATARS_CONFIG[Math.floor(Math.random() * AVATARS_CONFIG.length)];
+
+        // שליחת מידע על מצב המשחק והאווטר שנבחר
         const gameInProgress =
           game.gameState === "in-game" ||
           (game.currentRound && !game.currentRound.revealed);
-        socket.emit("gameCodeValid", { gameInProgress });
+        socket.emit("gameCodeValid", {
+          gameInProgress,
+          selectedAvatar: selectedAvatar,
+        });
       } else {
         socket.emit("errorMsg", "זה לא אישי, אבל אין מקום בחדר בשבילך");
       }

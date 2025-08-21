@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showNameEntryScreen(gameInProgress) {
-    chosenAvatarFile = showRandomAvatarPreview();
+    showAvatarPreview(chosenAvatarFile);
     nameInput.value = "";
     charCounter.textContent = "0/10";
 
@@ -589,6 +589,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("gameCodeValid", (data) => {
     isCreatingGame = false;
+    chosenAvatarFile = data.selectedAvatar.file;
     showNameEntryScreen(data?.gameInProgress);
   });
 
@@ -919,12 +920,19 @@ document.addEventListener("DOMContentLoaded", () => {
     joinGameBtn.disabled = code.length !== 4;
   }
 
+  function showAvatarPreview(avatarFile) {
+    if (avatarFile) {
+      avatarPreviewContainer.innerHTML = `<img src="/avatars/${avatarFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
+      return avatarFile;
+    }
+    return null;
+  }
+
   function showRandomAvatarPreview() {
     if (availableAvatars.length > 0) {
       const randomFile =
         availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
-      avatarPreviewContainer.innerHTML = `<img src="/avatars/${randomFile}" alt="Avatar Preview" class="avatar-circle-preview">`;
-      return randomFile;
+      return showAvatarPreview(randomFile);
     }
     return null;
   }
