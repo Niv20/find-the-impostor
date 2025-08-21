@@ -498,7 +498,7 @@ button:disabled {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin: 18px auto 20px auto;
+  margin: 18px auto 35px auto;
 }
 
 #game-code-display .code-digit {
