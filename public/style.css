@@ -1066,3 +1066,23 @@ input:checked + .slider:before {
   line-height: 1.4;
   text-align: center;
 }
+
+.admin-game-controls {
+  position: fixed;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.skip-word-btn {
+  color: #3498db;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.skip-word-btn:hover {
+  color: #2980b9;
+}

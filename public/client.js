@@ -822,6 +822,27 @@ document.addEventListener("DOMContentLoaded", () => {
       headerGameCode.style.display = "flex";
     }
 
+    // הצגת כפתור הדילוג רק למנהל
+    const adminControls = document.getElementById("admin-game-controls");
+    const currentAdmin = games[gameCode]?.players.find((p) => p.isAdmin);
+    if (currentAdmin && currentAdmin.id === myId) {
+      adminControls.classList.remove("hidden");
+
+      // הגדרת פעולת הדילוג
+      const skipWordBtn = document.getElementById("skip-word-btn");
+      skipWordBtn.onclick = () => {
+        showModalMessage("האם אתה בטוח שברצונך לדלג על המילה הזאת?", {
+          okText: "דלג",
+          cancelText: "ביטול",
+          onOk: () => {
+            socket.emit("skipWord", gameCode);
+          },
+        });
+      };
+    } else {
+      adminControls.classList.add("hidden");
+    }
+
     const impostorWordDisplay = document.getElementById(
       "impostor-word-display"
     );

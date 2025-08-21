@@ -285,6 +285,22 @@ io.on("connection", (socket) => {
     startNewRound(gameCode);
   });
 
+  socket.on("skipWord", (gameCode) => {
+    const game = games[gameCode];
+    // בדיקה שהשחקן הוא המנהל הנוכחי
+    const currentAdmin = game.players.find((p) => p.isAdmin);
+    if (!game || currentAdmin.id !== socket.id) return;
+
+    // עצירת הטיימר הנוכחי
+    if (gameTimers[gameCode]) {
+      clearInterval(gameTimers[gameCode].interval);
+      delete gameTimers[gameCode];
+    }
+
+    // התחלת סיבוב חדש
+    startNewRound(gameCode);
+  });
+
   socket.on("timerEnded", (gameCode) => {
     const game = games[gameCode];
     if (game && game.gameState === "in-game") {
