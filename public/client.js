@@ -153,11 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const headerLogoContainer = document.getElementById("header-logo-container");
   const headerCreateBtn = document.getElementById("header-create-btn");
   const headerSettingsBtn = document.getElementById("header-settings-btn");
-  const headerGameCode = document.createElement("div");
-  headerGameCode.className = "header-game-code";
-  headerGameCode.innerHTML = '<span class="game-code-value"></span>';
-  headerGameCode.style.cssText =
-    "display: none; margin-left: auto; font-size: 1.2em; color: var(--text-muted);";
 
   // Lobby
   const gameCodeDisplay = document.getElementById("game-code-display");
@@ -203,21 +198,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const showCategoryToggle = document.getElementById("show-category-toggle");
 
   // --- Screen Management ---
-  function updateHeaderForAdmin() {
-    if (isAdmin) {
-      // הצגת קוד המשחק בheader
-      headerGameCode.style.display = "flex";
-      headerGameCode.querySelector(".game-code-value").textContent = gameCode;
-      const header = document.querySelector("#app-header");
-      if (!header.contains(headerGameCode)) {
-        header.appendChild(headerGameCode);
-      }
-    }
-  }
-
   function refreshCurrentScreen() {
     // רענון הממשק בהתאם למסך הנוכחי
     switch (currentScreen) {
+      case "lobby":
+        // הצגת כפתורי אדמין בלובי
+        if (isAdmin) {
+          adminControls.classList.remove("hidden");
+          const canStart =
+            document.querySelectorAll("#player-list li").length >= 3;
+          startGameBtn.disabled = !canStart;
+          startGameHint.classList.toggle("hidden", canStart);
+        } else {
+          adminControls.classList.add("hidden");
+        }
+        break;
+      case "game":
+        // הצגת כפתורי אדמין במשחק
+        if (isAdmin) {
+          const skipWordBtn = document.querySelector(".skip-word-btn");
+          if (skipWordBtn) {
+            skipWordBtn.classList.remove("hidden");
+          }
+        }
+        break;
       case "result":
         const currentAdmin = games[gameCode]?.players.find((p) => p.isAdmin);
         if (currentAdmin && currentAdmin.id === myId) {
@@ -242,7 +246,20 @@ document.addEventListener("DOMContentLoaded", () => {
     headerCreateBtn.classList.add("hidden");
     headerSettingsBtn.classList.add("hidden");
     headerLogoContainer.classList.remove("hidden");
-    headerGameCode.style.display = "none";
+
+    // Get header elements
+    const headerGameCode = document.getElementById("header-game-code");
+    const headerGameCodeValue = document.getElementById(
+      "header-game-code-value"
+    );
+
+    // Update game code if admin
+    if (headerGameCode && headerGameCodeValue && isAdmin && gameCode) {
+      headerGameCodeValue.textContent = gameCode;
+      headerGameCode.classList.remove("hidden");
+    } else if (headerGameCode && !isAdmin) {
+      headerGameCode.classList.add("hidden");
+    }
 
     switch (screenName) {
       case "home":
@@ -252,33 +269,14 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
       case "lobby":
         if (isAdmin) {
-          // הצגת כפתור הגדרות למנהל בלובי
-          const header = document.querySelector("#app-header");
-          const settingsWrapper = document.createElement("div");
-          settingsWrapper.className = "settings-wrapper";
           headerSettingsBtn.classList.remove("hidden");
-          settingsWrapper.appendChild(headerSettingsBtn);
-          header.appendChild(settingsWrapper);
         }
         break;
       case "game":
       case "voting":
       case "result":
         if (isAdmin) {
-          // הצגת קוד המשחק בheader רק למנהל
-          headerGameCode.style.display = "flex";
-          headerGameCode.querySelector(".game-code-value").textContent =
-            gameCode;
-          const header = document.querySelector("#app-header");
-          if (!header.contains(headerGameCode)) {
-            header.appendChild(headerGameCode);
-          }
-          // הסתרת כפתור ההגדרות במהלך המשחק
-          headerSettingsBtn.classList.add("hidden");
-          const settingsWrapper = document.querySelector(".settings-wrapper");
-          if (settingsWrapper) {
-            settingsWrapper.classList.add("hidden");
-          }
+          headerSettingsBtn.classList.remove("hidden");
         }
         break;
       case "endGame":
@@ -586,11 +584,26 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.emit("startGame", gameCode)
   );
   endGameBtnFromResult.addEventListener("click", () => {
-    showModalMessage("האם אתה בטוח שברצונך לסיים את המשחק עבור כולם?", {
-      okText: "סיים משחק",
-      cancelText: "ביטול",
-      onOk: () => socket.emit("endGame", gameCode),
-      onCancel: () => {},
+    // שימוש באותה פונקציה כמו ביציאה מהמשחק
+    showModalMessage("איך תרצה לסיים את המשחק?", {
+      type: "admin_leave",
+      buttons: [
+        {
+          text: "סיים עבור כולם",
+          action: () => socket.emit("endGame", gameCode),
+          style: "danger",
+        },
+        {
+          text: "צא רק בעצמך",
+          action: () => {
+            socket.emit("adminLeaving", gameCode);
+            window.location.reload();
+          },
+          style: "danger",
+        },
+      ],
+      message:
+        "שים לב: אם תחליט לצאת מהמשחק רק בעצמך, השחקן הבא בתור יקבל את תפקיד המנהל",
     });
   });
   playAgainBtn.addEventListener("click", () => window.location.reload());
@@ -770,21 +783,8 @@ document.addEventListener("DOMContentLoaded", () => {
     gameCodeDisplay.classList.remove("hidden");
     adminControls.classList.remove("hidden");
 
-    // הצגת הקוד והגדרות בפס העליון למנהל
-    const headerGameCode = document.getElementById("header-game-code");
-    const headerGameCodeValue = document.getElementById(
-      "header-game-code-value"
-    );
-    const headerSettingsBtn = document.getElementById("header-settings-btn");
-
-    if (headerGameCode && headerGameCodeValue) {
-      headerGameCodeValue.textContent = gameCode;
-      headerGameCode.classList.remove("hidden");
-    }
-
-    if (headerSettingsBtn) {
-      headerSettingsBtn.classList.remove("hidden");
-    }
+    // עדכון הצגת הקוד והגדרות בפס העליון
+    updateHeader();
 
     if (shareCodeText) {
       shareCodeText.textContent = "שתף עם חברים את הקוד:";
@@ -799,7 +799,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // יצירת מסך המתנה להצטרפות באמצע משחק
   const waitingScreen = document.createElement("div");
   waitingScreen.id = "waiting-screen";
-  waitingScreen.className = "screen hidden";
+  waitingScreen.className = "screen hidden screen-container";
   waitingScreen.innerHTML = `
     <div class="waiting-content">
       <div class="loading-circle"></div>
@@ -814,7 +814,11 @@ document.addEventListener("DOMContentLoaded", () => {
   waitingStyles.textContent = `
     .waiting-content {
       text-align: center;
-      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
     }
     .loading-circle {
       width: 50px;
@@ -883,12 +887,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // אם השחקן היה במסך המתנה, נעביר אותו למשחק
     if (currentScreen === "waiting") {
       showScreen("game");
-    }
-
-    // הצגת הקוד בheader כשהמשחק מתחיל
-    const headerGameCode = document.querySelector(".header-game-code");
-    if (headerGameCode) {
-      headerGameCode.style.display = "flex";
     }
 
     // הצגת כפתור הדילוג רק למנהל
@@ -1090,7 +1088,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // עדכון כותרת לפי סיבת הסיום
     const endGameTitle = document.querySelector("#end-game-screen h2");
-    if (reason === "not_enough_players") {
+    if (reason === "notEnoughPlayers") {
       endGameTitle.textContent = "המשחק נעצר כי נותרו פחות מ־3 שחקנים";
     } else {
       endGameTitle.textContent = "המשחק נגמר!";
@@ -1178,26 +1176,10 @@ document.addEventListener("DOMContentLoaded", () => {
         adminSpan.style.opacity = "0.8";
         li.appendChild(adminSpan);
 
-        // אם השחקן הזה הוא המנהל וזה אני, להציג את הקוד והגדרות בפס העליון
-        if (player.id === myId && gameCode) {
-          const headerGameCode = document.getElementById("header-game-code");
-          const headerGameCodeValue = document.getElementById(
-            "header-game-code-value"
-          );
-          const headerSettingsBtn = document.getElementById(
-            "header-settings-btn"
-          );
-
-          if (headerGameCode && headerGameCodeValue) {
-            headerGameCodeValue.textContent = gameCode;
-            headerGameCode.classList.remove("hidden");
-          }
-
-          if (headerSettingsBtn) {
-            headerSettingsBtn.classList.remove("hidden");
-          }
-
+        // אם השחקן הזה הוא המנהל וזה אני, לעדכן את הסטטוס של אדמין
+        if (player.id === myId) {
           isAdmin = true;
+          updateHeader();
         }
       }
 
@@ -1525,32 +1507,43 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Modal Message ---
   // טיפול בהעברת תפקיד המנהל
   socket.on("adminChanged", (data) => {
-    const { newAdminId, newAdminName, players } = data;
+    const {
+      newAdminId,
+      newAdminName,
+      players,
+      settings,
+      allCategories: receivedCategories,
+    } = data;
 
     // עדכון המשתנים הגלובליים
     if (myId === newAdminId) {
       isAdmin = true;
+
+      // עדכון הגדרות אם התקבלו
+      if (settings) {
+        enabledCategories = settings.enabledCategories;
+      }
+      if (receivedCategories) {
+        allCategories = receivedCategories;
+      }
+
+      // עדכון מיידי של ממשק המנהל החדש
+      updateHeader();
+      refreshCurrentScreen();
+
       // הצגת הודעה למנהל החדש
-      showModalMessage(
-        "המנהל יצא מהמשחק ומעכשיו אתה מנהל המשחק. אתה קובע את קצב הסבבים.",
-        {
-          okText: "הבנתי",
-          onOk: () => {
-            // עדכון ממשק המנהל החדש
-            updateHeaderForAdmin();
-            // רענון המסך הנוכחי כדי להציג את כפתורי המנהל
-            refreshCurrentScreen();
-          },
-        }
-      );
+      setTimeout(() => {
+        showModalMessage(
+          "המנהל יצא מהמשחק ומעכשיו אתה מנהל המשחק. אתה קובע את קצב הסבבים.",
+          {
+            okText: "הבנתי",
+          }
+        );
+      }, 100);
     } else {
       // אם זה לא המנהל החדש, מוודאים שאין לו גישה לכפתורי ניהול
       isAdmin = false;
-      headerSettingsBtn.classList.add("hidden");
-      const headerGameCode = document.getElementById("header-game-code");
-      if (headerGameCode) {
-        headerGameCode.classList.add("hidden");
-      }
+      updateHeader();
     }
 
     // עדכון רשימת השחקנים

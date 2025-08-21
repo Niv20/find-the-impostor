@@ -33,19 +33,19 @@ async function createConfetti() {
           },
         },
         number: {
-          value: 500,
+          value: 200,
           density: {
             enable: true,
             area: 800,
           },
         },
         opacity: {
-          value: 0,
+          value: 1,
           animation: {
             enable: true,
-            startValue: "min",
-            endValue: "max",
-            speed: 2,
+            startValue: "max",
+            endValue: "min",
+            speed: 1,
             sync: false,
           },
         },

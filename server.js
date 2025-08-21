@@ -603,6 +603,26 @@ io.on("connection", (socket) => {
         delete gameTimers[gameCode];
       }
       delete games[gameCode];
+    } else if (game.players.length < 3) {
+      // אם נותרו פחות מ-3 שחקנים, מסיימים את המשחק
+      console.log(
+        `[Game ${gameCode}] Less than 3 players remaining, ending game.`
+      );
+
+      // עצירת הטיימר אם יש
+      if (gameTimers[gameCode]) {
+        clearInterval(gameTimers[gameCode].interval);
+        delete gameTimers[gameCode];
+      }
+
+      // שליחה למסך סיכום סופי
+      io.to(gameCode).emit("gameEnded", {
+        players: game.players,
+        reason: "notEnoughPlayers",
+      });
+
+      // מחיקת המשחק
+      delete games[gameCode];
     } else if (leavingPlayer.isAdmin) {
       // מוצאים את השחקן הבא בתור להיות מנהל (השני שנכנס למשחק)
       const newAdmin = game.players[0];
@@ -618,6 +638,8 @@ io.on("connection", (socket) => {
           newAdminId: newAdmin.id,
           newAdminName: newAdmin.name,
           players: game.players,
+          settings: game.settings,
+          allCategories: allCategoriesForClient,
         });
       } else {
         // אם אין שחקנים אחרים, סוגרים את המשחק
@@ -686,6 +708,79 @@ io.on("connection", (socket) => {
       }
     }
   }
+
+  socket.on("adminLeaving", (gameCode) => {
+    const game = games[gameCode];
+    if (!game) return;
+
+    const adminIndex = game.players.findIndex(
+      (p) => p.id === socket.id && p.isAdmin
+    );
+    if (adminIndex === -1) return;
+
+    const leavingAdmin = game.players[adminIndex];
+    game.players.splice(adminIndex, 1);
+
+    // שמירת מידע על האדמין שיצא
+    if (!game.disconnectedPlayers) {
+      game.disconnectedPlayers = {};
+    }
+    game.disconnectedPlayers[leavingAdmin.name] = {
+      score: leavingAdmin.score,
+      avatar: leavingAdmin.avatar,
+    };
+
+    socket.leave(gameCode);
+
+    console.log(
+      `🎮 Admin "${leavingAdmin.name}" left game ${gameCode} voluntarily`
+    );
+    console.log(`👥 Players remaining: ${game.players.length}`);
+
+    if (game.players.length === 0) {
+      console.log(`[Game ${gameCode}] Game empty after admin left, deleting.`);
+      if (gameTimers[gameCode]) {
+        clearInterval(gameTimers[gameCode].interval);
+        delete gameTimers[gameCode];
+      }
+      delete games[gameCode];
+    } else if (game.players.length < 3) {
+      // אם נותרו פחות מ-3 שחקנים, מסיימים את המשחק
+      console.log(
+        `[Game ${gameCode}] Less than 3 players after admin left, ending game.`
+      );
+
+      if (gameTimers[gameCode]) {
+        clearInterval(gameTimers[gameCode].interval);
+        delete gameTimers[gameCode];
+      }
+
+      io.to(gameCode).emit("gameEnded", {
+        players: game.players,
+        reason: "notEnoughPlayers",
+      });
+
+      delete games[gameCode];
+    } else {
+      // העברת תפקיד המנהל לשחקן הבא
+      const newAdmin = game.players[0];
+      newAdmin.isAdmin = true;
+      game.adminId = newAdmin.id;
+
+      console.log(
+        `[Game ${gameCode}] Admin role transferred to ${newAdmin.name}`
+      );
+
+      // שליחת הודעה על יציאת האדמין והעברת התפקיד
+      io.to(gameCode).emit("adminChanged", {
+        newAdminId: newAdmin.id,
+        newAdminName: newAdmin.name,
+        players: game.players,
+        settings: game.settings,
+        allCategories: allCategoriesForClient,
+      });
+    }
+  });
 });
 
 server.listen(PORT, "0.0.0.0", () => {
