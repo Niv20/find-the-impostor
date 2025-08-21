@@ -1117,8 +1117,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // יצירת מיכל הקטגוריות
     const categoriesContainer = document.createElement("div");
-    categoriesContainer.style.marginBottom = "20px";
-
+    categoriesContainer.className = "categories-container";
     // הוספת הקטגוריות
     allCategories.forEach((cat) => {
       const item = document.createElement("div");
