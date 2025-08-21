@@ -714,12 +714,11 @@ button:disabled {
   gap: 10px;
   cursor: pointer;
   transition: background-color 0.2s;
-  flex: 1;
-  min-width: 0;
+  width: fit-content;
 }
 .category-item label {
   cursor: pointer;
-  flex: 1;
+  white-space: nowrap;
 }
 .category-item input[type="checkbox"] {
   -webkit-appearance: none;
