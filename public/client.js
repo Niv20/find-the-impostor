@@ -751,11 +751,28 @@ document.addEventListener("DOMContentLoaded", () => {
       waitingOverlay.classList.add("hidden");
     }
 
-    resultTitle.textContent = correctlyGuessed
-      ? "המתחזה נתפס!"
-      : "המתחזה ניצח!";
+    // בדיקה האם יש customMessage (במקרה שהמתחזה יצא באמצע)
+    if (data.customMessage) {
+      resultTitle.textContent = "אהמממ נראה שהמתחזה יצא מהמשחק...";
+      resultInfo.textContent = "עצרנו את הסבב הזה מוקדם, אף אחד לא קיבל ניקוד";
+    } else {
+      // הצגת הודעה מותאמת לפי זהות השחקן והתוצאה
+      if (correctlyGuessed) {
+        if (myId === impostor.id) {
+          resultTitle.textContent = "תפסו אותך!";
+        } else {
+          resultTitle.textContent = "הצלחתם לתפוס את המתחזה!";
+        }
+      } else {
+        if (myId === impostor.id) {
+          resultTitle.textContent = "ניצחת!";
+        } else {
+          resultTitle.textContent = "המתחזה הצליח לברוח...";
+        }
+      }
+      resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
+    }
     resultScreen.dataset.impostorFound = correctlyGuessed;
-    resultInfo.textContent = `המתחזה היה ${impostor.name}. המילה הייתה "${word}".`;
     updateScoreList(players, scoreListUl, true);
 
     // Setup controls based on user role
