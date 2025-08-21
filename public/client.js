@@ -1212,7 +1212,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     buttonsContainer.appendChild(resetButton);
     buttonsContainer.appendChild(saveButton);
-    categoryListDiv.appendChild(buttonsContainer);
+    settingsModal.querySelector(".modal-content").appendChild(buttonsContainer);
   }
 
   function updateTimerDisplay(timeLeft) {

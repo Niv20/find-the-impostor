@@ -683,10 +683,10 @@ button:disabled {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid var(--border-color);
-  width: 100%;
 }
 
 .settings-footer-btn {
+  flex: 1;
   padding: 12px;
   font-size: 1rem;
   background-color: var(--card-hover);
