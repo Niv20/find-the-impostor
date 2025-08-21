@@ -675,6 +675,32 @@ button:disabled {
   gap: 10px;
   text-align: right;
 }
+
+/* הוספת סגנון חדש לקונטיינר של הכפתורים */
+.settings-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  width: 100%;
+}
+
+.settings-footer-btn {
+  padding: 12px;
+  font-size: 1rem;
+  background-color: var(--card-hover);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  margin: 0;
+}
+
+.settings-footer-btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
 .category-item {
   background-color: var(--card-hover);
   padding: 10px;

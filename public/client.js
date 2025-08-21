@@ -824,7 +824,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // הצגת כפתור הדילוג רק למנהל
     const adminControls = document.getElementById("admin-game-controls");
-    const currentAdmin = games[gameCode]?.players.find((p) => p.isAdmin);
+    const currentAdmin = previousPlayers.find((p) => p.isAdmin);
     if (currentAdmin && currentAdmin.id === myId) {
       adminControls.classList.remove("hidden");
 
