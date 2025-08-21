@@ -584,10 +584,6 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="waiting-content">
       <div class="loading-circle"></div>
       <h2 class="waiting-message"></h2>
-      <div class="player-count">
-        <span>שחקנים במשחק: </span>
-        <span class="waiting-player-count"></span>
-      </div>
     </div>
   `;
   document.body.appendChild(waitingScreen);
@@ -641,17 +637,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("joinedMidGame", (data) => {
     const waitingMessage = waitingScreen.querySelector(".waiting-message");
-    const playerCountSpan = waitingScreen.querySelector(
-      ".waiting-player-count"
-    );
-
-    waitingMessage.textContent = data.message;
-    playerCountSpan.textContent = data.players.length;
+    waitingMessage.textContent = "המתן לסיום הסבב הנוכחי כדי להצטרף למשחק...";
     showScreen("waiting");
-
-    // עדכון רשימת השחקנים במסך ההמתנה
-    updatePlayerList(data.players);
-    previousPlayers = data.players;
   });
 
   socket.on("updatePlayerList", (players) => {

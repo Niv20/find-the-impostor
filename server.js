@@ -311,6 +311,21 @@ io.on("connection", (socket) => {
     game.currentRound.revealed = true;
     game.gameState = "lobby"; // Game returns to a lobby-like state
 
+    // צירוף שחקנים ממתינים למשחק
+    if (game.waitingPlayers && game.waitingPlayers.length > 0) {
+      game.players.push(...game.waitingPlayers);
+      
+      // שליחת עדכון לשחקנים הממתינים
+      game.waitingPlayers.forEach(player => {
+        io.to(player.id).emit("joinedSuccess", {
+          players: game.players,
+          settings: game.settings,
+        });
+      });
+      
+      // איפוס רשימת הממתינים
+      game.waitingPlayers = [];
+
     const { votes, impostorId, word, categoryName } = game.currentRound;
     const voteCounts = {};
     Object.values(votes).forEach((votedId) => {
