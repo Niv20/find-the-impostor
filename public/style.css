@@ -200,6 +200,7 @@ body {
   padding: 0;
   overflow-x: hidden;
 }
+
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -752,8 +753,9 @@ button:disabled {
 
 #category-list {
   padding-top: 10px;
-  display: grid;
-  gap: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   text-align: right;
 }
 
@@ -789,18 +791,12 @@ button:disabled {
 }
 
 .category-item {
+  display: inline-block;
+  margin: 0;
+}
+
+.category-toggle-btn {
   background-color: var(--card-hover);
-<<<<<<< Updated upstream
-  padding: 10px 15px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  width: fit-content;
-  margin: 5px 0;
-=======
   border: 2px solid var(--border-color);
   border-radius: 8px;
   padding: 10px 14px;
@@ -813,47 +809,12 @@ button:disabled {
   color: var(--text-color);
   min-height: 40px;
   font-weight: 500;
->>>>>>> Stashed changes
 }
-.category-item label {
-  cursor: pointer;
-  white-space: nowrap;
-}
-<<<<<<< Updated upstream
-.category-item input[type="checkbox"] {
-  -webkit-appearance: none;
-  appearance: none;
-  background-color: #333;
-  margin: 0;
-  font: inherit;
-  color: currentColor;
-  width: 1.15em;
-  height: 1.15em;
-  border: 0.15em solid #555;
-  border-radius: 0.15em;
-  transform: translateY(-0.075em);
-  display: grid;
-  place-content: center;
-  flex-shrink: 0;
-}
-.category-item input[type="checkbox"]::before {
-  content: "";
-  width: 0.65em;
-  height: 0.65em;
-  transform: scale(0);
-  transition: 120ms transform ease-in-out;
-  box-shadow: inset 1em 1em white;
-  background-color: CanvasText;
-  transform-origin: bottom left;
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-}
-.category-item input[type="checkbox"]:checked::before {
-  transform: scale(1);
-}
-.category-item input[type="checkbox"]:checked {
-  background-color: var(--primary-color);
+
+.category-toggle-btn:hover {
+  background-color: var(--card-color);
   border-color: var(--primary-color);
-=======
+}
 
 .category-toggle-btn.active {
   background-color: var(--card-hover);
@@ -884,7 +845,6 @@ button:disabled {
 
 .category-name {
   white-space: nowrap;
->>>>>>> Stashed changes
 }
 
 /* Admin Controls */
