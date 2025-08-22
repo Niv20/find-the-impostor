@@ -81,11 +81,24 @@ class InputValidator {
     const nameInput = document.getElementById("name-input");
     if (!nameInput) return;
 
+    // Prevent extra input beyond limit & flash counter on blocked input
+    nameInput.addEventListener("beforeinput", (e) => {
+      // If trying to insert (not delete) while at limit
+      if (
+        nameInput.value.length >= 10 &&
+        e.data &&
+        !["deleteContentBackward", "deleteContentForward"].includes(e.inputType)
+      ) {
+        e.preventDefault();
+        this.flashCharacterLimit(true);
+      }
+    });
+
     nameInput.addEventListener("input", (e) => {
       const value = e.target.value;
 
-      // Allow Hebrew letters, spaces, and hyphens.
-      const hebrewRegex = /^[\u05D0-\u05EA\s-]*$/;
+      // Allow only Hebrew letters and spaces (no hyphens or other chars)
+      const hebrewChar = /[\u05D0-\u05EA ]/;
 
       let filteredValue = "";
       let hasInvalidChar = false;
@@ -103,8 +116,8 @@ class InputValidator {
           break;
         }
 
-        // Allow Hebrew characters, spaces, and hyphens
-        if (hebrewRegex.test(char)) {
+        // Allow Hebrew characters & spaces
+        if (hebrewChar.test(char)) {
           // Rule: No space at the beginning
           if (char === " " && filteredValue.length === 0) {
             hasInvalidChar = true;
@@ -126,6 +139,9 @@ class InputValidator {
         filteredValue = filteredValue.trimEnd();
         hasInvalidChar = true;
       }
+
+      // Remove accidental leading spaces created via deletion
+      filteredValue = filteredValue.replace(/^\s+/, "");
 
       if (hasInvalidChar) {
         this.flashInvalidInput(nameInput);
@@ -154,23 +170,27 @@ class InputValidator {
   }
 
   flashInvalidInput(input) {
-    if (input.classList.contains("invalid-input")) {
-      return; // Flash already active
-    }
+    if (!input) return;
+    // Restart animation if already applied
+    input.classList.remove("invalid-input");
+    void input.offsetWidth; // force reflow
     input.classList.add("invalid-input");
-    setTimeout(() => {
+    const removeListener = () => {
       input.classList.remove("invalid-input");
-    }, 500);
+      input.removeEventListener("animationend", removeListener);
+    };
+    input.addEventListener("animationend", removeListener);
   }
 
-  flashCharacterLimit() {
+  flashCharacterLimit(force = false) {
     const charCounter = document.getElementById("char-counter");
-    if (charCounter && !charCounter.classList.contains("char-limit-flash")) {
-      charCounter.classList.add("char-limit-flash");
-      setTimeout(() => {
-        charCounter.classList.remove("char-limit-flash");
-      }, 500);
+    if (!charCounter) return;
+    // Always restart animation when force or not currently running
+    if (force || charCounter.classList.contains("char-limit-flash")) {
+      charCounter.classList.remove("char-limit-flash");
+      void charCounter.offsetWidth; // reflow
     }
+    charCounter.classList.add("char-limit-flash");
   }
 
   validateAllCodeInputs() {
@@ -203,6 +223,10 @@ class InputValidator {
     // Enter key for code inputs
     document.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
+        if (window.ignoreNextEnter) {
+          window.ignoreNextEnter = false;
+          return;
+        }
         const activeElement = document.activeElement;
 
         // Don't handle Enter if modal is open

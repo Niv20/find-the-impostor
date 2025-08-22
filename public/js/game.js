@@ -250,6 +250,13 @@ class GameManager {
           }
           this.ui.setJoinButtonState(false);
           this.ui.showScreen("home");
+          // Focus first code input immediately
+          setTimeout(() => {
+            const first = document.querySelector(".code-input");
+            if (first) first.focus();
+          }, 0);
+          // Prevent Enter key used to close modal from re-triggering submit
+          window.ignoreNextEnter = true;
         },
       });
     });

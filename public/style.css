@@ -384,31 +384,27 @@ input[type="tel"]:focus {
 input[type="text"].invalid-input,
 input[type="tel"].invalid-input {
   border-color: var(--error-color);
-  animation: flash-red 0.6s ease;
+  animation: flash-red 1.2s ease; /* slower flash */
 }
 
 .char-limit-flash {
-  animation: char-limit-flash 0.8s ease;
+  animation: char-limit-flash 1.2s ease; /* extended */
 }
 
 @keyframes char-limit-flash {
   0% {
     color: var(--text-muted);
-    transform: scale(1);
   }
-  25% {
+  20% {
     color: var(--error-color);
-    transform: scale(1.1);
     font-weight: 600;
   }
-  75% {
+  80% {
     color: var(--error-color);
-    transform: scale(1.05);
     font-weight: 600;
   }
   100% {
     color: var(--text-muted);
-    transform: scale(1);
     font-weight: normal;
   }
 }
@@ -421,7 +417,8 @@ button {
   font-size: 1.08rem;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: background-color 0.25s ease, color 0.25s ease,
+    border-color 0.25s ease; /* remove movement */
   font-weight: 600;
   margin-top: 10px;
   width: 100%;
@@ -530,17 +527,21 @@ button:disabled {
 
 .code-input.invalid-input {
   border-color: var(--error-color);
-  animation: flash-red 0.6s ease;
+  animation: flash-red 1.2s ease; /* slower */
 }
 
 @keyframes flash-red {
   0% {
     border-color: var(--error-color);
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.4);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.55);
   }
-  50% {
+  40% {
     border-color: var(--error-color);
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.6);
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.75);
+  }
+  70% {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.55);
   }
   100% {
     border-color: var(--primary-color);
@@ -1073,8 +1074,7 @@ input:checked + .slider:before {
 }
 
 .primary-button:hover {
-  background-color: #0071e3;
-  transform: translateY(-1px);
+  background-color: #0071e3; /* no movement */
 }
 
 .text-button {
@@ -1256,6 +1256,13 @@ input:checked + .slider:before {
   border-color: var(--primary-color);
 }
 
+/* Remove hover change for save settings */
+.save-settings-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
 .reset-settings-btn {
   background-color: var(--card-hover);
   color: var(--text-color);
@@ -1266,7 +1273,8 @@ input:checked + .slider:before {
   background-color: var(--card-color);
   border-color: #e74c3c;
   color: #e74c3c;
-  font-weight: 600;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(231, 76, 60, 0.6);
 }
 
 .skip-word-btn:hover {

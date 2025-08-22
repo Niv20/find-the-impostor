@@ -384,6 +384,7 @@ class UIManager {
       // הוספת מאזין Enter
       const handleEnter = (e) => {
         if (e.key === "Enter" && defaultButton) {
+          window.ignoreNextEnter = true;
           defaultButton.click();
           document.removeEventListener("keydown", handleEnter);
         } else if (e.key === "Escape") {
@@ -417,6 +418,7 @@ class UIManager {
       // הוספת מאזין Enter לפופאפים רגילים
       const handleEnter = (e) => {
         if (e.key === "Enter") {
+          window.ignoreNextEnter = true;
           okBtn.click();
           document.removeEventListener("keydown", handleEnter);
         } else if (e.key === "Escape") {
