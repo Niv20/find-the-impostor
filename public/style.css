@@ -76,6 +76,18 @@
   color: var(--text-muted);
 }
 
+.modal-btn-danger {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+  color: white;
+}
+
+.modal-btn-secondary {
+  background-color: var(--card-hover);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
 .modal-explanation {
   margin-top: 10px;
   color: var(--text-muted);
@@ -267,8 +279,9 @@ body {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin: 18px auto 20px auto;
+  margin: 18px auto 35px auto;
 }
+
 #game-code-display .code-digit {
   width: 44px;
   height: 56px;
@@ -320,11 +333,13 @@ body {
   margin: 0 auto;
   flex-grow: 1;
   display: flex;
+  justify-content: center;
+  align-items: center;
   flex-direction: column;
   padding-top: calc(var(--header-height) + 20px);
 }
 .screen-container {
-  display: contents;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -363,6 +378,38 @@ input[type="tel"]:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+}
+
+input[type="text"].invalid-input,
+input[type="tel"].invalid-input {
+  border-color: var(--error-color);
+  animation: flash-red 0.6s ease;
+}
+
+.char-limit-flash {
+  animation: char-limit-flash 0.8s ease;
+}
+
+@keyframes char-limit-flash {
+  0% {
+    color: var(--text-muted);
+    transform: scale(1);
+  }
+  25% {
+    color: var(--error-color);
+    transform: scale(1.1);
+    font-weight: 600;
+  }
+  75% {
+    color: var(--error-color);
+    transform: scale(1.05);
+    font-weight: 600;
+  }
+  100% {
+    color: var(--text-muted);
+    transform: scale(1);
+    font-weight: normal;
+  }
 }
 button {
   background-color: var(--primary-color);
@@ -480,6 +527,26 @@ button:disabled {
   outline: none;
 }
 
+.code-input.invalid-input {
+  border-color: var(--error-color);
+  animation: flash-red 0.6s ease;
+}
+
+@keyframes flash-red {
+  0% {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.4);
+  }
+  50% {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.6);
+  }
+  100% {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+  }
+}
+
 /* Name Entry Screen */
 .name-entry-content {
   width: 100%;
@@ -530,36 +597,26 @@ button:disabled {
   right: 0;
   margin: 0 auto;
 }
-#game-code-display {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin: 18px auto 35px auto;
-}
 
-#game-code-display .code-digit {
-  width: 44px;
-  height: 56px;
-  font-size: 2.2rem;
-  line-height: 56px;
-  text-align: center;
-  border-radius: 12px;
-  background-color: var(--code-input-bg);
-  color: var(--primary-color);
-  font-weight: 700;
-  box-shadow: var(--code-input-shadow);
-  border: 1px solid var(--border-color);
-}
 #admin-controls {
   width: 100%;
   padding-top: 20px;
   padding-bottom: 10px;
   flex-shrink: 0;
 }
+
+#start-game-btn {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  display: block;
+}
+
 #start-game-hint {
   color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 10px;
+  text-align: center;
 }
 
 /* Player Lists */
@@ -587,6 +644,21 @@ button:disabled {
   margin-left: auto;
   margin-right: auto;
 }
+
+/* כפתור הסרת שחקן */
+.remove-player-btn {
+  color: #e74c3c !important;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.remove-player-btn:hover {
+  color: #c0392b !important;
+  font-weight: 600;
+}
+
 #score-list li {
   transition: transform 0.6s ease-in-out;
 }
@@ -718,6 +790,7 @@ button:disabled {
 
 .category-item {
   background-color: var(--card-hover);
+<<<<<<< Updated upstream
   padding: 10px 15px;
   border-radius: 6px;
   display: flex;
@@ -727,11 +800,26 @@ button:disabled {
   transition: background-color 0.2s;
   width: fit-content;
   margin: 5px 0;
+=======
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  min-height: 40px;
+  font-weight: 500;
+>>>>>>> Stashed changes
 }
 .category-item label {
   cursor: pointer;
   white-space: nowrap;
 }
+<<<<<<< Updated upstream
 .category-item input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
@@ -765,6 +853,38 @@ button:disabled {
 .category-item input[type="checkbox"]:checked {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
+=======
+
+.category-toggle-btn.active {
+  background-color: var(--card-hover);
+  border-color: var(--border-color);
+}
+
+.category-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #bdc3c7;
+  border-radius: 4px;
+  background-color: #ecf0f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.category-toggle-btn.active .category-check {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.category-name {
+  white-space: nowrap;
+>>>>>>> Stashed changes
 }
 
 /* Admin Controls */
@@ -780,14 +900,29 @@ button:disabled {
   text-align: left;
 }
 .timer-btn {
-  padding: 8px 12px;
+  padding: 10px 14px;
   margin: 0 4px;
-  background-color: #444;
+  background-color: var(--card-hover);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 500;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
   width: auto;
-  transition: background-color 0.3s;
 }
+
+.timer-btn:hover {
+  background-color: var(--card-color);
+  border-color: var(--primary-color);
+}
+
 .timer-btn.active {
   background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
 }
 
 /* Toggle Switch */
@@ -1129,6 +1264,49 @@ input:checked + .slider:before {
   color: #3498db;
   font-size: 0.9rem;
   transition: color 0.2s;
+}
+
+/* כפתורי הגדרות - שמור ואיפוס */
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+.settings-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid var(--border-color);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-settings-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.reset-settings-btn {
+  background-color: var(--card-hover);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.reset-settings-btn:hover {
+  background-color: var(--card-color);
+  border-color: #e74c3c;
+  color: #e74c3c;
+  font-weight: 600;
 }
 
 .skip-word-btn:hover {

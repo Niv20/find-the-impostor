@@ -50,6 +50,10 @@
               id="code-input-1"
               name="code-1"
               aria-label="ספרה ראשונה"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
             />
             <input
               type="tel"
@@ -58,6 +62,10 @@
               id="code-input-2"
               name="code-2"
               aria-label="ספרה שנייה"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
             />
             <input
               type="tel"
@@ -66,6 +74,10 @@
               id="code-input-3"
               name="code-3"
               aria-label="ספרה שלישית"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
             />
             <input
               type="tel"
@@ -74,6 +86,10 @@
               id="code-input-4"
               name="code-4"
               aria-label="ספרה רביעית"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
             />
           </div>
           <button id="join-game-btn" disabled>הצטרף למשחק</button>
@@ -91,6 +107,10 @@
               class="name-input"
               placeholder="השם שלך"
               maxlength="10"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
             />
             <span id="char-counter">0/10</span>
           </div>
@@ -115,9 +135,7 @@
           <ul id="player-list"></ul>
         </div>
         <div id="admin-controls">
-          <p id="start-game-hint" class="hidden">
-            צריך לפחות 3 שחקנים בשביל להתחיל
-          </p>
+          <p id="start-game-hint">צריך לפחות שלושה שחקנים</p>
           <button id="start-game-btn" disabled>התחל משחק</button>
         </div>
       </div>
@@ -231,6 +249,19 @@
             aria-labelledby="categories-label"
           ></div>
         </div>
+
+        <!-- כפתורי פעולות הגדרות -->
+        <div class="settings-actions">
+          <button id="save-settings-btn" class="settings-btn save-settings-btn">
+            שמור הגדרות
+          </button>
+          <button
+            id="reset-settings-btn"
+            class="settings-btn reset-settings-btn"
+          >
+            איפוס הגדרות
+          </button>
+        </div>
       </div>
     </div>
 
@@ -248,5 +279,17 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
     <script src="/confetti.js"></script>
+<<<<<<< Updated upstream
+=======
+
+    <!-- Load modular JavaScript files -->
+    <script src="/js/input-validation.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/networking.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/game.js"></script>
+    <script src="/js/screens.js"></script>
+    <script src="/js/main.js"></script>
+>>>>>>> Stashed changes
   </body>
 </html>

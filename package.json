@@ -4,10 +4,13 @@
   "description": "A real-time party game about finding the impostor.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "nodemon server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
     "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
