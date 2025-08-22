@@ -12,6 +12,26 @@ class InputValidator {
 
     codeInputs.forEach((input, index) => {
       // Allow only digits 0-9
+      input.addEventListener("keydown", (e) => {
+        // Allow navigation keys
+        const allowedKeys = [
+          "Backspace",
+          "Delete",
+          "Tab",
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+          "Home",
+          "End",
+        ];
+        if (allowedKeys.includes(e.key)) return;
+        if (!/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          this.flashInvalidInput(input);
+        }
+      });
+
       input.addEventListener("input", (e) => {
         const value = e.target.value;
 
@@ -162,6 +182,43 @@ class InputValidator {
       // Enable/disable submit button
       this.validateNameInput();
     });
+
+    // Fallback keydown (for browsers not firing beforeinput as expected)
+    nameInput.addEventListener("keydown", (e) => {
+      const controlKeys = [
+        "Backspace",
+        "Delete",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Home",
+        "End",
+        "Tab",
+        "Enter",
+      ];
+      if (controlKeys.includes(e.key)) return; // allow control keys
+
+      // Prevent exceeding limit
+      if (nameInput.value.length >= 10) {
+        e.preventDefault();
+        this.flashCharacterLimit(true);
+        return;
+      }
+      // Validate Hebrew letter or space only
+      if (e.key.length === 1 && !/[\u05D0-\u05EA ]/.test(e.key)) {
+        e.preventDefault();
+        this.flashInvalidInput(nameInput);
+      } else if (e.key === " " && nameInput.value.length === 0) {
+        // No leading space
+        e.preventDefault();
+        this.flashInvalidInput(nameInput);
+      } else if (e.key === " " && nameInput.value.endsWith(" ")) {
+        // No consecutive spaces
+        e.preventDefault();
+        this.flashInvalidInput(nameInput);
+      }
+    });
   }
 
   cleanupSpaces(text) {
@@ -175,6 +232,8 @@ class InputValidator {
     input.classList.remove("invalid-input");
     void input.offsetWidth; // force reflow
     input.classList.add("invalid-input");
+    // Debug (can remove later)
+    // console.debug('Flashing invalid input', input.id || input.className);
     const removeListener = () => {
       input.classList.remove("invalid-input");
       input.removeEventListener("animationend", removeListener);

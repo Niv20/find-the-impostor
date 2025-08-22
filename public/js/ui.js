@@ -403,6 +403,8 @@ class UIManager {
         if (options.onOk) options.onOk();
       };
       actionsDiv.appendChild(okBtn);
+      // Auto focus primary button for Enter support
+      setTimeout(() => okBtn.focus(), 0);
 
       if (options.onCancel) {
         const cancelBtn = document.createElement("button");
