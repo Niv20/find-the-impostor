@@ -128,6 +128,10 @@ function createGame(adminId, adminName, adminAvatarFile, io) {
 }
 
 function joinGame(gameCode, playerId, playerName, avatarFile) {
+  // Normalize name: trim & collapse internal multiple spaces
+  if (typeof playerName === "string") {
+    playerName = playerName.replace(/\s+/g, " ").trim();
+  }
   const game = games[gameCode];
   if (!game)
     return { success: false, error: "המשחק לא נמצא. בדוק את הקוד שהזנת." };
@@ -136,7 +140,7 @@ function joinGame(gameCode, playerId, playerName, avatarFile) {
     return { success: false, error: "זה לא אישי, אבל אין מקום בחדר בשבילך" };
   }
 
-  // Check for existing disconnected player
+  // Check for existing disconnected player - they can rejoin with same name
   if (game.disconnectedPlayers && game.disconnectedPlayers[playerName]) {
     const disconnectedPlayer = game.disconnectedPlayers[playerName];
     const returnedPlayer = {
@@ -172,9 +176,21 @@ function joinGame(gameCode, playerId, playerName, avatarFile) {
     }
   }
 
-  // Check for duplicate names
-  const isNameTaken = game.players.some((p) => p.name === playerName);
-  if (isNameTaken) {
+  // Check for duplicate names (case & space normalized) - exclude current disconnected name
+  const norm = (s) => s.replace(/\s+/g, " ").trim();
+  const normalizedName = norm(playerName);
+
+  // Check active players
+  const isNameTakenActive = game.players.some(
+    (p) => norm(p.name) === normalizedName
+  );
+
+  // Check waiting players
+  const isNameTakenWaiting =
+    game.waitingPlayers &&
+    game.waitingPlayers.some((p) => norm(p.name) === normalizedName);
+
+  if (isNameTakenActive || isNameTakenWaiting) {
     return {
       success: false,
       error: "כבר יש מישהו בחדר עם השם הזה. נסה שם אחר.",
@@ -206,6 +222,18 @@ function joinGame(gameCode, playerId, playerName, avatarFile) {
   ) {
     if (!game.waitingPlayers) game.waitingPlayers = [];
 
+    // Double-check before adding to waiting list
+    const waitingNameCheck = game.waitingPlayers.some(
+      (p) => norm(p.name) === normalizedName
+    );
+    if (waitingNameCheck) {
+      return {
+        success: false,
+        error: "כבר יש מישהו בחדר עם השם הזה. נסה שם אחר.",
+        type: "nameTaken",
+      };
+    }
+
     const waitingPlayer = {
       id: playerId,
       name: playerName,
@@ -217,6 +245,18 @@ function joinGame(gameCode, playerId, playerName, avatarFile) {
     game.waitingPlayers.push(waitingPlayer);
     return { success: true, type: "waiting", player: waitingPlayer };
   } else {
+    // Double-check before adding to game to prevent duplicate names
+    const finalNameCheck = game.players.some(
+      (p) => norm(p.name) === normalizedName
+    );
+    if (finalNameCheck) {
+      return {
+        success: false,
+        error: "כבר יש מישהו בחדר עם השם הזה. נסה שם אחר.",
+        type: "nameTaken",
+      };
+    }
+
     const newPlayer = {
       id: playerId,
       name: playerName,

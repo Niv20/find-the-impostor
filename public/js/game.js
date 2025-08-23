@@ -39,6 +39,7 @@ class GameManager {
 
     // טיפול ביצירה והצטרפות למשחקים
     this.network.on("gameCodeValid", (data) => {
+      window.pendingCodeSubmit = false; // success, suppress any residual flash
       // קוד המשחק תקין - עוברים להזנת שם
       this.gameState.isCreatingGame = false;
       this.gameState.chosenAvatarFile = data.selectedAvatar.file;
@@ -239,26 +240,25 @@ class GameManager {
 
     // שגיאה כללית - משהו השתבש במהלך הפעולה
     this.network.on("errorMsg", (message) => {
-      this.ui.showModalMessage(message, {
-        okText: "אישור",
-        onOk: () => {
-          // ניקוי כל שדות הקוד והחזרה לתא הראשון
-          if (window.inputValidator) {
-            window.inputValidator.clearCodeInputs();
-          } else {
-            this.ui.clearCodeInputs();
-          }
-          this.ui.setJoinButtonState(false);
-          this.ui.showScreen("home");
-          // Focus first code input immediately
-          setTimeout(() => {
-            const first = document.querySelector(".code-input");
-            if (first) first.focus();
-          }, 0);
-          // Prevent Enter key used to close modal from re-triggering submit
-          window.ignoreNextEnter = true;
-        },
-      });
+      const onHome = this.ui.currentScreen === "home";
+      const codePattern = /קוד|code|מכירים/;
+      if (onHome && codePattern.test(message)) {
+        if (window.Utils?.showToast) {
+          window.Utils.showToast(message, "error", 3000);
+        }
+        if (window.inputValidator) {
+          window.inputValidator.clearCodeInputs(true);
+        } else {
+          this.ui.clearCodeInputs(true);
+        }
+        this.ui.setJoinButtonState(false);
+        setTimeout(() => {
+          document.querySelector(".code-input")?.focus();
+        }, 0);
+        window.pendingCodeSubmit = false;
+        return;
+      }
+      this.ui.showModalMessage(message, { okText: "אישור" });
     });
 
     // עדכון הגדרות המשחק שהתקבל מהשרת
@@ -410,6 +410,7 @@ class GameManager {
           .map((input) => input.value)
           .join("");
     this.gameState.gameCode = code;
+    window.pendingCodeSubmit = true;
     // שליחת הקוד לשרת לבדיקה
     this.network.emit("checkGameCode", code);
   }

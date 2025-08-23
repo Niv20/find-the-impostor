@@ -236,10 +236,8 @@ class UIManager {
       "header-game-code-value"
     );
 
-    // הסתרת קוד המשחק בכותרת עבור כל השחקנים
-    if (headerGameCode) {
-      headerGameCode.classList.add("hidden");
-    }
+    // ברירת מחדל: מסתירים קוד
+    if (headerGameCode) headerGameCode.classList.add("hidden");
 
     // התאמת הכותרת לפי המסך הנוכחי
     switch (screenName) {
@@ -253,12 +251,17 @@ class UIManager {
         if (window.gameState?.isAdmin) {
           this.headerSettingsBtn.classList.remove("hidden");
         }
+        // לא מציגים את הקוד בלובי לפי דרישה
         break;
       case "game":
       case "voting":
       case "result":
         if (window.gameState?.isAdmin) {
           this.headerSettingsBtn.classList.remove("hidden");
+        }
+        if (headerGameCode && window.gameState?.gameCode) {
+          headerGameCodeValue.textContent = window.gameState.gameCode;
+          headerGameCode.classList.remove("hidden");
         }
         break;
       case "endGame":

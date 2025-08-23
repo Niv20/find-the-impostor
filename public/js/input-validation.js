@@ -13,19 +13,41 @@ class InputValidator {
     codeInputs.forEach((input, index) => {
       // Allow only digits 0-9
       input.addEventListener("keydown", (e) => {
-        // Allow navigation keys
+        // Allow navigation & control keys & modifiers (no flash)
         const allowedKeys = [
           "Backspace",
           "Delete",
           "Tab",
+          "Enter",
           "ArrowLeft",
           "ArrowRight",
           "ArrowUp",
           "ArrowDown",
           "Home",
           "End",
+          "Shift",
+          "Control",
+          "Alt",
+          "Meta",
+          "CapsLock",
+          "Escape",
+          "F1",
+          "F2",
+          "F3",
+          "F4",
+          "F5",
+          "F6",
+          "F7",
+          "F8",
+          "F9",
+          "F10",
+          "F11",
+          "F12",
         ];
         if (allowedKeys.includes(e.key)) return;
+        // Ignore non-character keys (length>1) silently - like modifier combinations
+        if (e.key.length > 1) return;
+        // Only flash red for actual character input that's not a digit
         if (!/^[0-9]$/.test(e.key)) {
           e.preventDefault();
           this.flashInvalidInput(input);
@@ -137,21 +159,21 @@ class InputValidator {
         }
 
         // Allow Hebrew characters & spaces
-        if (hebrewChar.test(char)) {
-          // Rule: No space at the beginning
-          if (char === " " && filteredValue.length === 0) {
-            hasInvalidChar = true;
-            continue;
-          }
-          // Rule: No consecutive spaces
-          if (char === " " && filteredValue[filteredValue.length - 1] === " ") {
-            hasInvalidChar = true;
-            continue;
-          }
-          filteredValue += char;
-        } else {
+        if (!hebrewChar.test(char)) {
           hasInvalidChar = true;
+          continue;
         }
+        if (char === " ") {
+          if (filteredValue.length === 0) {
+            hasInvalidChar = true;
+            continue; // no leading space
+          }
+          if (filteredValue.endsWith(" ")) {
+            hasInvalidChar = true;
+            continue; // no double space
+          }
+        }
+        filteredValue += char;
       }
 
       // Don't allow trailing spaces
@@ -298,6 +320,7 @@ class InputValidator {
         if (activeElement && activeElement.classList.contains("code-input")) {
           e.preventDefault();
           if (this.validateAllCodeInputs()) {
+            // Don't flash red if all inputs are filled - this is a valid submission
             const joinBtn = document.getElementById("join-game-btn");
             if (joinBtn && !joinBtn.disabled) {
               // Use game manager if available
@@ -307,6 +330,9 @@ class InputValidator {
                 joinBtn.click();
               }
             }
+          } else {
+            // Only show red flash if not all fields are filled
+            this.flashInvalidInput(activeElement);
           }
         }
 
